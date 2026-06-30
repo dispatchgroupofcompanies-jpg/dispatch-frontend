@@ -88,21 +88,23 @@ export default function DashboardPage() {
         return;
       }
 
+      // Explicit tuple assignment to satisfy 'Html2PdfOptions' type matching constraint
       const options = {
-        margin: [8, 10, 8, 10], 
+        margin: [8, 10, 8, 10] as [number, number, number, number], 
         filename: `Invoice-${record.invoiceNumber || "Statement"}.pdf`,
-        image: { type: "jpeg", quality: 0.98 },
+        image: { type: "jpeg" as const, quality: 0.98 },
         html2canvas: { 
           scale: 2, 
           useCORS: true, 
           letterRendering: true 
         },
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
-      };
+      } as const;
 
       await html2pdf().set(options).from(element).save();
       message.success("PDF Downloaded successfully!");
     } catch (error) {
+      console.error("PDF engine crash context track:", error);
       message.error("Could not render selected HTML node block into PDF stream.");
     } finally {
       hideLoading();
@@ -271,12 +273,12 @@ export default function DashboardPage() {
       {/* 📊 RUNTIME ANALYTICS CARDS ROW */}
       <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
         <Col xs={24} md={8}>
-          <Card variant={false} style={{ boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.05)", borderRadius: "12px" }}>
+          <Card style={{ boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.05)", borderRadius: "12px" }}>
             <Statistic title="Total Ledger Statements" value={stats.total} prefix={<FileTextOutlined style={{ color: "#3b82f6", marginRight: "6px" }} />} />
           </Card>
         </Col>
         <Col xs={24} md={8}>
-          <Card variant={false} style={{ boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.05)", borderRadius: "12px" }}>
+          <Card style={{ boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.05)", borderRadius: "12px" }}>
             <Statistic title="Gross Volume Valuation" value={stats.grossEarnings} precision={2} prefix={<DollarCircleOutlined style={{ color: "#10b981", marginRight: "6px" }} />} />
           </Card>
         </Col>
@@ -288,7 +290,6 @@ export default function DashboardPage() {
       </Row>
 
       <Card 
-        variant={false} 
         style={{ boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.06)", borderRadius: "16px" }}
         title={
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", padding: "8px 0" }}>
@@ -371,7 +372,7 @@ export default function DashboardPage() {
                   <h1 style={{ fontSize: "24px", fontWeight: 800, color: "#1e3a8a", margin: 0 }}>
                     {selected.trips?.length > 1 ? "INVOICE - T" : "INVOICE - 1"}
                   </h1>
-                  <span style={{ fontSize: "12px", color: "#64748b" }}>Num: <b>#${selected.invoiceNumber}</b></span>
+                  <span style={{ fontSize: "12px", color: "#64748b" }}>Num: <b>#{selected.invoiceNumber}</b></span>
                 </Col>
                 <Col style={{ textAlign: "right" }}>
                   <Tag color={selected.invoiceStatus?.toLowerCase() === "paid" ? "success" : selected.invoiceStatus?.toLowerCase() === "sent" ? "processing" : "warning"} style={{ textTransform: "uppercase", fontWeight: 700, padding: "2px 8px", fontSize: "11px", borderRadius: "4px" }}>
@@ -385,7 +386,7 @@ export default function DashboardPage() {
 
               <Row gutter={24} style={{ marginBottom: "20px" }}>
                 <Col span={12}>
-                  <h3 style={{ fontSize: "11px", textTransform: "uppercase", color: "#475569", margin: "0 0 6px 0", letterSpacing: "0.5px", fontTheme: "bold", fontWeight: 700 }}>Extreme Logistic Invoice From:</h3>
+                  <h3 style={{ fontSize: "11px", textTransform: "uppercase", color: "#475569", margin: "0 0 6px 0", letterSpacing: "0.5px", fontWeight: 700 }}>Extreme Logistic Invoice From:</h3>
                   <div style={{ fontWeight: 700, fontSize: "13px", color: "#0f172a" }}>{selected.payee?.companyName || "N/A"}</div>
                   <div style={{ fontSize: "11px", color: "#475569", marginTop: "4px", lineHeight: "1.4" }}>
                     {selected.payee?.address1 || selected.payee?.address || "N/A"}<br/>

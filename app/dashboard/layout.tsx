@@ -5,7 +5,7 @@ import Sidebar from "../components/Sidebar";
 
 const { Content } = Layout;
 
-export default function DashboardLayout({ children }) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Sidebar />

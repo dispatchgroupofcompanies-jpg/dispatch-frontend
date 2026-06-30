@@ -29,7 +29,7 @@ export default function InvoiceDetails() {
 
         <Col xs={24} md={8}>
           <Form.Item label="Currency" name="currency" style={{ marginBottom: 8 }}>
-            <Select defer={false}>
+            <Select>
               <Select.Option value="CAD">CAD</Select.Option>
               <Select.Option value="USD">USD</Select.Option>
             </Select>

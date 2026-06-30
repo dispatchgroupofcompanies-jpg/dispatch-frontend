@@ -11,7 +11,7 @@ import TripSection from "./TripSection";
 import SummaryCard from "./SummaryCard";
 import { createInvoice, updateInvoice } from "./route";
 
-export default function CreateInvoiceModal({ open, onClose, editData }) {
+export default function CreateInvoiceModal({ open, onClose, editData }: { open: boolean; onClose: () => void; editData?: any }) {
   const [form] = Form.useForm();
   
   const trips = Form.useWatch("trips", form);
@@ -27,7 +27,7 @@ export default function CreateInvoiceModal({ open, onClose, editData }) {
             dayjs(editData.invoicePeriod.startDate),
             dayjs(editData.invoicePeriod.endDate)
           ] : null,
-          trips: (editData.trips || []).map((trip) => ({
+          trips: (editData.trips || []).map((trip: any) => ({
             ...trip,
             tripDate: trip.tripDate ? dayjs(trip.tripDate) : null,
           })),
@@ -44,14 +44,14 @@ export default function CreateInvoiceModal({ open, onClose, editData }) {
     return trips.reduce((total, trip) => total + Number(trip?.totalCharges || 0), 0);
   }, [trips]);
 
-  const handleSubmit = async (values) => {
+  const handleSubmit = async (values: any) => {
     try {
       const hstRate = 13;
       const calculatedSubtotal = invoiceSubtotal;
       const hstAmount = (calculatedSubtotal * hstRate) / 100;
       const grandTotal = calculatedSubtotal + hstAmount;
 
-      const formattedTrips = (values.trips || []).map((trip) => {
+      const formattedTrips = (values.trips || []).map((trip: any) => {
         const tCharges = Number(trip?.totalCharges || 0);
         const dPercent = Number(trip?.dispatchPercent || 0);
         return {
@@ -91,7 +91,7 @@ export default function CreateInvoiceModal({ open, onClose, editData }) {
       onClose();
     } catch (error) {
       console.error(error);
-      message.error(error?.response?.data?.message || "Operation failed");
+        message.error((error as any)?.response?.data?.message || "Operation failed");
     }
   };
 

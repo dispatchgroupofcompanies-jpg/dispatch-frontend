@@ -115,7 +115,7 @@ export default function TripSection({ form }: Props) {
                           size="small"
                           precision={2} 
                           formatter={(value) => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-                          parser={(value) => value!.replace(/\$\s?|(,*)/g, "")}
+                          parser={(value) => parseFloat(value!.replace(/\$\s?|(,*)/g, "") || "0") as any}
                         />
                       </Form.Item>
                     </Col>
@@ -127,7 +127,7 @@ export default function TripSection({ form }: Props) {
                           max={100} 
                           size="small"
                           formatter={(value) => `${value}%`}
-                          parser={(value) => value!.replace("%", "")}
+                          parser={(value) => parseFloat(value!.replace("%", "") || "0") as any}
                         />
                       </Form.Item>
                     </Col>

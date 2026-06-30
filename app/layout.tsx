@@ -5,7 +5,7 @@ export const metadata = {
   description: "Auth system with Next.js + Express",
 };
 
-export default function RootLayout({ children }) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className="min-h-screen flex flex-col bg-white dark:bg-black">
