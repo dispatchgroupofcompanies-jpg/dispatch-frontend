@@ -101,16 +101,16 @@ export default function CreateInvoiceModal({ open, onClose, editData }: { open: 
 
   return (
     <Modal
-      title={<span style={{ fontSize: "15px", fontWeight: 700 }}>{isEditMode ? "✏️ Edit Invoice Master Log" : "➕ Generate New Bill Statement"}</span>}
+      title={<span style={{ fontSize: window.innerWidth < 640 ? "13px" : "15px", fontWeight: 700 }}>{isEditMode ? "✏️ Edit Invoice Master Log" : "➕ Generate New Bill Statement"}</span>}
       open={open}
       onCancel={() => {
         form.resetFields();
         onClose();
       }}
       footer={null}
-      width={1300}
-      style={{ top: 20 }}
-      styles={{ body: { padding: "8px 16px" } }}
+      width={window.innerWidth < 640 ? "98%" : window.innerWidth < 768 ? "95%" : 1300}
+      style={{ top: window.innerWidth < 640 ? 0 : 20 }}
+      styles={{ body: { padding: { xs: "4px 8px", sm: "6px 12px", md: "8px 16px" }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || "8px 16px" } }}
     >
       <Form
         form={form}
@@ -129,21 +129,44 @@ export default function CreateInvoiceModal({ open, onClose, editData }: { open: 
         <PayToDetails />
         
         {/* Dynamic Trips Container */}
-        <div style={{ background: "#f8fafc", padding: "10px 14px", borderRadius: 6, border: "1px solid #e2e8f0", marginBottom: 10 }}>
-          <h3 style={{ fontSize: 12, fontWeight: 700, margin: "0 0 10px 0", color: "#1e3a8a" }}>
-            📋 Trips Segment Entry — Mode: <span style={{ textTransform: "uppercase", color: "#2563eb" }}>{invoiceType}</span>
+        <div style={{ 
+          background: "#f8fafc", 
+          padding: { xs: "6px 8px", sm: "8px 12px", md: "10px 14px" }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || "10px 14px", 
+          borderRadius: 6, 
+          border: "1px solid #e2e8f0", 
+          marginBottom: { xs: 6, sm: 8, md: 10 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 10 
+        }}>
+          <h3 style={{ 
+            fontSize: { xs: 11, sm: 12, md: 13 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 13, 
+            fontWeight: 700, 
+            margin: "0 0 8px 0", 
+            color: "#1e3a8a" 
+          }}>
+            📋 Trips — Mode: <span style={{ textTransform: "uppercase", color: "#2563eb" }}>{invoiceType}</span>
           </h3>
           <TripSection form={form} allowMultiple={invoiceType === "multiple" || invoiceType === "Multiple"} />
         </div>
         
         <SummaryCard subtotal={invoiceSubtotal}  />
 
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 16, paddingBottom: 10 }}>
-          <Button size="middle" onClick={() => { form.resetFields(); onClose(); }}>
+        <div style={{ 
+          display: "flex", 
+          justifyContent: "flex-end", 
+          gap: { xs: 6, sm: 8, md: 8 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 8, 
+          marginTop: { xs: 10, sm: 12, md: 16 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 16, 
+          paddingBottom: { xs: 6, sm: 8, md: 10 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 10 
+        }}>
+          <Button size={window.innerWidth < 640 ? "small" : "middle"} onClick={() => { form.resetFields(); onClose(); }}>
             Cancel
           </Button>
-          <Button size="middle" type="primary" htmlType="submit" style={{ fontWeight: 600 }} loading={submitting}>
-            {submitting ? (isEditMode ? "Saving Changes..." : "Compiling & Sending...") : (isEditMode ? "Save Changes" : "Compile & Email Broadcast")}
+          <Button 
+            size={window.innerWidth < 640 ? "small" : "middle"} 
+            type="primary" 
+            htmlType="submit" 
+            style={{ fontWeight: 600 }} 
+            loading={submitting}
+          >
+            {submitting ? (isEditMode ? "Saving..." : "Sending...") : (isEditMode ? "Save Changes" : "Compile & Send")}
           </Button>
         </div>
       </Form>
