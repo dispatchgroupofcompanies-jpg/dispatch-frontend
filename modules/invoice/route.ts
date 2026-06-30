@@ -3,7 +3,7 @@ import axios from "axios";
 const DEBUG = false; // 👈 turn true only when debugging
 
 const API = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api",
   headers: {
     "Content-Type": "application/json",
   },
