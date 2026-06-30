@@ -283,7 +283,7 @@ export default function DashboardPage() {
           </Card>
         </Col>
         <Col xs={24} md={8}>
-          <Card bordered={false} style={{ boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.05)", borderRadius: "12px" }}>
+          <Card variant="borderless" style={{ boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.05)", borderRadius: "12px" }}>
             <Statistic title="Active Draft Modifications" value={stats.draftCount} prefix={<CheckCircleOutlined style={{ color: "#f59e0b", marginRight: "6px" }} />} />
           </Card>
         </Col>
@@ -436,7 +436,7 @@ export default function DashboardPage() {
                         <td style={{ padding: "8px 6px", whiteSpace: "nowrap" }}>{trip.tripDate ? new Date(trip.tripDate).toLocaleDateString("en-CA", { year: "numeric", month: "short", day: "numeric" }) : "-"}</td>
                         <td style={{ padding: "8px 6px", fontWeight: "bold", color: "#1e293b" }}>{trip.vrid || "N/A"}</td>
                         <td style={{ padding: "8px 6px" }}>{trip.route || "N/A"}</td>
-                        <td style={{ padding: "8px 6px" }}>{trip.pickup || "N/A"} to {trip.drop || "N/A"}</td>
+                        <td style={{ padding: "8px 6px" }}>{`${trip.pickup || "N/A"} to ${trip.drop || "N/A"}`}</td>
                         <td style={{ padding: "8px 6px", textAlign: "right" }}>${trip.totalCharges?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                         <td style={{ padding: "8px 4px", textAlign: "center", color: "#475569" }}>{trip.dispatchPercent || 0}%</td>
                         <td style={{ padding: "8px 6px", textAlign: "right", fontWeight: 600, color: "#b91c1c" }}>
