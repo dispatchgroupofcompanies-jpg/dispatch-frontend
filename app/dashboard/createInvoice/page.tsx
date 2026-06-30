@@ -268,21 +268,26 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div style={{ padding: "24px", minHeight: "100vh", backgroundColor: "#f8fafc" }}>
+    <div style={{ 
+      padding: { xs: "12px", sm: "16px", md: "20px", lg: "24px" }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : window.innerWidth < 1024 ? 'md' : 'lg'] || "24px", 
+      minHeight: "100vh", 
+      backgroundColor: "#f8fafc",
+      overflow: "auto"
+    }}>
       
       {/* 📊 RUNTIME ANALYTICS CARDS ROW */}
-      <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
-        <Col xs={24} md={8}>
+      <Row gutter={[{ xs: 8, sm: 12, md: 16 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 16, { xs: 8, sm: 12, md: 16 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 16]} style={{ marginBottom: { xs: "12px", sm: "16px", md: "20px", lg: "24px" }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : window.innerWidth < 1024 ? 'md' : 'lg'] || "24px" }}>
+        <Col xs={24} sm={12} md={8}>
           <Card style={{ boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.05)", borderRadius: "12px" }}>
             <Statistic title="Total Ledger Statements" value={stats.total} prefix={<FileTextOutlined style={{ color: "#3b82f6", marginRight: "6px" }} />} />
           </Card>
         </Col>
-        <Col xs={24} md={8}>
+        <Col xs={24} sm={12} md={8}>
           <Card style={{ boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.05)", borderRadius: "12px" }}>
             <Statistic title="Gross Volume Valuation" value={stats.grossEarnings} precision={2} prefix={<DollarCircleOutlined style={{ color: "#10b981", marginRight: "6px" }} />} />
           </Card>
         </Col>
-        <Col xs={24} md={8}>
+        <Col xs={24} sm={12} md={8}>
           <Card variant="borderless" style={{ boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.05)", borderRadius: "12px" }}>
             <Statistic title="Active Draft Modifications" value={stats.draftCount} prefix={<CheckCircleOutlined style={{ color: "#f59e0b", marginRight: "6px" }} />} />
           </Card>
@@ -292,18 +297,38 @@ export default function DashboardPage() {
       <Card 
         style={{ boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.06)", borderRadius: "16px" }}
         title={
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", padding: "8px 0" }}>
+          <div style={{ 
+            display: "flex", 
+            flexDirection: window.innerWidth < 640 ? "column" : "row",
+            justifyContent: "space-between", 
+            alignItems: window.innerWidth < 640 ? "flex-start" : "center", 
+            width: "100%", 
+            padding: "8px 0",
+            gap: "12px"
+          }}>
             <div>
-              <h2 style={{ margin: 0, fontSize: "20px", fontWeight: 700, color: "#0f172a" }}>Invoice Management Ledger</h2>
-              <p style={{ margin: "4px 0 0 0", fontSize: "13px", fontWeight: 400, color: "#64748b" }}>Create, tracking logs, view, and instantly download isolated layout copies.</p>
+              <h2 style={{ margin: 0, fontSize: { xs: "18px", sm: "20px", md: "24px" }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || "24px", fontWeight: 700, color: "#0f172a" }}>Invoice Management Ledger</h2>
+              <p style={{ margin: "4px 0 0 0", fontSize: { xs: "11px", sm: "12px", md: "13px" }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || "13px", fontWeight: 400, color: "#64748b" }}>Create, tracking logs, view, and instantly download isolated layout copies.</p>
             </div>
-            <Button type="primary" size="large" icon={<FileAddOutlined />} style={{ borderRadius: "8px", fontWeight: 600 }} onClick={() => { setEditingInvoice(null); setOpen(true); }}>
+            <Button type="primary" size={window.innerWidth < 640 ? "middle" : "large"} icon={<FileAddOutlined />} style={{ borderRadius: "8px", fontWeight: 600 }} onClick={() => { setEditingInvoice(null); setOpen(true); }}>
               Create Statement
             </Button>
           </div>
         }
       >
-        <Table dataSource={invoices} columns={columns} rowKey={(record: any) => record._id} loading={loading} pagination={{ pageSize: 8 }} />
+        <Table 
+          dataSource={invoices} 
+          columns={columns} 
+          rowKey={(record: any) => record._id} 
+          loading={loading} 
+          pagination={{ 
+            pageSize: window.innerWidth < 640 ? 5 : window.innerWidth < 768 ? 6 : 8,
+            showSizeChanger: window.innerWidth >= 768,
+            pageSizeOptions: window.innerWidth >= 768 ? [5, 8, 10, 20] : [5, 8]
+          }}
+          scroll={{ x: window.innerWidth < 768 ? 800 : undefined }}
+          size={window.innerWidth < 640 ? "small" : "middle"}
+        />
       </Card>
 
       <CreateInvoiceModal open={open} onClose={() => { setOpen(false); setEditingInvoice(null); fetchInvoices(); }} editData={editingInvoice} />
@@ -312,14 +337,14 @@ export default function DashboardPage() {
       <Modal 
         open={viewOpen} 
         footer={[
-          <Button key="close" onClick={() => setViewOpen(false)} size="large" style={{ borderRadius: "6px" }}>
+          <Button key="close" onClick={() => setViewOpen(false)} size={window.innerWidth < 640 ? "middle" : "large"} style={{ borderRadius: "6px" }}>
             Close Preview
           </Button>,
           <Button 
             key="download" 
             type="primary" 
             icon={<DownloadOutlined />} 
-            size="large" 
+            size={window.innerWidth < 640 ? "middle" : "large"} 
             loading={downloading}
             style={{ borderRadius: "6px", backgroundColor: "#10b981", borderColor: "#10b981" }} 
             onClick={() => triggerDownloadPDF(selected)}
@@ -328,9 +353,9 @@ export default function DashboardPage() {
           </Button>
         ]} 
         onCancel={() => setViewOpen(false)} 
-        width={850} 
+        width={window.innerWidth < 640 ? "95%" : window.innerWidth < 768 ? "90%" : 850} 
         centered 
-        styles={{ body: { padding: "24px" } }} 
+        styles={{ body: { padding: { xs: "12px", sm: "16px", md: "24px" }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || "24px" } }} 
         title={null} 
         closable
       >
