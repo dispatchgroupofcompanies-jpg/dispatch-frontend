@@ -3,62 +3,54 @@
 import { Form, Input, Button, message, Spin, Checkbox, Typography } from "antd";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { signin } from "../route";
 import { EyeInvisibleOutlined, EyeTwoTone, LockOutlined, MailOutlined } from "@ant-design/icons";
 
 const { Text, Title } = Typography;
 
-export default function LoginForm() {
+export default function
+  LoginForm() {
   const [form] = Form.useForm();
+  const savedEmail = typeof window !== "undefined" ? localStorage.getItem("rememberEmail") : null;
   const [loading, setLoading] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => !!savedEmail);
   const router = useRouter();
 
-  // Load remembered email on mount
-  useEffect(() => {
-    const savedEmail = localStorage.getItem("rememberEmail");
-    if (savedEmail) {
-      form.setFieldsValue({ email: savedEmail });
-      setRememberMe(true);
-    }
-  }, [form]);
 
-  const handleFinish = async (values) => {
-    setLoading(true);
-    try {
-      const res = await signin(values);
+ const handleFinish = async (values) => {
+  setLoading(true);
 
-      if (res.success || res.token) {
-        message.success("Login successful! Redirecting...");
-        
-        // Store token if provided
-        if (res.token) {
-          localStorage.setItem("authToken", res.token);
-          localStorage.setItem("userData", JSON.stringify(res.user || {}));
-        }
-        
-        // Store remember me preference
-        if (rememberMe) {
-          localStorage.setItem("rememberEmail", values.email);
-        }
-        
-        setTimeout(() => {
-          router.push("/dashbaord");
-        }, 1000);
-      } else {
-        message.error(res.message || "Invalid email or password!");
+  try {
+    const res = await signin(values);
+
+
+    if (res.success) {
+      message.success("Login successful! Redirecting...");
+
+      // 🔥 STORE TOKEN (IMPORTANT)
+      if (res.token) {
+        localStorage.setItem("token", res.token);
       }
-    } catch (error) {
-      console.error(error);
-      const errorMsg = error?.response?.data?.message || 
-                      error?.message || 
-                      "Something went wrong! Please try again.";
-      message.error(errorMsg);
-    } finally {
-      setLoading(false);
+
+      // store user info
+      if (res.user) {
+        localStorage.setItem("userData", JSON.stringify(res.user));
+      }
+
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 1000);
+    } else {
+      message.error(res.message);
     }
-  };
+  } catch (error) {
+    console.error(error);
+    message.error("Login failed");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center px-4 py-8">
@@ -124,6 +116,7 @@ export default function LoginForm() {
                   form={form} 
                   layout="vertical" 
                   onFinish={handleFinish}
+                  initialValues={{ email: savedEmail || undefined, remember: rememberMe }}
                   requiredMark="optional"
                   scrollToFirstError
                   className="space-y-4"
