@@ -1,7 +1,7 @@
 "use client";
 
 import { Form, Modal, Button, message } from "antd";
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import dayjs from "dayjs";
 
 import InvoiceDetails from "./InvoiceDetails";
@@ -13,6 +13,7 @@ import { createInvoice, updateInvoice } from "./route";
 
 export default function CreateInvoiceModal({ open, onClose, editData }: { open: boolean; onClose: () => void; editData?: any }) {
   const [form] = Form.useForm();
+  const [submitting, setSubmitting] = useState(false);
   
   const trips = Form.useWatch("trips", form);
   const invoiceType = Form.useWatch("invoiceType", form);
@@ -46,6 +47,7 @@ export default function CreateInvoiceModal({ open, onClose, editData }: { open: 
 
   const handleSubmit = async (values: any) => {
     try {
+      setSubmitting(true);
       const hstRate = 13;
       const calculatedSubtotal = invoiceSubtotal;
       const hstAmount = (calculatedSubtotal * hstRate) / 100;
@@ -92,6 +94,8 @@ export default function CreateInvoiceModal({ open, onClose, editData }: { open: 
     } catch (error) {
       console.error(error);
         message.error((error as any)?.response?.data?.message || "Operation failed");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -138,8 +142,8 @@ export default function CreateInvoiceModal({ open, onClose, editData }: { open: 
           <Button size="middle" onClick={() => { form.resetFields(); onClose(); }}>
             Cancel
           </Button>
-          <Button size="middle" type="primary" htmlType="submit" style={{ fontWeight: 600 }}>
-            {isEditMode ? "Save Changes" : "Compile & Email Broadcast"}
+          <Button size="middle" type="primary" htmlType="submit" style={{ fontWeight: 600 }} loading={submitting}>
+            {submitting ? (isEditMode ? "Saving Changes..." : "Compiling & Sending...") : (isEditMode ? "Save Changes" : "Compile & Email Broadcast")}
           </Button>
         </div>
       </Form>
