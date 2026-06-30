@@ -11,7 +11,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <Sidebar />
 
       <Layout>
-        <Content style={{ padding: 20, background: "#f5f5f5" }}>
+        <Content style={{ 
+          padding: { xs: 12, sm: 16, md: 20, lg: 24 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : window.innerWidth < 1024 ? 'md' : 'lg'] || 20, 
+          background: "#f5f5f5",
+          overflow: "auto"
+        }}>
           {children}
         </Content>
       </Layout>
