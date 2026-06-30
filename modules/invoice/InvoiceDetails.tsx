@@ -24,7 +24,7 @@ export default function InvoiceDetails() {
         boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)"
       }}
     >
-      <Row gutter={12}>
+      <Row gutter={[{ xs: 8, sm: 10, md: 12 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 12, { xs: 8, sm: 10, md: 12 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 12]}>
         <Col xs={24} md={6}>
           <Form.Item 
             label="Invoice Number" 
@@ -115,7 +115,7 @@ export default function InvoiceDetails() {
         </Col>
       </Row>
 
-      <Row gutter={12}>
+      <Row gutter={[{ xs: 8, sm: 10, md: 12 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 12, { xs: 8, sm: 10, md: 12 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 12]}>
         <Col xs={24} md={6}>
           <Form.Item 
             label="Transit Number" 
