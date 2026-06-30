@@ -99,7 +99,7 @@ export default function TripSection({ form }: Props) {
                     }
                   >
                     {/* Top Fields Row */}
-                    <Row gutter={8}>
+                    <Row gutter={[{ xs: 4, sm: 6, md: 8 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 8, { xs: 4, sm: 6, md: 8 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 8]}>
                       <Col xs={24} md={4}>
                         <Form.Item
                           {...restField}
@@ -181,10 +181,10 @@ export default function TripSection({ form }: Props) {
 
                     {/* Calculations Values Sub-Row */}
                     <Row 
-                      gutter={8} 
+                      gutter={[{ xs: 4, sm: 6, md: 8 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 8, { xs: 4, sm: 6, md: 8 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 8]} 
                       style={{ 
-                        marginTop: 4, 
-                        paddingTop: 8, 
+                        marginTop: { xs: 2, sm: 3, md: 4 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 4, 
+                        paddingTop: { xs: 4, sm: 6, md: 8 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 8, 
                         borderTop: "1px dashed #e2e8f0" 
                       }}
                     >

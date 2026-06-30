@@ -23,7 +23,7 @@ export default function PayeeDetails() {
         boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)"
       }}
     >
-      <Row gutter={10}>
+      <Row gutter={[{ xs: 6, sm: 8, md: 10 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 10, { xs: 6, sm: 8, md: 10 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 10]}>
         <Col xs={24} md={12}>
           <Form.Item 
             label="Company Name" 
@@ -55,7 +55,7 @@ export default function PayeeDetails() {
         </Col>
       </Row>
 
-      <Row gutter={10}>
+      <Row gutter={[{ xs: 6, sm: 8, md: 10 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 10, { xs: 6, sm: 8, md: 10 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 10]}>
         <Col span={24}>
           <Form.Item 
             label="Address" 
@@ -72,7 +72,7 @@ export default function PayeeDetails() {
         </Col>
       </Row>
 
-      <Row gutter={10}>
+      <Row gutter={[{ xs: 6, sm: 8, md: 10 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 10, { xs: 6, sm: 8, md: 10 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 10]}>
         <Col xs={24} md={8}>
           <Form.Item 
             label="Phone" 

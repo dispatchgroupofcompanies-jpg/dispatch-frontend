@@ -31,7 +31,7 @@ export default function SummaryCard({ subtotal }: Props) {
         boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)"
       }}
     >
-      <Row justify="space-between" align="middle" style={{ marginBottom: 8 }}>
+      <Row justify="space-between" align="middle" style={{ marginBottom: { xs: 6, sm: 7, md: 8 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 8 }}>
         <Col>
           <Text style={{ color: "#64748b", fontSize: 12, fontWeight: 500 }}>Subtotal</Text>
         </Col>
@@ -50,7 +50,7 @@ export default function SummaryCard({ subtotal }: Props) {
         justify="space-between" 
         align="middle" 
         style={{ 
-          padding: "8px 12px", 
+          padding: { xs: "6px 10px", sm: "7px 11px", md: "8px 12px" }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || "8px 12px", 
           background: "#f0fdf4", 
           border: "1px solid #bbf7d0", 
           borderRadius: 6,
