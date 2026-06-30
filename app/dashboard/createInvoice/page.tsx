@@ -392,28 +392,28 @@ export default function DashboardPage() {
             </div>
 
             <div style={{ position: "relative", zIndex: 10 }}>
-              <Row justify="space-between" align="middle" style={{ marginBottom: "20px" }}>
-                <Col>
-                  <h1 style={{ fontSize: "24px", fontWeight: 800, color: "#1e3a8a", margin: 0 }}>
+              <Row justify="space-between" align="middle" style={{ marginBottom: { xs: "12px", sm: "16px", md: "20px" }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || "20px" }}>
+                <Col xs={24} sm={12}>
+                  <h1 style={{ fontSize: { xs: "18px", sm: "20px", md: "24px" }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || "24px", fontWeight: 800, color: "#1e3a8a", margin: 0 }}>
                     {selected.trips?.length > 1 ? "INVOICE - T" : "INVOICE - 1"}
                   </h1>
-                  <span style={{ fontSize: "12px", color: "#64748b" }}>Num: <b>#{selected.invoiceNumber}</b></span>
+                  <span style={{ fontSize: { xs: "10px", sm: "11px", md: "12px" }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || "12px", color: "#64748b" }}>Num: <b>#{selected.invoiceNumber}</b></span>
                 </Col>
-                <Col style={{ textAlign: "right" }}>
-                  <Tag color={selected.invoiceStatus?.toLowerCase() === "paid" ? "success" : selected.invoiceStatus?.toLowerCase() === "sent" ? "processing" : "warning"} style={{ textTransform: "uppercase", fontWeight: 700, padding: "2px 8px", fontSize: "11px", borderRadius: "4px" }}>
+                <Col xs={24} sm={12} style={{ textAlign: window.innerWidth < 640 ? "left" : "right", marginTop: window.innerWidth < 640 ? "8px" : 0 }}>
+                  <Tag color={selected.invoiceStatus?.toLowerCase() === "paid" ? "success" : selected.invoiceStatus?.toLowerCase() === "sent" ? "processing" : "warning"} style={{ textTransform: "uppercase", fontWeight: 700, padding: "2px 6px", fontSize: { xs: "10px", sm: "11px" }[window.innerWidth < 640 ? 'xs' : 'sm'] || "11px", borderRadius: "4px" }}>
                     {selected.invoiceStatus || "DRAFT"}
                   </Tag>
-                  <div style={{ fontSize: "11px", color: "#64748b", marginTop: "4px" }}>Date: {selected.createdAt ? new Date(selected.createdAt).toLocaleDateString("en-CA", { year: "numeric", month: "short", day: "numeric" }) : "N/A"}</div>
+                  <div style={{ fontSize: { xs: "10px", sm: "11px" }[window.innerWidth < 640 ? 'xs' : 'sm'] || "11px", color: "#64748b", marginTop: "4px" }}>Date: {selected.createdAt ? new Date(selected.createdAt).toLocaleDateString("en-CA", { year: "numeric", month: "short", day: "numeric" }) : "N/A"}</div>
                 </Col>
               </Row>
 
-              <hr style={{ border: 0, borderTop: "2px solid #f1f5f9", marginBottom: "20px" }} />
+              <hr style={{ border: 0, borderTop: "2px solid #f1f5f9", marginBottom: { xs: "12px", sm: "16px", md: "20px" }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || "20px" }} />
 
-              <Row gutter={24} style={{ marginBottom: "20px" }}>
-                <Col span={12}>
-                  <h3 style={{ fontSize: "11px", textTransform: "uppercase", color: "#475569", margin: "0 0 6px 0", letterSpacing: "0.5px", fontWeight: 700 }}>Extreme Logistic Invoice From:</h3>
-                  <div style={{ fontWeight: 700, fontSize: "13px", color: "#0f172a" }}>{selected.payee?.companyName || "N/A"}</div>
-                  <div style={{ fontSize: "11px", color: "#475569", marginTop: "4px", lineHeight: "1.4" }}>
+              <Row gutter={[{ xs: 12, sm: 16, md: 24 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 24, { xs: 12, sm: 16, md: 24 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 24]} style={{ marginBottom: { xs: "12px", sm: "16px", md: "20px" }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || "20px" }}>
+                <Col xs={24} sm={24} md={12}>
+                  <h3 style={{ fontSize: { xs: "10px", sm: "11px", md: "11px" }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || "11px", textTransform: "uppercase", color: "#475569", margin: "0 0 6px 0", letterSpacing: "0.5px", fontWeight: 700 }}>Extreme Logistic Invoice From:</h3>
+                  <div style={{ fontWeight: 700, fontSize: { xs: "12px", sm: "13px", md: "13px" }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || "13px", color: "#0f172a" }}>{selected.payee?.companyName || "N/A"}</div>
+                  <div style={{ fontSize: { xs: "10px", sm: "11px", md: "11px" }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || "11px", color: "#475569", marginTop: "4px", lineHeight: "1.4" }}>
                     {selected.payee?.address1 || selected.payee?.address || "N/A"}<br/>
                     <b>Driver Name:</b> {selected.payee?.contactPerson || selected.payee?.driverName || "N/A"}<br/>
                     <b>Phone:</b> {selected.payee?.phone || "N/A"} <br/>
@@ -421,10 +421,10 @@ export default function DashboardPage() {
                     <b>GST/HST:</b> {selected.payee?.gstNumber || "N/A"}
                   </div>
                 </Col>
-                <Col span={12} style={{ borderLeft: "1px solid #e2e8f0", paddingLeft: "20px" }}>
-                  <h3 style={{ fontSize: "11px", textTransform: "uppercase", color: "#475569", margin: "0 0 6px 0", letterSpacing: "0.5px", fontWeight: 700 }}>Invoice To:</h3>
-                  <div style={{ fontWeight: 700, fontSize: "13px", color: "#0f172a" }}>{selected.customer?.companyName || "N/A"}</div>
-                  <div style={{ fontSize: "11px", color: "#475569", marginTop: "4px", lineHeight: "1.4" }}>
+                <Col xs={24} sm={24} md={12} style={{ borderLeft: window.innerWidth < 768 ? "none" : "1px solid #e2e8f0", paddingLeft: window.innerWidth < 768 ? 0 : "20px", marginTop: window.innerWidth < 768 ? "12px" : 0 }}>
+                  <h3 style={{ fontSize: { xs: "10px", sm: "11px", md: "11px" }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || "11px", textTransform: "uppercase", color: "#475569", margin: "0 0 6px 0", letterSpacing: "0.5px", fontWeight: 700 }}>Invoice To:</h3>
+                  <div style={{ fontWeight: 700, fontSize: { xs: "12px", sm: "13px", md: "13px" }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || "13px", color: "#0f172a" }}>{selected.customer?.companyName || "N/A"}</div>
+                  <div style={{ fontSize: { xs: "10px", sm: "11px", md: "11px" }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || "11px", color: "#475569", marginTop: "4px", lineHeight: "1.4" }}>
                     {selected.customer?.address1 || selected.customer?.address || "N/A"}<br/>
                     <b>Attention:</b> {selected.customer?.contactPerson || "N/A"}<br/>
                     <b>Phone:</b> {selected.customer?.phone || "N/A"} <br/>
