@@ -237,7 +237,7 @@ export default function DashboardPage() {
     { title: "Total Invoices", value: data?.totalInvoices || 0, icon: <FileTextOutlined />, bg: "#6366f1" },
     { title: "Total Earnings", value: formatCurrency(data?.totalEarnings || 0), icon: <DollarOutlined />, bg: "#ec4899" },
     { title: "Subtotal", value: formatCurrency(data?.totalSubtotal || 0), icon: <ShoppingCartOutlined />, bg: "#3b82f6" },
-    { title: "Total Tax", value: formatCurrency(data?.totalTax || 0), icon: <DollarOutlined />, bg: "#f59e0b" },
+    { title: "Total Dispatch", value: formatCurrency(data?.totalTax || 0), icon: <DollarOutlined />, bg: "#f59e0b" },
     { title: "Cancelled", value: data?.cancelledInvoices || 0, icon: <CloseCircleOutlined />, bg: "#ef4444" }
   ].map((item, index) => (
     <Col 

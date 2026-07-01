@@ -1,6 +1,6 @@
 "use client";
 
-import { Form, Modal, Button, message, Input, Select } from "antd";
+import { Form, Modal, Button, message, Input, Select, Row, Col } from "antd";
 import { useState } from "react";
 
 const { Option } = Select;
@@ -13,7 +13,7 @@ export default function CompanyProfileModal({ open, onClose }: { open: boolean; 
     try {
       setSubmitting(true);
       
-   
+      // API call simulation loop tracking block
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       console.log("Company Profile Data:", values);
@@ -31,7 +31,11 @@ export default function CompanyProfileModal({ open, onClose }: { open: boolean; 
 
   return (
     <Modal
-      title={<span style={{ fontSize: 15, fontWeight: 700 }}>🏢 Company Profile</span>}
+      title={
+        <span style={{ fontSize: 16, fontWeight: 700, color: "#0f172a", letterSpacing: "0.3px" }}>
+          🏢 Company Profile Configurations
+        </span>
+      }
       open={open}
       onCancel={() => {
         form.resetFields();
@@ -39,229 +43,267 @@ export default function CompanyProfileModal({ open, onClose }: { open: boolean; 
       }}
       footer={null}
       width={800}
-      style={{ top: 20 }}
-      styles={{ body: { padding: "8px 16px" } }}
+      centered
+      styles={{ body: { padding: "12px 24px" } }}
     >
       <Form
         form={form}
         layout="vertical"
-        size="small"
+        size="middle"
         onFinish={handleSubmit}
         requiredMark={false}
-        style={{ maxHeight: "65vh", overflowY: "auto" }}
+        style={{ maxHeight: "70vh", overflowY: "auto", overflowX: "hidden", paddingRight: "4px" }}
       >
-        {/* Company Information Section */}
-        <div style={{ marginBottom: 12 }}>
+        
+        {/* 🏢 SECTION 1: COMPANY INFORMATION */}
+        <div style={{ marginBottom: 20 }}>
           <div style={{ 
-            fontSize: 13, 
-            fontWeight: 600, 
-            marginBottom: 10, 
+            fontSize: 14, 
+            fontWeight: 700, 
+            marginBottom: 16, 
             color: "#1e3a8a",
             paddingBottom: 6,
-            borderBottom: "1px solid #e5e7eb"
+            borderBottom: "2px solid #eff6ff",
+            letterSpacing: "0.4px"
           }}>
             Company Information
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <Form.Item
-              name="companyName"
-              label="Company Name"
-              rules={[{ required: true, message: "Please enter company name" }]}
-              style={{ marginBottom: 10 }}
-            >
-              <Input placeholder="Enter company name" />
-            </Form.Item>
 
-            <Form.Item
-              name="carrierIdentifier"
-              label="Carrier Identifier"
-              rules={[{ required: true, message: "Please enter carrier identifier" }]}
-              style={{ marginBottom: 10 }}
-            >
-              <Input placeholder="Enter carrier identifier" />
-            </Form.Item>
+          <Row gutter={[16, 0]}>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="companyName"
+                label={<span style={{ fontWeight: 600, color: "#475569" }}>Company Name</span>}
+                rules={[{ required: true, message: "Please enter company name" }]}
+              >
+                <Input placeholder="Enter company name" style={{ borderRadius: "6px" }} />
+              </Form.Item>
+            </Col>
 
-            <Form.Item
-              name="province"
-              label="Province/Territory"
-              rules={[{ required: true, message: "Please select province" }]}
-              style={{ marginBottom: 10 }}
-            >
-              <Select placeholder="Select province">
-                <Option value="AB">Alberta</Option>
-                <Option value="BC">British Columbia</Option>
-                <Option value="MB">Manitoba</Option>
-                <Option value="NB">New Brunswick</Option>
-                <Option value="NL">Newfoundland and Labrador</Option>
-                <Option value="NS">Nova Scotia</Option>
-                <Option value="NT">Northwest Territories</Option>
-                <Option value="NU">Nunavut</Option>
-                <Option value="ON">Ontario</Option>
-                <Option value="PE">Prince Edward Island</Option>
-                <Option value="QC">Quebec</Option>
-                <Option value="SK">Saskatchewan</Option>
-                <Option value="YT">Yukon</Option>
-              </Select>
-            </Form.Item>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="carrierIdentifier"
+                label={<span style={{ fontWeight: 600, color: "#475569" }}>Carrier Identifier</span>}
+                rules={[{ required: true, message: "Please enter carrier identifier" }]}
+              >
+                <Input placeholder="Enter carrier identifier" style={{ borderRadius: "6px" }} />
+              </Form.Item>
+            </Col>
 
-            <Form.Item
-              name="nsc"
-              label="NSC"
-              rules={[{ required: true, message: "Please enter NSC" }]}
-              style={{ marginBottom: 10 }}
-            >
-              <Input placeholder="Enter NSC number" />
-            </Form.Item>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="eTransfer"
+                label={<span style={{ fontWeight: 600, color: "#475569" }}>E-Transfer Email</span>}
+                rules={[
+                  { required: true, message: "Please enter E-Transfer email" },
+                  { type: "email", message: "Please enter a valid email" }
+                ]}
+              >
+                <Input placeholder="Enter E-Transfer Email" style={{ borderRadius: "6px" }} />
+              </Form.Item>
+            </Col>
 
-            <Form.Item
-              name="gstHst"
-              label="GST/HST"
-              rules={[{ required: true, message: "Please enter GST/HST" }]}
-              style={{ marginBottom: 10 }}
-            >
-              <Input placeholder="Enter GST/HST number" />
-            </Form.Item>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="province"
+                label={<span style={{ fontWeight: 600, color: "#475569" }}>Province/Territory</span>}
+                rules={[{ required: true, message: "Please select province" }]}
+              >
+                <Select placeholder="Select province" style={{ borderRadius: "6px" }}>
+                  <Option value="AB">Alberta</Option>
+                  <Option value="BC">British Columbia</Option>
+                  <Option value="MB">Manitoba</Option>
+                  <Option value="NB">New Brunswick</Option>
+                  <Option value="NL">Newfoundland and Labrador</Option>
+                  <Option value="NS">Nova Scotia</Option>
+                  <Option value="NT">Northwest Territories</Option>
+                  <Option value="NU">Nunavut</Option>
+                  <Option value="ON">Ontario</Option>
+                  <Option value="PE">Prince Edward Island</Option>
+                  <Option value="QC">Quebec</Option>
+                  <Option value="SK">Saskatchewan</Option>
+                  <Option value="YT">Yukon</Option>
+                </Select>
+              </Form.Item>
+            </Col>
 
-            <Form.Item
-              name="qst"
-              label="QST"
-              style={{ marginBottom: 10 }}
-            >
-              <Input placeholder="Enter QST number (if applicable)" />
-            </Form.Item>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="nsc"
+                label={<span style={{ fontWeight: 600, color: "#475569" }}>NSC Number</span>}
+                rules={[{ required: true, message: "Please enter NSC" }]}
+              >
+                <Input placeholder="Enter NSC number" style={{ borderRadius: "6px" }} />
+              </Form.Item>
+            </Col>
 
-            <Form.Item
-              name="ifta"
-              label="IFTA"
-              rules={[{ required: true, message: "Please enter IFTA" }]}
-              style={{ marginBottom: 10 }}
-            >
-              <Input placeholder="Enter IFTA number" />
-            </Form.Item>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="gstHst"
+                label={<span style={{ fontWeight: 600, color: "#475569" }}>GST/HST</span>}
+                rules={[{ required: true, message: "Please enter GST/HST" }]}
+              >
+                <Input placeholder="Enter GST/HST number" style={{ borderRadius: "6px" }} />
+              </Form.Item>
+            </Col>
 
-            <Form.Item
-              name="email"
-              label="Email"
-              rules={[
-                { required: true, message: "Please enter email" },
-                { type: "email", message: "Please enter a valid email" }
-              ]}
-              style={{ marginBottom: 10 }}
-            >
-              <Input placeholder="Enter email address" />
-            </Form.Item>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="qst"
+                label={<span style={{ fontWeight: 600, color: "#475569" }}>QST (Optional)</span>}
+              >
+                <Input placeholder="Enter QST number" style={{ borderRadius: "6px" }} />
+              </Form.Item>
+            </Col>
 
-            <Form.Item
-              name="phone"
-              label="Phone"
-              rules={[{ required: true, message: "Please enter phone number" }]}
-              style={{ marginBottom: 10 }}
-            >
-              <Input placeholder="Enter phone number" />
-            </Form.Item>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="ifta"
+                label={<span style={{ fontWeight: 600, color: "#475569" }}>IFTA</span>}
+                rules={[{ required: true, message: "Please enter IFTA" }]}
+              >
+                <Input placeholder="Enter IFTA number" style={{ borderRadius: "6px" }} />
+              </Form.Item>
+            </Col>
 
-            <Form.Item
-              name="countryCode"
-              label="Country Code"
-              rules={[{ required: true, message: "Please enter country code" }]}
-              style={{ marginBottom: 10 }}
-            >
-              <Input placeholder="e.g., +1" />
-            </Form.Item>
-          </div>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="email"
+                label={<span style={{ fontWeight: 600, color: "#475569" }}>Official Email</span>}
+                rules={[
+                  { required: true, message: "Please enter email" },
+                  { type: "email", message: "Please enter a valid email" }
+                ]}
+              >
+                <Input placeholder="Enter email address" style={{ borderRadius: "6px" }} />
+              </Form.Item>
+            </Col>
+
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="phone"
+                label={<span style={{ fontWeight: 600, color: "#475569" }}>Phone Number</span>}
+                rules={[{ required: true, message: "Please enter phone number" }]}
+              >
+                <Input placeholder="Enter phone number" style={{ borderRadius: "6px" }} />
+              </Form.Item>
+            </Col>
+
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="countryCode"
+                label={<span style={{ fontWeight: 600, color: "#475569" }}>Country Code</span>}
+                rules={[{ required: true, message: "Please enter country code" }]}
+              >
+                <Input placeholder="e.g., +1" style={{ borderRadius: "6px" }} />
+              </Form.Item>
+            </Col>
+          </Row>
         </div>
 
-        {/* Address Section */}
+        {/* 📍 SECTION 2: ADDRESS INFORMATION */}
         <div style={{ marginBottom: 12 }}>
           <div style={{ 
-            fontSize: 13, 
-            fontWeight: 600, 
-            marginBottom: 10, 
+            fontSize: 14, 
+            fontWeight: 700, 
+            marginBottom: 16, 
             color: "#1e3a8a",
             paddingBottom: 6,
-            borderBottom: "1px solid #e5e7eb"
+            borderBottom: "2px solid #eff6ff",
+            letterSpacing: "0.4px"
           }}>
             Address Information
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <Form.Item
-              name="addressLine1"
-              label="Address Line 1"
-              rules={[{ required: true, message: "Please enter address line 1" }]}
-              style={{ marginBottom: 10 }}
-            >
-              <Input placeholder="Street address" />
-            </Form.Item>
 
-            <Form.Item
-              name="addressLine2"
-              label="Address Line 2"
-              style={{ marginBottom: 10 }}
-            >
-              <Input placeholder="Apartment, suite, etc. (optional)" />
-            </Form.Item>
+          <Row gutter={[16, 0]}>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="addressLine1"
+                label={<span style={{ fontWeight: 600, color: "#475569" }}>Address Line 1</span>}
+                rules={[{ required: true, message: "Please enter address line 1" }]}
+              >
+                <Input placeholder="Street address" style={{ borderRadius: "6px" }} />
+              </Form.Item>
+            </Col>
 
-            <Form.Item
-              name="city"
-              label="City"
-              rules={[{ required: true, message: "Please enter city" }]}
-              style={{ marginBottom: 10 }}
-            >
-              <Input placeholder="Enter city" />
-            </Form.Item>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="addressLine2"
+                label={<span style={{ fontWeight: 600, color: "#475569" }}>Address Line 2 (Optional)</span>}
+              >
+                <Input placeholder="Apartment, suite, unit, etc." style={{ borderRadius: "6px" }} />
+              </Form.Item>
+            </Col>
 
-            <Form.Item
-              name="state"
-              label="State"
-              rules={[{ required: true, message: "Please enter state" }]}
-              style={{ marginBottom: 10 }}
-            >
-              <Input placeholder="Enter state/province" />
-            </Form.Item>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="city"
+                label={<span style={{ fontWeight: 600, color: "#475569" }}>City</span>}
+                rules={[{ required: true, message: "Please enter city" }]}
+              >
+                <Input placeholder="Enter city" style={{ borderRadius: "6px" }} />
+              </Form.Item>
+            </Col>
 
-            <Form.Item
-              name="postCode"
-              label="Post Code"
-              rules={[{ required: true, message: "Please enter postal code" }]}
-              style={{ marginBottom: 10 }}
-            >
-              <Input placeholder="Enter postal code" />
-            </Form.Item>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="state"
+                label={<span style={{ fontWeight: 600, color: "#475569" }}>State/Province</span>}
+                rules={[{ required: true, message: "Please enter state/province" }]}
+              >
+                <Input placeholder="Enter state or region" style={{ borderRadius: "6px" }} />
+              </Form.Item>
+            </Col>
 
-            <Form.Item
-              name="country"
-              label="Country"
-              rules={[{ required: true, message: "Please select country" }]}
-              style={{ marginBottom: 10 }}
-            >
-              <Select placeholder="Select country">
-                <Option value="CA">Canada</Option>
-                <Option value="US">United States</Option>
-              </Select>
-            </Form.Item>
-          </div>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="postCode"
+                label={<span style={{ fontWeight: 600, color: "#475569" }}>Postal / ZIP Code</span>}
+                rules={[{ required: true, message: "Please enter postal code" }]}
+              >
+                <Input placeholder="Enter postal code" style={{ borderRadius: "6px" }} />
+              </Form.Item>
+            </Col>
+
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="country"
+                label={<span style={{ fontWeight: 600, color: "#475569" }}>Country</span>}
+                rules={[{ required: true, message: "Please select country" }]}
+              >
+                <Select placeholder="Select country" style={{ borderRadius: "6px" }}>
+                  <Option value="CA">Canada</Option>
+                  <Option value="US">United States</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
         </div>
 
-        {/* Action Buttons */}
+        {/* 🛠️ ACTION BUTTONS FOOTER WRAPPER */}
         <div style={{ 
           display: "flex", 
           justifyContent: "flex-end", 
-          gap: 8, 
-          marginTop: 12, 
-          paddingTop: 10,
-          borderTop: "1px solid #e5e7eb"
+          gap: 12, 
+          marginTop: 16, 
+          paddingTop: 16,
+          borderTop: "1px solid #f1f5f9"
         }}>
-          <Button size="middle" onClick={() => { form.resetFields(); onClose(); }}>
+          <Button 
+            size="large" 
+            style={{ borderRadius: "6px", minWidth: 100 }} 
+            onClick={() => { form.resetFields(); onClose(); }}
+          >
             Cancel
           </Button>
           <Button 
-            size="middle" 
+            size="large" 
             type="primary" 
             htmlType="submit" 
-            style={{ fontWeight: 600 }} 
+            style={{ fontWeight: 600, borderRadius: "6px", minWidth: 120, backgroundColor: "#1e3a8a", borderColor: "#1e3a8a" }} 
             loading={submitting}
           >
-            {submitting ? "Saving..." : "Save"}
+            {submitting ? "Saving..." : "Save Profile"}
           </Button>
         </div>
       </Form>

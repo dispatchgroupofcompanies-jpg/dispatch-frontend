@@ -33,28 +33,39 @@ export default function CompanyHistoryPage() {
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
   const [presetFilter, setPresetFilter] = useState<string | null>(null);
+  
+  // 🎯 Pipeline Status Filter State Hook
+  const [invoiceStatusFilter, setInvoiceStatusFilter] = useState<string | null>(null);
 
   const applyFilters = useCallback(() => {
     let filtered = [...invoices];
 
-    // Filter by company
+    // 1. Filter by company
     if (selectedCompany) {
       filtered = filtered.filter(
         (inv) => inv.customer?.companyName === selectedCompany
       );
     }
 
-    // Filter by date range
+    // 2. Filter by Invoice Status (Draft / Paid)
+    if (invoiceStatusFilter) {
+      filtered = filtered.filter(
+        (inv) => inv.invoiceStatus?.toLowerCase() === invoiceStatusFilter.toLowerCase()
+      );
+    }
+
+    // 3. Filter by date range
     if (dateRange && dateRange[0] && dateRange[1]) {
       const startDate = dateRange[0].startOf("day");
       const endDate = dateRange[1].endOf("day");
       filtered = filtered.filter((inv) => {
         const invDate = dayjs(inv.createdAt);
-        return invDate.isAfter(startDate) && invDate.isBefore(endDate);
+        return (invDate.isAfter(startDate) || invDate.isSame(startDate, 'day')) && 
+               (invDate.isBefore(endDate) || invDate.isSame(endDate, 'day'));
       });
     }
 
-    // Apply preset filters
+    // 4. Apply preset filters
     if (presetFilter) {
       const now = dayjs();
       let startDate: dayjs.Dayjs;
@@ -78,12 +89,12 @@ export default function CompanyHistoryPage() {
 
       filtered = filtered.filter((inv) => {
         const invDate = dayjs(inv.createdAt);
-        return invDate.isAfter(startDate);
+        return invDate.isAfter(startDate) || invDate.isSame(startDate, 'day');
       });
     }
 
     setFilteredInvoices(filtered);
-  }, [invoices, selectedCompany, dateRange, presetFilter]);
+  }, [invoices, selectedCompany, invoiceStatusFilter, dateRange, presetFilter]);
 
   const fetchInvoices = useCallback(async () => {
     try {
@@ -111,17 +122,11 @@ export default function CompanyHistoryPage() {
   }, []);
 
   useEffect(() => {
-    const loadData = async () => {
-      await fetchInvoices();
-    };
-    loadData();
+    fetchInvoices();
   }, [fetchInvoices]);
 
   useEffect(() => {
-    const filterData = async () => {
-      await applyFilters();
-    };
-    filterData();
+    applyFilters();
   }, [applyFilters]);
 
   const handlePresetFilter = (preset: string) => {
@@ -151,6 +156,7 @@ export default function CompanyHistoryPage() {
 
   const handleClearFilters = () => {
     setSelectedCompany(null);
+    setInvoiceStatusFilter(null);
     setDateRange(null);
     setPresetFilter(null);
     setFilteredInvoices(invoices);
@@ -210,7 +216,9 @@ export default function CompanyHistoryPage() {
       dataIndex: "invoiceStatus",
       key: "invoiceStatus",
       render: (status: string) => (
-        <Tag color={getStatusColor(status)}>{status.toUpperCase()}</Tag>
+        <Tag color={getStatusColor(status)} style={{ fontWeight: 600 }}>
+          {status.toUpperCase()}
+        </Tag>
       ),
     },
     {
@@ -231,29 +239,30 @@ export default function CompanyHistoryPage() {
           minHeight: "400px",
         }}
       >
-        <Spin size="large" />
+        <Spin size="large" tip="Loading History Logs..." />
       </div>
     );
   }
 
   return (
     <div style={{ padding: "0 0 24px 0" }}>
-      {/* Page Title */}
+      {/* Page Title Header */}
       <div style={{ marginBottom: 24 }}>
         <Title level={3} style={{ margin: 0, color: "#0f172a" }}>
           Company History
         </Title>
         <Text type="secondary">
-          View and filter all invoice history by company and date
+          View and filter all invoice history by company, status, and timeline dates
         </Text>
       </div>
 
-      {/* Filters Section */}
+      {/* Modern Card Filters Section */}
       <Card
         style={{
-          borderRadius: "12px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+          borderRadius: "16px",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.03)",
           marginBottom: 24,
+          border: "1px solid #f1f5f9",
         }}
         title={
           <div
@@ -262,20 +271,20 @@ export default function CompanyHistoryPage() {
               alignItems: "center",
               gap: 8,
               fontSize: 16,
-              fontWeight: 600,
+              fontWeight: 700,
               color: "#1e3a8a",
             }}
           >
-            <FilterOutlined />
-            Filters
+            <FilterOutlined style={{ color: "#2563eb" }} />
+            Filter Ledger Analytics
           </div>
         }
       >
         <Row gutter={[16, 16]}>
           {/* Company Filter */}
-          <Col xs={24} sm={12} md={8} lg={6}>
+          <Col xs={24} sm={12} md={8} lg={5}>
             <div>
-              <Text strong style={{ display: "block", marginBottom: 8, color: "#374151" }}>
+              <Text strong style={{ display: "block", marginBottom: 6, color: "#475569", fontSize: "13px" }}>
                 Company Name
               </Text>
               <Select
@@ -286,9 +295,7 @@ export default function CompanyHistoryPage() {
                 allowClear
                 showSearch
                 filterOption={(input, option) =>
-                  (option?.label ?? "")
-                    .toLowerCase()
-                    .includes(input.toLowerCase())
+                  (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
                 }
                 options={companies.map((company) => ({
                   value: company,
@@ -298,10 +305,30 @@ export default function CompanyHistoryPage() {
             </div>
           </Col>
 
+          {/* 🎯 Invoice Status Filter (Draft / Paid) */}
+          <Col xs={24} sm={12} md={8} lg={4}>
+            <div>
+              <Text strong style={{ display: "block", marginBottom: 6, color: "#475569", fontSize: "13px" }}>
+                Invoice Status
+              </Text>
+              <Select
+                placeholder="All Statuses"
+                value={invoiceStatusFilter}
+                onChange={setInvoiceStatusFilter}
+                style={{ width: "100%" }}
+                allowClear
+                options={[
+                  { value: "draft", label: "Draft" },
+                  { value: "paid", label: "Paid" },
+                ]}
+              />
+            </div>
+          </Col>
+
           {/* Date Range Filter */}
           <Col xs={24} sm={12} md={8} lg={6}>
             <div>
-              <Text strong style={{ display: "block", marginBottom: 8, color: "#374151" }}>
+              <Text strong style={{ display: "block", marginBottom: 6, color: "#475569", fontSize: "13px" }}>
                 Date Range
               </Text>
               <RangePicker
@@ -314,10 +341,10 @@ export default function CompanyHistoryPage() {
           </Col>
 
           {/* Preset Filters */}
-          <Col xs={24} sm={12} md={8} lg={6}>
+          <Col xs={24} sm={12} md={8} lg={4}>
             <div>
-              <Text strong style={{ display: "block", marginBottom: 8, color: "#374151" }}>
-                Quick Filters
+              <Text strong style={{ display: "block", marginBottom: 6, color: "#475569", fontSize: "13px" }}>
+                Quick Period
               </Text>
               <Select
                 placeholder="Select period"
@@ -336,16 +363,18 @@ export default function CompanyHistoryPage() {
           </Col>
 
           {/* Action Buttons */}
-          <Col xs={24} sm={12} md={8} lg={6}>
+          <Col xs={24} sm={24} md={8} lg={5}>
             <div>
-              <Text strong style={{ display: "block", marginBottom: 8, color: "#374151" }}>
+              <Text strong style={{ display: "block", marginBottom: 6, color: "#475569", fontSize: "13px" }}>
                 Actions
               </Text>
-              <Space>
+              <Space style={{ width: "100%" }}>
                 <Button
+                  type="primary"
                   icon={<ReloadOutlined />}
                   onClick={fetchInvoices}
                   loading={loading}
+                  style={{ backgroundColor: "#1e3a8a", borderColor: "#1e3a8a" }}
                 >
                   Refresh
                 </Button>
@@ -360,22 +389,37 @@ export default function CompanyHistoryPage() {
           </Col>
         </Row>
 
-        {/* Active Filters Summary */}
-        {(selectedCompany || dateRange || presetFilter) && (
-          <Row style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #f0f0f0" }}>
+        {/* Active Filters Summary Logs */}
+        {(selectedCompany || dateRange || presetFilter || invoiceStatusFilter) && (
+          <Row style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid #f1f5f9" }}>
             <Col span={24}>
-              <Space size="middle">
-                <Text strong>Active Filters:</Text>
+              <Space size="small" wrap>
+                <Text strong style={{ color: "#64748b", marginRight: 4, fontSize: "12px" }}>Active Pipelines:</Text>
+                
                 {selectedCompany && (
-                  <Tag color="blue">Company: {selectedCompany}</Tag>
-                )}
-                {dateRange && dateRange[0] && dateRange[1] && (
-                  <Tag color="green">
-                    {dateRange[0].format("YYYY-MM-DD")} to {dateRange[1].format("YYYY-MM-DD")}
+                  <Tag color="blue" bordered={false} style={{ fontWeight: 600, borderRadius: "4px" }}>
+                    Company: {selectedCompany}
                   </Tag>
                 )}
+
+                {invoiceStatusFilter && (
+                  <Tag 
+                    color={invoiceStatusFilter === "paid" ? "success" : "warning"} 
+                    bordered={false} 
+                    style={{ fontWeight: 700, borderRadius: "4px", textTransform: "uppercase" }}
+                  >
+                    Status: {invoiceStatusFilter}
+                  </Tag>
+                )}
+
+                {dateRange && dateRange[0] && dateRange[1] && (
+                  <Tag color="green" bordered={false} style={{ fontWeight: 600, borderRadius: "4px" }}>
+                    Timeline: {dateRange[0].format("YYYY-MM-DD")} - {dateRange[1].format("YYYY-MM-DD")}
+                  </Tag>
+                )}
+
                 {presetFilter && (
-                  <Tag color="purple">
+                  <Tag color="purple" bordered={false} style={{ fontWeight: 600, borderRadius: "4px" }}>
                     Period: {presetFilter === "week" ? "Last 7 Days" : 
                              presetFilter === "month" ? "Last 1 Month" :
                              presetFilter === "quarter" ? "Last 3 Months" : "Last 1 Year"}
@@ -387,7 +431,7 @@ export default function CompanyHistoryPage() {
         )}
       </Card>
 
-      {/* Results Summary */}
+      {/* Results Count Summary */}
       <Row style={{ marginBottom: 16 }}>
         <Col span={24}>
           <Text type="secondary">
@@ -397,7 +441,7 @@ export default function CompanyHistoryPage() {
         </Col>
       </Row>
 
-      {/* Invoices Table */}
+      {/* Invoices Table Card */}
       <Card
         style={{
           borderRadius: "12px",
@@ -415,13 +459,14 @@ export default function CompanyHistoryPage() {
             }}
           >
             <FileTextOutlined />
-            Invoice History
+            Invoice History Ledger Logs
           </div>
         }
       >
         <Table
           dataSource={filteredInvoices}
           columns={columns}
+          rowKey="_id" // Stable primary unique key mapping configuration
           pagination={{
             pageSize: 10,
             showSizeChanger: true,
