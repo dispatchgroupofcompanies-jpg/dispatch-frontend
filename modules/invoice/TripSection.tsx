@@ -99,85 +99,95 @@ export default function TripSection({ form }: Props) {
                     }
                   >
                     {/* Top Fields Row */}
-                    <Row gutter={[{ xs: 4, sm: 6, md: 8 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 8, { xs: 4, sm: 6, md: 8 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 8]}>
-                      <Col xs={24} md={4}>
-                        <Form.Item
-                          {...restField}
-                          label="Trip Date"
-                          name={[name, "tripDate"]}
-                          rules={[{ required: true, message: "Required" }]}
-                          style={{ marginBottom: 8 }}
-                          labelCol={{ style: { fontWeight: 600, color: "#475569", fontSize: 11 } }}
-                        >
-                          <DatePicker 
-                            style={{ width: "100%", borderRadius: 4 }} 
-                            format="YYYY-MM-DD" 
-                            size="middle"
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col xs={24} md={4}>
-                        <Form.Item
-                          {...restField}
-                          label="VRID"
-                          name={[name, "vrid"]}
-                          rules={[{ required: true, message: "Required" }]}
-                          style={{ marginBottom: 8 }}
-                          labelCol={{ style: { fontWeight: 600, color: "#475569", fontSize: 11 } }}
-                        >
-                          <Input 
-                            placeholder="VRID" 
-                            style={{ textTransform: "uppercase", borderRadius: 4 }} 
-                            size="middle"
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col xs={24} md={4}>
-                        <Form.Item 
-                          {...restField} 
-                          label="Route" 
-                          name={[name, "route"]} 
-                          style={{ marginBottom: 8 }}
-                          labelCol={{ style: { fontWeight: 600, color: "#475569", fontSize: 11 } }}
-                        >
-                          <Input 
-                            placeholder="e.g. YHM1 → YYZ1" 
-                            size="middle"
-                            style={{ borderRadius: 4 }}
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col xs={24} md={6}>
-                        <Form.Item 
-                          {...restField} 
-                          label="Pickup Location" 
-                          name={[name, "pickup"]} 
-                          style={{ marginBottom: 8 }}
-                          labelCol={{ style: { fontWeight: 600, color: "#475569", fontSize: 11 } }}
-                        >
-                          <Input 
-                            placeholder="Pickup Location" 
-                            size="middle"
-                            style={{ borderRadius: 4 }}
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col xs={24} md={6}>
-                        <Form.Item 
-                          {...restField} 
-                          label="Drop Location" 
-                          name={[name, "drop"]} 
-                          style={{ marginBottom: 8 }}
-                          labelCol={{ style: { fontWeight: 600, color: "#475569", fontSize: 11 } }}
-                        >
-                          <Input 
-                            placeholder="Drop Location" 
-                            size="middle"
-                            style={{ borderRadius: 4 }}
-                          />
-                        </Form.Item>
-                      </Col>
-                    </Row>
+                   <Row gutter={[{ xs: 8, sm: 12, md: 16 }, { xs: 8, sm: 12, md: 16 }]}>
+  {/* 🇨🇦 Trip Date - Canadian Format Configured */}
+  <Col xs={24} md={4}>
+    <Form.Item
+      {...restField}
+      label="Trip Date"
+      name={[name, "tripDate"]}
+      rules={[{ required: true, message: "Required" }]}
+      style={{ marginBottom: 8 }}
+      labelCol={{ style: { fontWeight: 600, color: "#475569", fontSize: 11 } }}
+    >
+      <DatePicker 
+        style={{ width: "100%", borderRadius: 4 }} 
+        format="YYYY-MM-DD" // Standalone standard format for Canada (EN-CA)
+        placeholder="YYYY-MM-DD"
+        size="middle"
+      />
+    </Form.Item>
+  </Col>
+
+  {/* VRID */}
+  <Col xs={24} md={4}>
+    <Form.Item
+      {...restField}
+      label="VRID"
+      name={[name, "vrid"]}
+      rules={[{ required: true, message: "Required" }]}
+      style={{ marginBottom: 8 }}
+      labelCol={{ style: { fontWeight: 600, color: "#475569", fontSize: 11 } }}
+    >
+      <Input 
+        placeholder="VRID" 
+        style={{ textTransform: "uppercase", borderRadius: 4 }} 
+        size="middle"
+      />
+    </Form.Item>
+  </Col>
+
+  {/* Route */}
+  <Col xs={24} md={4}>
+    <Form.Item 
+      {...restField} 
+      label="Route" 
+      name={[name, "route"]} 
+      style={{ marginBottom: 8 }}
+      labelCol={{ style: { fontWeight: 600, color: "#475569", fontSize: 11 } }}
+    >
+      <Input 
+        placeholder="e.g. YHM1 → YYZ1" 
+        size="middle"
+        style={{ borderRadius: 4 }}
+      />
+    </Form.Item>
+  </Col>
+
+  {/* Pickup Location */}
+  <Col xs={24} md={6}>
+    <Form.Item 
+      {...restField} 
+      label="Pickup Location" 
+      name={[name, "pickup"]} 
+      style={{ marginBottom: 8 }}
+      labelCol={{ style: { fontWeight: 600, color: "#475569", fontSize: 11 } }}
+    >
+      <Input 
+        placeholder="Pickup Location" 
+        size="middle"
+        style={{ borderRadius: 4 }}
+      />
+    </Form.Item>
+  </Col>
+
+  {/* Drop Location */}
+  <Col xs={24} md={6}>
+    <Form.Item 
+      {...restField} 
+      label="Drop Location" 
+      name={[name, "drop"]} 
+      style={{ marginBottom: 8 }}
+      labelCol={{ style: { fontWeight: 600, color: "#475569", fontSize: 11 } }}
+    >
+      <Input 
+        placeholder="Drop Location" 
+        size="middle"
+        style={{ borderRadius: 4 }}
+      />
+    </Form.Item>
+  </Col>
+</Row>
 
                     {/* Calculations Values Sub-Row */}
                     <Row 

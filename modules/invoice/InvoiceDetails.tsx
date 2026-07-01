@@ -98,21 +98,22 @@ export default function InvoiceDetails() {
           </Form.Item>
         </Col>
 
-        <Col xs={24} md={6}>
-          <Form.Item 
-            label="Invoice Date" 
-            name="invoiceDate" 
-            initialValue={dayjs()} 
-            style={{ marginBottom: 12 }}
-            labelCol={{ style: { fontWeight: 600, color: "#475569", fontSize: 12 } }}
-          >
-            <DatePicker 
-              style={{ width: "100%", borderRadius: 4 }} 
-              format="YYYY-MM-DD"
-              size="middle"
-            />
-          </Form.Item>
-        </Col>
+       <Col xs={24} md={6}>
+  <Form.Item 
+    label="Invoice Date" 
+    name="invoiceDate" 
+    initialValue={dayjs()} // Default aaj ki date standard layout me automatically load ho jayegi
+    style={{ marginBottom: 12 }}
+    labelCol={{ style: { fontWeight: 600, color: "#475569", fontSize: 12 } }}
+  >
+    <DatePicker 
+      style={{ width: "100%", borderRadius: 4 }} 
+      format="YYYY-MM-DD" // 🇨🇦 Official Canadian Date format standard configuration
+      placeholder="YYYY-MM-DD"
+      size="middle"
+    />
+  </Form.Item>
+</Col>
       </Row>
 
       <Row gutter={[{ xs: 8, sm: 10, md: 12 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 12, { xs: 8, sm: 10, md: 12 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 12]}>
