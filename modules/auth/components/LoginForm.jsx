@@ -39,7 +39,7 @@ export default function
       }
 
       setTimeout(() => {
-        router.push("/dashboard");
+        router.push("/user/dashboard");
       }, 1000);
     } else {
       message.error(res.message);

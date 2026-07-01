@@ -24,3 +24,12 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Ensure Ant Design components render correctly */
+.ant-layout {
+  background: transparent;
+}
+
+.ant-card {
+  box-sizing: border-box;
+}

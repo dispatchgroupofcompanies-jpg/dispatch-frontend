@@ -26,11 +26,11 @@ export default function PayToDetails() {
       <Row gutter={[{ xs: 6, sm: 8, md: 10 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 10, { xs: 6, sm: 8, md: 10 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 10]}>
         <Col xs={24} md={12}>
           <Form.Item 
-            label="Customer/Company Name" 
+            label={<span style={{ color: "#2563eb", fontWeight: 600 }}>Customer/Company Name</span>} 
             name={["customer", "companyName"]} 
             rules={[{ required: true, message: "Required" }]} 
             style={{ marginBottom: 10 }}
-            labelCol={{ style: { fontWeight: 600, color: "#475569", fontSize: 12 } }}
+            labelCol={{ style: { fontWeight: 600, color: "#2563eb", fontSize: 12 } }}
           >
             <Input 
               placeholder="Customer Company Name" 

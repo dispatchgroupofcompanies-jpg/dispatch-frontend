@@ -50,7 +50,7 @@ API.interceptors.response.use(
 // INVOICE APIs
 // -------------------------
 
-export const createInvoice = (data: any) => {
+export const createInvoice = (data: Record<string, unknown>) => {
   return API.post("/invoices", data);
 };
 
@@ -62,7 +62,7 @@ export const getInvoiceById = (invoiceId: string) => {
   return API.get(`/invoices/${invoiceId}`);
 };
 
-export const updateInvoice = (invoiceId: string, data: any) => {
+export const updateInvoice = (invoiceId: string, data: Record<string, unknown>) => {
   return API.put(`/invoices/${invoiceId}`, data);
 };
 
@@ -75,6 +75,14 @@ export const updateInvoiceStatus = (invoiceId: string, status: string) => {
 };
 export const deleteInvoiceAPI = (invoiceId: string) => {
   return API.delete(`/invoices/${invoiceId}`);
+};
+
+// -------------------------
+// DASHBOARD APIs
+// -------------------------
+
+export const getDashboardStats = () => {
+  return API.get("/dashboard/stats");
 };
 
 export default API;

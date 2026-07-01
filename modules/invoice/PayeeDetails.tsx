@@ -26,11 +26,11 @@ export default function PayeeDetails() {
       <Row gutter={[{ xs: 6, sm: 8, md: 10 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 10, { xs: 6, sm: 8, md: 10 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 10]}>
         <Col xs={24} md={12}>
           <Form.Item 
-            label="Company Name" 
+            label={<span style={{ color: "#dc2626", fontWeight: 600 }}>Company Name</span>} 
             name={["payee", "companyName"]} 
             rules={[{ required: true, message: "Required" }]} 
             style={{ marginBottom: 10 }}
-            labelCol={{ style: { fontWeight: 600, color: "#475569", fontSize: 12 } }}
+            labelCol={{ style: { fontWeight: 600, color: "#dc2626", fontSize: 12 } }}
           >
             <Input 
               placeholder="Company Name" 
