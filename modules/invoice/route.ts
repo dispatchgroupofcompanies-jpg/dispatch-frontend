@@ -43,7 +43,7 @@ API.interceptors.response.use(
       console.log("❌ API Error:", error?.response?.data || error.message);
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 // -------------------------
@@ -62,7 +62,10 @@ export const getInvoiceById = (invoiceId: string) => {
   return API.get(`/invoices/${invoiceId}`);
 };
 
-export const updateInvoice = (invoiceId: string, data: Record<string, unknown>) => {
+export const updateInvoice = (
+  invoiceId: string,
+  data: Record<string, unknown>,
+) => {
   return API.put(`/invoices/${invoiceId}`, data);
 };
 

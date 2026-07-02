@@ -15,21 +15,26 @@ import {
   Tooltip,
   message,
 } from "antd";
-import { 
-  EyeOutlined, 
-  FileAddOutlined, 
-  EditOutlined, 
+import {
+  EyeOutlined,
+  FileAddOutlined,
+  EditOutlined,
   DeleteOutlined,
   DollarCircleOutlined,
   FileTextOutlined,
   CheckCircleOutlined,
   ShareAltOutlined,
-  DownloadOutlined
+  DownloadOutlined,
 } from "@ant-design/icons";
 import CreateInvoiceModal from "../../../modules/invoice/InvoiceModal";
-import { getInvoices, updateInvoiceStatus, deleteInvoiceAPI } from "../../../modules/invoice/route";
+import {
+  getInvoices,
+  updateInvoiceStatus,
+  deleteInvoiceAPI,
+} from "../../../modules/invoice/route";
 
 interface Invoice {
+  eTransfer?: any;
   _id: string;
   invoiceNumber: string;
   invoiceStatus: string;
@@ -47,6 +52,8 @@ interface Invoice {
   };
   createdAt: string;
   payee?: {
+    eTransferAddress?: string;
+    eTransfer?: string;
     companyName: string;
     address1?: string;
     address?: string;
@@ -76,7 +83,6 @@ interface Invoice {
   notes?: string;
 }
 
-// ❌ export default yahan se hata diya hai taaki build bypass control parent component ko miley
 function DashboardComponent() {
   const [open, setOpen] = useState(false);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -95,6 +101,7 @@ function DashboardComponent() {
     try {
       setLoading(true);
       const res = await getInvoices();
+      console.log("Fetched Invoices Complete Data:", res);
       setInvoices(res.data?.data || []);
     } catch (err) {
       console.error(err);
@@ -113,8 +120,13 @@ function DashboardComponent() {
   // -------------------------
   const stats = useMemo(() => {
     const total = invoices.length;
-    const grossEarnings = invoices.reduce((sum, inv) => sum + Number(inv.grandTotal || 0), 0);
-    const draftCount = invoices.filter(inv => (inv.invoiceStatus || "draft").toLowerCase() === "draft").length;
+    const grossEarnings = invoices.reduce(
+      (sum, inv) => sum + Number(inv.grandTotal || 0),
+      0,
+    );
+    const draftCount = invoices.filter(
+      (inv) => (inv.invoiceStatus || "draft").toLowerCase() === "draft",
+    ).length;
     return { total, grossEarnings, draftCount };
   }, [invoices]);
 
@@ -124,12 +136,17 @@ function DashboardComponent() {
   const triggerDownloadPDF = async (record: Invoice) => {
     if (!record || typeof window === "undefined") return;
     setDownloading(true);
-    const hideLoading = message.loading(`Compiling Invoice #${record.invoiceNumber} PDF...`, 0);
-    
+    const hideLoading = message.loading(
+      `Compiling Invoice #${record.invoiceNumber} PDF...`,
+      0,
+    );
+
     try {
       const html2pdf = (await import("html2pdf.js")).default;
-      const element = document.getElementById("printable-invoice-modal-content");
-      
+      const element = document.getElementById(
+        "printable-invoice-modal-content",
+      );
+
       if (!element) {
         setSelected(record);
         setViewOpen(true);
@@ -139,22 +156,24 @@ function DashboardComponent() {
       }
 
       const options = {
-        margin: [8, 10, 8, 10] as [number, number, number, number], 
+        margin: [8, 10, 8, 10] as [number, number, number, number],
         filename: `Invoice-${record.invoiceNumber || "Statement"}.pdf`,
         image: { type: "jpeg" as const, quality: 0.98 },
-        html2canvas: { 
-          scale: 2, 
-          useCORS: true, 
-          letterRendering: true 
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          letterRendering: true,
         },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
       } as const;
 
       await html2pdf().set(options).from(element).save();
       message.success("PDF Downloaded successfully!");
     } catch (error) {
       console.error("PDF engine crash context track:", error);
-      message.error("Could not render selected HTML node block into PDF stream.");
+      message.error(
+        "Could not render selected HTML node block into PDF stream.",
+      );
     } finally {
       hideLoading();
       setDownloading(false);
@@ -170,8 +189,11 @@ function DashboardComponent() {
     }
 
     setSharing(true);
-    const hideLoading = message.loading(`Preparing to share Invoice #${record.invoiceNumber}...`, 0);
-    
+    const hideLoading = message.loading(
+      `Preparing to share Invoice #${record.invoiceNumber}...`,
+      0,
+    );
+
     try {
       const shareUrl = `${window.location.origin}/public/invoice/${record._id}`;
       const shareData = {
@@ -189,8 +211,20 @@ function DashboardComponent() {
           title: "Invoice Link Copied!",
           content: (
             <div>
-              <p>Native sharing is not supported on this browser. Copy the link below to share manually:</p>
-              <pre style={{ background: "#f1f5f9", padding: "8px", borderRadius: "4px", overflowX: "auto" }}>{shareUrl}</pre>
+              <p>
+                Native sharing is not supported on this browser. Copy the link
+                below to share manually:
+              </p>
+              <pre
+                style={{
+                  background: "#f1f5f9",
+                  padding: "8px",
+                  borderRadius: "4px",
+                  overflowX: "auto",
+                }}
+              >
+                {shareUrl}
+              </pre>
             </div>
           ),
         });
@@ -204,10 +238,13 @@ function DashboardComponent() {
     }
   };
 
-  // -------------------------
-  // CONTROLLER ROUTE DRIVERS
-  // -------------------------
   const openView = (record: Invoice) => {
+    console.log("🔴 CURRENT SELECTED INVOICE OBJECT:", record);
+    console.log("🔴 E-TRANSFER DATA:", {
+      eTransfer: record.eTransfer,
+      payeeETransfer: record.payee?.eTransfer,
+      payeeETransferAddress: record.payee?.eTransferAddress,
+    });
     setSelected(record);
     setViewOpen(true);
   };
@@ -225,8 +262,13 @@ function DashboardComponent() {
       message.success("Invoice statement wiped permanently.");
     } catch (err) {
       console.error(err);
-      const error = err as { response?: { data?: { message?: string } }; message?: string };
-      message.error(error?.response?.data?.message || "Failed to delete invoice");
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      message.error(
+        error?.response?.data?.message || "Failed to delete invoice",
+      );
     } finally {
       setLoading(false);
     }
@@ -237,12 +279,17 @@ function DashboardComponent() {
       setLoading(true);
       await updateInvoiceStatus(id, newStatus);
       setInvoices((prev) =>
-        prev.map((inv) => (inv._id === id ? { ...inv, invoiceStatus: newStatus } : inv))
+        prev.map((inv) =>
+          inv._id === id ? { ...inv, invoiceStatus: newStatus } : inv,
+        ),
       );
       message.success(`Status updated to ${newStatus.toUpperCase()}`);
     } catch (err) {
       console.error(err);
-      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
       message.error(error?.response?.data?.message || "Status sync error");
     } finally {
       setLoading(false);
@@ -257,13 +304,23 @@ function DashboardComponent() {
       title: "Invoice Identification",
       dataIndex: "invoiceNumber",
       key: "invoiceNumber",
-      render: (text: string) => <span style={{ fontWeight: 700, color: "#1e3a8a", letterSpacing: "0.5px" }}>#{text}</span>,
+      render: (text: string) => (
+        <span
+          style={{ fontWeight: 700, color: "#1e3a8a", letterSpacing: "0.5px" }}
+        >
+          #{text}
+        </span>
+      ),
     },
     {
       title: "Client Entity",
       dataIndex: ["customer", "companyName"],
       key: "customer",
-      render: (text: string) => <span style={{ fontWeight: 500, color: "#334155" }}>{text || "N/A"}</span>,
+      render: (text: string) => (
+        <span style={{ fontWeight: 500, color: "#334155" }}>
+          {text || "N/A"}
+        </span>
+      ),
     },
     {
       title: "Grand Evaluation",
@@ -271,7 +328,11 @@ function DashboardComponent() {
       key: "grandTotal",
       render: (val: number, record: Invoice) => (
         <span style={{ fontWeight: 700, color: "#0f172a" }}>
-          {record.currency || "CAD"} ${val?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          {record.currency || "CAD"} $
+          {val?.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
         </span>
       ),
     },
@@ -281,11 +342,28 @@ function DashboardComponent() {
       key: "invoiceStatus",
       render: (status: string, record: Invoice) => {
         const cleanStatus = status?.toLowerCase() || "draft";
-        const tagColor = cleanStatus === "paid" ? "success" : cleanStatus === "sent" ? "processing" : "warning";
+        const tagColor =
+          cleanStatus === "paid"
+            ? "success"
+            : cleanStatus === "sent"
+              ? "processing"
+              : "warning";
 
         return (
-          <Space orientation="horizontal" size={12} style={{ alignItems: "center" }}>
-            <Tag color={tagColor} style={{ textTransform: "uppercase", fontWeight: 700, borderRadius: "4px", padding: "2px 8px" }}>
+          <Space
+            orientation="horizontal"
+            size={12}
+            style={{ alignItems: "center" }}
+          >
+            <Tag
+              color={tagColor}
+              style={{
+                textTransform: "uppercase",
+                fontWeight: 700,
+                borderRadius: "4px",
+                padding: "2px 8px",
+              }}
+            >
               {status || "DRAFT"}
             </Tag>
             <Select
@@ -293,7 +371,9 @@ function DashboardComponent() {
               variant="filled"
               value={cleanStatus}
               style={{ width: 95, borderRadius: "4px" }}
-              onChange={(newStatus) => handleStatusChange(record._id, newStatus)}
+              onChange={(newStatus) =>
+                handleStatusChange(record._id, newStatus)
+              }
               options={[
                 { value: "draft", label: "Draft" },
                 { value: "paid", label: "Paid" },
@@ -309,7 +389,13 @@ function DashboardComponent() {
       key: "createdAt",
       render: (val: string) => (
         <span style={{ color: "#64748b", fontSize: "13px" }}>
-          {val ? new Date(val).toLocaleDateString("en-CA", { year: "numeric", month: "short", day: "numeric" }) : "-"}
+          {val
+            ? new Date(val).toLocaleDateString("en-CA", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })
+            : "-"}
         </span>
       ),
     },
@@ -317,35 +403,55 @@ function DashboardComponent() {
       title: "Administrative Actions",
       key: "action",
       render: (_: unknown, record: Invoice) => {
-        const isDraft = (record.invoiceStatus || "draft").toLowerCase() === "draft";
+        const isDraft =
+          (record.invoiceStatus || "draft").toLowerCase() === "draft";
 
         return (
           <Space size="small">
-            <Button type="primary" variant="outlined" icon={<EyeOutlined />} onClick={() => openView(record)}>
+            <Button
+              type="primary"
+              variant="outlined"
+              icon={<EyeOutlined />}
+              onClick={() => openView(record)}
+            >
               View
             </Button>
 
             <Tooltip title="Download Clean PDF">
-              <Button 
-                type="default" 
+              <Button
+                type="default"
                 loading={downloading && selected?._id === record._id}
-                style={{ color: "#10b981", borderColor: "#a7f3d0", backgroundColor: "#f0fdf4" }}
-                icon={<DownloadOutlined />} 
-                onClick={() => triggerDownloadPDF(record)} 
+                style={{
+                  color: "#10b981",
+                  borderColor: "#a7f3d0",
+                  backgroundColor: "#f0fdf4",
+                }}
+                icon={<DownloadOutlined />}
+                onClick={() => triggerDownloadPDF(record)}
               />
             </Tooltip>
 
             <Tooltip title="Share Invoice Link">
-              <Button 
-                type="default" 
+              <Button
+                type="default"
                 loading={sharing && selected?._id === record._id}
-                style={{ color: "#2563eb", borderColor: "#bfdbfe", backgroundColor: "#eff6ff" }}
-                icon={<ShareAltOutlined />} 
-                onClick={() => triggerShareInvoice(record)} 
+                style={{
+                  color: "#2563eb",
+                  borderColor: "#bfdbfe",
+                  backgroundColor: "#eff6ff",
+                }}
+                icon={<ShareAltOutlined />}
+                onClick={() => triggerShareInvoice(record)}
               />
             </Tooltip>
 
-            <Tooltip title={isDraft ? "Modify Properties" : "Locked (Only editable in draft stage)"}>
+            <Tooltip
+              title={
+                isDraft
+                  ? "Modify Properties"
+                  : "Locked (Only editable in draft stage)"
+              }
+            >
               <Button
                 type="default"
                 icon={<EditOutlined />}
@@ -372,121 +478,230 @@ function DashboardComponent() {
   ];
 
   return (
-    <div style={{ padding: "24px", minHeight: "100vh", backgroundColor: "#f8fafc", overflow: "auto" }}>
-      
+    <div
+      style={{
+        padding: "24px",
+        minHeight: "100vh",
+        backgroundColor: "#f8fafc",
+        overflow: "auto",
+      }}
+    >
       {/* 📊 RUNTIME ANALYTICS CARDS ROW */}
       <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
         <Col xs={24} sm={12} md={8}>
-          <Card style={{ boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.05)", borderRadius: "12px" }}>
+          <Card
+            style={{
+              boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.05)",
+              borderRadius: "12px",
+            }}
+          >
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <FileTextOutlined style={{ color: "#3b82f6", fontSize: "24px" }} />
+              <FileTextOutlined
+                style={{ color: "#3b82f6", fontSize: "24px" }}
+              />
               <div>
-                <div style={{ color: "#64748b", fontSize: "14px" }}>Total Ledger Statements</div>
-                <div style={{ fontSize: "20px", fontWeight: 700 }}>{stats.total}</div>
+                <div style={{ color: "#64748b", fontSize: "14px" }}>
+                  Total Ledger Statements
+                </div>
+                <div style={{ fontSize: "20px", fontWeight: 700 }}>
+                  {stats.total}
+                </div>
               </div>
             </div>
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8}>
-          <Card style={{ boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.05)", borderRadius: "12px" }}>
+          <Card
+            style={{
+              boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.05)",
+              borderRadius: "12px",
+            }}
+          >
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <DollarCircleOutlined style={{ color: "#10b981", fontSize: "24px" }} />
+              <DollarCircleOutlined
+                style={{ color: "#10b981", fontSize: "24px" }}
+              />
               <div>
-                <div style={{ color: "#64748b", fontSize: "14px" }}>Gross Volume Valuation</div>
-                <div style={{ fontSize: "20px", fontWeight: 700 }}>${stats.grossEarnings?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                <div style={{ color: "#64748b", fontSize: "14px" }}>
+                  Gross Volume Valuation
+                </div>
+                <div style={{ fontSize: "20px", fontWeight: 700 }}>
+                  $
+                  {stats.grossEarnings?.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                  })}
+                </div>
               </div>
             </div>
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8}>
-          <Card style={{ boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.05)", borderRadius: "12px" }}>
+          <Card
+            style={{
+              boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.05)",
+              borderRadius: "12px",
+            }}
+          >
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <CheckCircleOutlined style={{ color: "#f59e0b", fontSize: "24px" }} />
+              <CheckCircleOutlined
+                style={{ color: "#f59e0b", fontSize: "24px" }}
+              />
               <div>
-                <div style={{ color: "#64748b", fontSize: "14px" }}>Active Draft Modifications</div>
-                <div style={{ fontSize: "20px", fontWeight: 700 }}>{stats.draftCount}</div>
+                <div style={{ color: "#64748b", fontSize: "14px" }}>
+                  Active Draft Modifications
+                </div>
+                <div style={{ fontSize: "20px", fontWeight: 700 }}>
+                  {stats.draftCount}
+                </div>
               </div>
             </div>
           </Card>
         </Col>
       </Row>
 
-      <Card 
-        style={{ boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.06)", borderRadius: "16px" }}
+      <Card
+        style={{
+          boxShadow:
+            "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+          borderRadius: "16px",
+        }}
         title={
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", padding: "8px 0", gap: "12px" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              width: "100%",
+              padding: "8px 0",
+              gap: "12px",
+            }}
+          >
             <div>
-              <h2 style={{ margin: 0, fontSize: "24px", fontWeight: 700, color: "#0f172a" }}>Invoice Management Ledger</h2>
-              <p style={{ margin: "4px 0 0 0", fontSize: "13px", fontWeight: 400, color: "#64748b" }}>Create, tracking logs, view, and instantly download or share invoice links.</p>
+              <h2
+                style={{
+                  margin: 0,
+                  fontSize: "24px",
+                  fontWeight: 700,
+                  color: "#0f172a",
+                }}
+              >
+                Invoice Management Ledger
+              </h2>
+              <p
+                style={{
+                  margin: "4px 0 0 0",
+                  fontSize: "13px",
+                  fontWeight: 400,
+                  color: "#64748b",
+                }}
+              >
+                Create, tracking logs, view, and instantly download or share
+                invoice links.
+              </p>
             </div>
-            <Button type="primary" size="large" icon={<FileAddOutlined />} style={{ borderRadius: "8px", fontWeight: 600 }} onClick={() => { setEditingInvoice(null); setOpen(true); }}>
+            <Button
+              type="primary"
+              size="large"
+              icon={<FileAddOutlined />}
+              style={{ borderRadius: "8px", fontWeight: 600 }}
+              onClick={() => {
+                setEditingInvoice(null);
+                setOpen(true);
+              }}
+            >
               Create Statement
             </Button>
           </div>
         }
       >
-        <Table 
-          dataSource={invoices} 
-          columns={columns} 
-          rowKey={(record: Invoice) => record._id} 
-          loading={loading} 
+        <Table
+          dataSource={invoices}
+          columns={columns}
+          rowKey={(record: Invoice) => record._id}
+          loading={loading}
           pagination={{ pageSize: 8 }}
           size="middle"
         />
       </Card>
 
-      <CreateInvoiceModal open={open} onClose={() => { setOpen(false); setEditingInvoice(null); fetchInvoices(); }} editData={editingInvoice} />
+      <CreateInvoiceModal
+        open={open}
+        onClose={() => {
+          setOpen(false);
+          setEditingInvoice(null);
+          fetchInvoices();
+        }}
+        editData={editingInvoice}
+      />
 
       {/* 👁️ PREVIEW MODAL SPECIFICATION */}
-      <Modal 
-        open={viewOpen} 
+      <Modal
+        open={viewOpen}
         footer={[
-          <Button key="close" onClick={() => setViewOpen(false)} size="large" style={{ borderRadius: "6px" }}>
+          <Button
+            key="close"
+            onClick={() => setViewOpen(false)}
+            size="large"
+            style={{ borderRadius: "6px" }}
+          >
             Close Preview
           </Button>,
-          <Button 
-            key="share" 
-            type="default" 
-            icon={<ShareAltOutlined />} 
-            size="large" 
+          <Button
+            key="share"
+            type="default"
+            icon={<ShareAltOutlined />}
+            size="large"
             loading={sharing}
             disabled={!selected}
-            style={{ borderRadius: "6px", color: "#2563eb", borderColor: "#bfdbfe", backgroundColor: "#eff6ff" }} 
-            onClick={() => { if (selected) triggerShareInvoice(selected); }}
+            style={{
+              borderRadius: "6px",
+              color: "#2563eb",
+              borderColor: "#bfdbfe",
+              backgroundColor: "#eff6ff",
+            }}
+            onClick={() => {
+              if (selected) triggerShareInvoice(selected);
+            }}
           >
             Share Link
           </Button>,
-          <Button 
-            key="download" 
-            type="primary" 
-            icon={<DownloadOutlined />} 
-            size="large" 
+          <Button
+            key="download"
+            type="primary"
+            icon={<DownloadOutlined />}
+            size="large"
             loading={downloading}
             disabled={!selected}
-            style={{ borderRadius: "6px", backgroundColor: "#10b981", borderColor: "#10b981" }} 
-            onClick={() => { if (selected) triggerDownloadPDF(selected); }}
+            style={{
+              borderRadius: "6px",
+              backgroundColor: "#10b981",
+              borderColor: "#10b981",
+            }}
+            onClick={() => {
+              if (selected) triggerDownloadPDF(selected);
+            }}
           >
             Download PDF
-          </Button>
-        ]} 
-        onCancel={() => setViewOpen(false)} 
-        width={850} 
-        centered 
-        title={null} 
+          </Button>,
+        ]}
+        onCancel={() => setViewOpen(false)}
+        width={850}
+        centered
+        title={null}
         closable
       >
         {selected && (
-          <div 
-            id="printable-invoice-modal-content" 
-            style={{ 
-              backgroundColor: "#ffffff", 
-              padding: "10px 15px", 
+          <div
+            id="printable-invoice-modal-content"
+            style={{
+              backgroundColor: "#ffffff",
+              padding: "10px 15px",
               borderRadius: "4px",
               position: "relative",
-              overflow: "hidden"
+              overflow: "hidden",
             }}
           >
-            <div 
+            <div
               style={{
                 position: "absolute",
                 top: "50%",
@@ -500,92 +715,331 @@ function DashboardComponent() {
                 zIndex: 0,
                 pointerEvents: "none",
                 userSelect: "none",
-                textAlign: "center"
+                textAlign: "center",
               }}
             >
               EXTREME LOGISTICS
             </div>
 
             <div style={{ position: "relative", zIndex: 10 }}>
-              <Row justify="space-between" align="middle" style={{ marginBottom: "20px" }}>
+              <Row
+                justify="space-between"
+                align="middle"
+                style={{ marginBottom: "20px" }}
+              >
                 <Col xs={24} sm={12}>
-                  <h1 style={{ fontSize: "24px", fontWeight: 800, color: "#1e3a8a", margin: 0 }}>
-                    {selected.trips && selected.trips.length > 1 ? "INVOICE - T" : "INVOICE - 1"}
+                  <h1
+                    style={{
+                      fontSize: "24px",
+                      fontWeight: 800,
+                      color: "#1e3a8a",
+                      margin: 0,
+                    }}
+                  >
+                    {selected.trips && selected.trips.length > 1
+                      ? "INVOICE - T"
+                      : "INVOICE - 1"}
                   </h1>
-                  <span style={{ fontSize: "12px", color: "#64748b" }}>Num: <b>#{selected.invoiceNumber}</b></span>
+                  <span style={{ fontSize: "12px", color: "#64748b" }}>
+                    Num: <b>#{selected.invoiceNumber}</b>
+                  </span>
                 </Col>
                 <Col xs={24} sm={12} style={{ textAlign: "right" }}>
-                  <Tag color={selected.invoiceStatus?.toLowerCase() === "paid" ? "success" : selected.invoiceStatus?.toLowerCase() === "sent" ? "processing" : "warning"} style={{ textTransform: "uppercase", fontWeight: 700, padding: "2px 6px", fontSize: "11px", borderRadius: "4px" }}>
+                  <Tag
+                    color={
+                      selected.invoiceStatus?.toLowerCase() === "paid"
+                        ? "success"
+                        : selected.invoiceStatus?.toLowerCase() === "sent"
+                          ? "processing"
+                          : "warning"
+                    }
+                    style={{
+                      textTransform: "uppercase",
+                      fontWeight: 700,
+                      padding: "2px 6px",
+                      fontSize: "11px",
+                      borderRadius: "4px",
+                    }}
+                  >
                     {selected.invoiceStatus || "DRAFT"}
                   </Tag>
-                  <div style={{ fontSize: "11px", color: "#64748b", marginTop: "4px" }}>Date: {selected.createdAt ? new Date(selected.createdAt).toLocaleDateString("en-CA", { year: "numeric", month: "short", day: "numeric" }) : "N/A"}</div>
+                  <div
+                    style={{
+                      fontSize: "11px",
+                      color: "#64748b",
+                      marginTop: "4px",
+                    }}
+                  >
+                    Date:{" "}
+                    {selected.createdAt
+                      ? new Date(selected.createdAt).toLocaleDateString(
+                          "en-CA",
+                          { year: "numeric", month: "short", day: "numeric" },
+                        )
+                      : "N/A"}
+                  </div>
                 </Col>
               </Row>
 
-              <hr style={{ border: 0, borderTop: "2px solid #f1f5f9", marginBottom: "20px" }} />
+              <hr
+                style={{
+                  border: 0,
+                  borderTop: "2px solid #f1f5f9",
+                  marginBottom: "20px",
+                }}
+              />
 
               <Row gutter={[24, 24]} style={{ marginBottom: "20px" }}>
                 <Col xs={24} md={12}>
-                  <h3 style={{ fontSize: "11px", textTransform: "uppercase", color: "#475569", margin: "0 0 6px 0", letterSpacing: "0.5px", fontWeight: 700 }}>Extreme Logistic Invoice From:</h3>
-                  <div style={{ fontWeight: 700, fontSize: "13px", color: "#dc2626" }}>{selected.payee?.companyName || "N/A"}</div>
-                  <div style={{ fontSize: "11px", color: "#475569", marginTop: "4px", lineHeight: "1.4" }}>
-                    {(selected.payee as any)?.address1 || selected.payee?.address || "N/A"}<br/>
-                    <b>Driver Name:</b> {selected.payee?.contactPerson || selected.payee?.driverName || "N/A"}<br/>
-                    <b>Phone:</b> {selected.payee?.phone || "N/A"} <br/>
-                    <b>Email:</b> {selected.payee?.email || "N/A"} <br/>
+                  <h3
+                    style={{
+                      fontSize: "11px",
+                      textTransform: "uppercase",
+                      color: "#475569",
+                      margin: "0 0 6px 0",
+                      letterSpacing: "0.5px",
+                      fontWeight: 700,
+                    }}
+                  >
+                    Extreme Logistic Invoice From:
+                  </h3>
+                  <div
+                    style={{
+                      fontWeight: 700,
+                      fontSize: "13px",
+                      color: "#dc2626",
+                    }}
+                  >
+                    {selected.payee?.companyName || "N/A"}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "11px",
+                      color: "#475569",
+                      marginTop: "4px",
+                      lineHeight: "1.4",
+                    }}
+                  >
+                    {(selected.payee as any)?.address1 ||
+                      selected.payee?.address ||
+                      "N/A"}
+                    <br />
+                    <b>Driver Name:</b>{" "}
+                    {selected.payee?.contactPerson ||
+                      selected.payee?.driverName ||
+                      "N/A"}
+                    <br />
+                    <b>Phone:</b> {selected.payee?.phone || "N/A"} <br />
+                    <b>Email:</b> {selected.payee?.email || "N/A"} <br />
                     <b>GST/HST:</b> {selected.payee?.gstNumber || "N/A"}
                   </div>
                 </Col>
-                <Col xs={24} md={12} style={{ borderLeft: "1px solid #e2e8f0", paddingLeft: "20px" }}>
-                  <h3 style={{ fontSize: "11px", textTransform: "uppercase", color: "#475569", margin: "0 0 6px 0", letterSpacing: "0.5px", fontWeight: 700 }}>Invoice To:</h3>
-                  <div style={{ fontWeight: 700, fontSize: "13px", color: "#2563eb" }}>{selected.customer?.companyName || "N/A"}</div>
-                  <div style={{ fontSize: "11px", color: "#475569", marginTop: "4px", lineHeight: "1.4" }}>
-                    {(selected.customer as any)?.address1 || selected.customer?.address || "N/A"}<br/>
-                    <b>Attention:</b> {selected.customer?.contactPerson || "N/A"}<br/>
-                    <b>Phone:</b> {selected.customer?.phone || "N/A"} <br/>
-                    <b>Email:</b> {selected.customer?.email || "N/A"} <br/>
+                <Col
+                  xs={24}
+                  md={12}
+                  style={{
+                    borderLeft: "1px solid #e2e8f0",
+                    paddingLeft: "20px",
+                  }}
+                >
+                  <h3
+                    style={{
+                      fontSize: "11px",
+                      textTransform: "uppercase",
+                      color: "#475569",
+                      margin: "0 0 6px 0",
+                      letterSpacing: "0.5px",
+                      fontWeight: 700,
+                    }}
+                  >
+                    Invoice To:
+                  </h3>
+                  <div
+                    style={{
+                      fontWeight: 700,
+                      fontSize: "13px",
+                      color: "#2563eb",
+                    }}
+                  >
+                    {selected.customer?.companyName || "N/A"}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "11px",
+                      color: "#475569",
+                      marginTop: "4px",
+                      lineHeight: "1.4",
+                    }}
+                  >
+                    {(selected.customer as any)?.address1 ||
+                      selected.customer?.address ||
+                      "N/A"}
+                    <br />
+                    <b>Attention:</b>{" "}
+                    {selected.customer?.contactPerson || "N/A"}
+                    <br />
+                    <b>Phone:</b> {selected.customer?.phone || "N/A"} <br />
+                    <b>Email:</b> {selected.customer?.email || "N/A"} <br />
                     <b>GST/HST:</b> {selected.customer?.gstNumber || "N/A"}
                   </div>
                 </Col>
               </Row>
 
               {selected.invoicePeriod?.startDate && (
-                <div style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", padding: "8px 10px", borderRadius: "4px", fontSize: "11px", marginBottom: "20px", color: "#334155" }}>
-                  📅 <b>Billing Period:</b> {new Date(selected.invoicePeriod.startDate).toLocaleDateString("en-CA", { year: "numeric", month: "short", day: "numeric" })} — {new Date(selected.invoicePeriod.endDate).toLocaleDateString("en-CA", { year: "numeric", month: "short", day: "numeric" })}
+                <div
+                  style={{
+                    backgroundColor: "#f8fafc",
+                    border: "1px solid #e2e8f0",
+                    padding: "8px 10px",
+                    borderRadius: "4px",
+                    fontSize: "11px",
+                    marginBottom: "20px",
+                    color: "#334155",
+                  }}
+                >
+                  📅 <b>Billing Period:</b>{" "}
+                  {new Date(
+                    selected.invoicePeriod.startDate,
+                  ).toLocaleDateString("en-CA", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })}{" "}
+                  —{" "}
+                  {new Date(selected.invoicePeriod.endDate).toLocaleDateString(
+                    "en-CA",
+                    { year: "numeric", month: "short", day: "numeric" },
+                  )}
                 </div>
               )}
 
-              <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", marginBottom: "20px" }}>
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  textAlign: "left",
+                  marginBottom: "20px",
+                }}
+              >
                 <thead>
-                  <tr style={{ backgroundColor: "#1e3a8a", color: "#ffffff", fontSize: "11px" }}>
-                    <th style={{ padding: "8px 4px", textAlign: "center", width: "4%" }}>#</th>
+                  <tr
+                    style={{
+                      backgroundColor: "#1e3a8a",
+                      color: "#ffffff",
+                      fontSize: "11px",
+                    }}
+                  >
+                    <th
+                      style={{
+                        padding: "8px 4px",
+                        textAlign: "center",
+                        width: "4%",
+                      }}
+                    >
+                      #
+                    </th>
                     <th style={{ padding: "8px 6px" }}>Date</th>
                     <th style={{ padding: "8px 6px" }}>VRID</th>
                     <th style={{ padding: "8px 6px" }}>Route</th>
                     <th style={{ padding: "8px 6px" }}>Description</th>
-                    <th style={{ padding: "8px 6px", textAlign: "right" }}>Charges</th>
-                    <th style={{ padding: "8px 4px", textAlign: "center" }}>Dispatch%</th>
-                    <th style={{ padding: "8px 6px", textAlign: "right" }}>Total Amount</th>
+                    <th style={{ padding: "8px 6px", textAlign: "right" }}>
+                      Charges
+                    </th>
+                    <th style={{ padding: "8px 4px", textAlign: "center" }}>
+                      Dispatch%
+                    </th>
+                    <th style={{ padding: "8px 6px", textAlign: "right" }}>
+                      Total Amount
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {selected.trips && selected.trips.length > 0 ? (
                     selected.trips.map((trip: any, index: number) => (
-                      <tr key={index} style={{ borderBottom: "1px solid #e2e8f0", fontSize: "11px", color: "#334155" }}>
-                        <td style={{ padding: "8px 4px", textAlign: "center" }}>{index + 1}</td>
-                        <td style={{ padding: "8px 6px", whiteSpace: "nowrap" }}>{trip.tripDate ? new Date(trip.tripDate).toLocaleDateString("en-CA", { year: "numeric", month: "short", day: "numeric" }) : "-"}</td>
-                        <td style={{ padding: "8px 6px", fontWeight: "bold", color: "#1e293b" }}>{trip.vrid || "N/A"}</td>
-                        <td style={{ padding: "8px 6px" }}>{trip.route || "N/A"}</td>
-                        <td style={{ padding: "8px 6px" }}>{`${trip.pickup || "N/A"} to ${trip.drop || "N/A"}`}</td>
-                        <td style={{ padding: "8px 6px", textAlign: "right" }}>${trip.totalCharges?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                        <td style={{ padding: "8px 4px", textAlign: "center", color: "#475569" }}>{trip.dispatchPercent || 0}%</td>
-                        <td style={{ padding: "8px 6px", textAlign: "right", fontWeight: 600, color: "#b91c1c" }}>
-                          ${(trip.dispatchAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      <tr
+                        key={index}
+                        style={{
+                          borderBottom: "1px solid #e2e8f0",
+                          fontSize: "11px",
+                          color: "#334155",
+                        }}
+                      >
+                        <td style={{ padding: "8px 4px", textAlign: "center" }}>
+                          {index + 1}
+                        </td>
+                        <td
+                          style={{ padding: "8px 6px", whiteSpace: "nowrap" }}
+                        >
+                          {trip.tripDate
+                            ? new Date(trip.tripDate).toLocaleDateString(
+                                "en-CA",
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                },
+                              )
+                            : "-"}
+                        </td>
+                        <td
+                          style={{
+                            padding: "8px 6px",
+                            fontWeight: "bold",
+                            color: "#1e293b",
+                          }}
+                        >
+                          {trip.vrid || "N/A"}
+                        </td>
+                        <td style={{ padding: "8px 6px" }}>
+                          {trip.route || "N/A"}
+                        </td>
+                        <td
+                          style={{ padding: "8px 6px" }}
+                        >{`${trip.pickup || "N/A"} to ${trip.drop || "N/A"}`}</td>
+                        <td style={{ padding: "8px 6px", textAlign: "right" }}>
+                          $
+                          {trip.totalCharges?.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                          })}
+                        </td>
+                        <td
+                          style={{
+                            padding: "8px 4px",
+                            textAlign: "center",
+                            color: "#475569",
+                          }}
+                        >
+                          {trip.dispatchPercent || 0}%
+                        </td>
+                        <td
+                          style={{
+                            padding: "8px 6px",
+                            textAlign: "right",
+                            fontWeight: 600,
+                            color: "#b91c1c",
+                          }}
+                        >
+                          $
+                          {(trip.dispatchAmount || 0).toLocaleString(
+                            undefined,
+                            { minimumFractionDigits: 2 },
+                          )}
                         </td>
                       </tr>
                     ))
                   ) : (
-                    <tr><td colSpan={8} style={{ padding: "20px", textAlign: "center", color: "#94a3b8" }}>No active trips found in system database</td></tr>
+                    <tr>
+                      <td
+                        colSpan={8}
+                        style={{
+                          padding: "20px",
+                          textAlign: "center",
+                          color: "#94a3b8",
+                        }}
+                      >
+                        No active trips found in system database
+                      </td>
+                    </tr>
                   )}
                 </tbody>
               </table>
@@ -593,32 +1047,164 @@ function DashboardComponent() {
               {/* 💰 Totals Realignment */}
               <Row justify="end" style={{ marginBottom: "20px" }}>
                 <Col span={8}>
-                  <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 6px", fontSize: "11px", color: "#475569" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      padding: "4px 6px",
+                      fontSize: "11px",
+                      color: "#475569",
+                    }}
+                  >
                     <span>Subtotal:</span>
-                    <span style={{ fontWeight: 500, color: "#0f172a" }}>${selected.subtotal?.toLocaleString(undefined, { minimumFractionDigits: 2 }) || "0.00"}</span>
+                    <span style={{ fontWeight: 500, color: "#0f172a" }}>
+                      $
+                      {selected.subtotal?.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                      }) || "0.00"}
+                    </span>
                   </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", padding: "6px", borderTop: "1.5px solid #cbd5e1", marginTop: "4px", alignItems: "center" }}>
-                    <span style={{ fontWeight: "bold", fontSize: "12px", color: "#1e3a8a" }}>Grand Total:</span>
-                    <span style={{ fontWeight: "bold", fontSize: "13px", color: "#1e3a8a" }}>
-                      {selected.currency || "CAD"} ${selected.grandTotal?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      padding: "6px",
+                      borderTop: "1.5px solid #cbd5e1",
+                      marginTop: "4px",
+                      alignItems: "center",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontWeight: "bold",
+                        fontSize: "12px",
+                        color: "#1e3a8a",
+                      }}
+                    >
+                      Grand Total:
+                    </span>
+                    <span
+                      style={{
+                        fontWeight: "bold",
+                        fontSize: "13px",
+                        color: "#1e3a8a",
+                      }}
+                    >
+                      {selected.currency || "CAD"} $
+                      {selected.grandTotal?.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                      })}
                     </span>
                   </div>
                 </Col>
               </Row>
 
-              {selected.accountNumber && (
-                <div style={{ borderTop: "1px dashed #cbd5e1", paddingTop: "12px", marginTop: "20px" }}>
-                  <h4 style={{ fontSize: "10px", textTransform: "uppercase", color: "#64748b", margin: "0 0 4px 0", letterSpacing: "0.5px" }}>Direct Deposit Details</h4>
-                  <p style={{ fontSize: "10px", color: "#475569", margin: 0, lineHeight: "1.4" }}>
-                    <b>Institution Number:</b> {selected.institutionNumber || "N/A"} | 
-                    <b>Transit Number:</b> {selected.transitNumber || "N/A"} | 
-                    <b>Account Number:</b> {selected.accountNumber}
-                  </p>
+              {/* 💳 Payment Details Footer (Direct Deposit & E-Transfer Side-By-Side) */}
+              {(selected.accountNumber ||
+                selected.eTransfer ||
+                selected.payee?.eTransfer ||
+                selected.payee?.eTransferAddress) && (
+                <div
+                  style={{
+                    borderTop: "1px dashed #cbd5e1",
+                    paddingTop: "12px",
+                    marginTop: "20px",
+                  }}
+                >
+                  <Row gutter={16}>
+                    {/* Direct Deposit Section */}
+                    {selected.accountNumber && (
+                      <Col
+                        span={
+                          selected.eTransfer ||
+                          selected.payee?.eTransfer ||
+                          selected.payee?.eTransferAddress
+                            ? 12
+                            : 24
+                        }
+                      >
+                        <h4
+                          style={{
+                            fontSize: "10px",
+                            textTransform: "uppercase",
+                            color: "#64748b",
+                            margin: "0 0 4px 0",
+                            letterSpacing: "0.5px",
+                            fontWeight: 700,
+                          }}
+                        >
+                          Direct Deposit Details
+                        </h4>
+                        <p
+                          style={{
+                            fontSize: "10px",
+                            color: "#475569",
+                            margin: 0,
+                            lineHeight: "1.4",
+                          }}
+                        >
+                          <b>Institution:</b>{" "}
+                          {selected.institutionNumber || "N/A"} |
+                          <b> Transit:</b> {selected.transitNumber || "N/A"} |
+                          <b> Account:</b> {selected.accountNumber}
+                        </p>
+                      </Col>
+                    )}
+
+                    {/* E-Transfer Address Section */}
+                    {(selected.eTransfer ||
+                      selected.payee?.eTransfer ||
+                      selected.payee?.eTransferAddress) && (
+                      <Col
+                        span={selected.accountNumber ? 12 : 24}
+                        style={{
+                          borderLeft: selected.accountNumber
+                            ? "1px dashed #cbd5e1"
+                            : "none",
+                          paddingLeft: selected.accountNumber ? "16px" : "0",
+                        }}
+                      >
+                        <h4
+                          style={{
+                            fontSize: "10px",
+                            textTransform: "uppercase",
+                            color: "#2563eb",
+                            margin: "0 0 4px 0",
+                            letterSpacing: "0.5px",
+                            fontWeight: 700,
+                          }}
+                        >
+                          💥 E-Transfer Details
+                        </h4>
+                        <p
+                          style={{
+                            fontSize: "10px",
+                            color: "#1e293b",
+                            margin: 0,
+                            lineHeight: "1.4",
+                            fontWeight: 600,
+                          }}
+                        >
+                          <b>E-Transfer Email:</b>{" "}
+                          {selected.eTransfer ||
+                            selected.payee?.eTransfer ||
+                            selected.payee?.eTransferAddress}
+                        </p>
+                      </Col>
+                    )}
+                  </Row>
                 </div>
               )}
 
               {selected.notes && (
-                <div style={{ marginTop: "12px", fontSize: "10px", color: "#64748b", fontStyle: "italic" }}>
+                <div
+                  style={{
+                    marginTop: "12px",
+                    fontSize: "10px",
+                    color: "#64748b",
+                    fontStyle: "italic",
+                  }}
+                >
                   <b>Notes:</b> {selected.notes}
                 </div>
               )}
@@ -631,7 +1217,6 @@ function DashboardComponent() {
 }
 
 import dynamic from "next/dynamic";
-// Pure architecture wrapper injection taaki server-side pre-render absolute zero ho sake
 const DashboardPage = dynamic(() => Promise.resolve(DashboardComponent), {
   ssr: false,
 });

@@ -22,15 +22,24 @@ export default function TripSection({ form }: Props) {
     return trips.reduce((sum: number, trip: any) => sum + Number(trip?.totalCharges || 0), 0);
   }, [trips]);
 
+  // Shared Label Style - Matches Payee/Customer Cards
+  const labelStyle = {
+    display: "block",
+    fontSize: "14px",
+    fontWeight: 500,
+    color: "#1e293b",
+    marginBottom: "6px"
+  };
+
   return (
     <div style={{ width: "100%" }}>
       <Card 
-        title={<span style={{ fontSize: 13, fontWeight: 700, color: "#1e3a8a" }}>🚛 Trip Segment Entry — Mode: <span style={{ textTransform: "uppercase", color: "#2563eb" }}>{String(invoiceTypeRaw).toLowerCase()}</span></span>}
+     
         variant="borderless"
         styles={{ 
-          body: { padding: "10px 14px" }, 
+          body: { padding: "14px 14px" }, 
           header: { 
-            minHeight: 38, 
+            minHeight: 42, 
             padding: "0 14px", 
             borderBottom: "1px solid #e2e8f0",
             background: "#f8fafc"
@@ -58,17 +67,16 @@ export default function TripSection({ form }: Props) {
                     size="small"
                     variant="borderless"
                     style={{ 
-                      marginBottom: 8, 
+                      marginBottom: 12, 
                       background: "#ffffff", 
                       borderRadius: 6, 
-                      border: "1px solid #e2e8f0",
-                      boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)"
+                      border: "1px solid #e2e8f0"
                     }}
                     styles={{ 
-                      body: { padding: "8px 12px" }, 
+                      body: { padding: "14px" }, 
                       header: { 
-                        minHeight: 32, 
-                        padding: "0 12px", 
+                        minHeight: 36, 
+                        padding: "0 14px", 
                         background: "#f8fafc", 
                         borderBottom: "1px solid #e2e8f0" 
                       } 
@@ -86,9 +94,9 @@ export default function TripSection({ form }: Props) {
                           size="small"
                           icon={<DeleteOutlined />} 
                           style={{ 
-                            fontSize: 11, 
-                            height: 22, 
-                            padding: "0 6px",
+                            fontSize: 12, 
+                            height: 24, 
+                            padding: "0 8px",
                             borderRadius: 4
                           }}
                           onClick={() => remove(name)}
@@ -98,224 +106,175 @@ export default function TripSection({ form }: Props) {
                       )
                     }
                   >
-                    {/* Top Fields Row */}
-                   <Row gutter={[{ xs: 8, sm: 12, md: 16 }, { xs: 8, sm: 12, md: 16 }]}>
-  {/* 🇨🇦 Trip Date - Canadian Format Configured */}
-  <Col xs={24} md={4}>
-    <Form.Item
-      {...restField}
-      label="Trip Date"
-      name={[name, "tripDate"]}
-      rules={[{ required: true, message: "Required" }]}
-      style={{ marginBottom: 8 }}
-      labelCol={{ style: { fontWeight: 600, color: "#475569", fontSize: 11 } }}
-    >
-      <DatePicker 
-        style={{ width: "100%", borderRadius: 4 }} 
-        format="YYYY-MM-DD" // Standalone standard format for Canada (EN-CA)
-        placeholder="YYYY-MM-DD"
-        size="middle"
-      />
-    </Form.Item>
-  </Col>
+                    {/* Top Row UI Info Blocks */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                      
+                      <Row gutter={12}>
+                        {/* Trip Date */}
+                        <Col span={4}>
+                          <span style={labelStyle}>Trip Date</span>
+                          <Form.Item
+                            {...restField}
+                            name={[name, "tripDate"]}
+                            rules={[{ required: true, message: "Required" }]}
+                            style={{ marginBottom: 0 }}
+                          >
+                            <DatePicker 
+                              style={{ width: "100%", borderRadius: 4 }} 
+                              format="YYYY-MM-DD" 
+                              placeholder="YYYY-MM-DD"
+                              size="middle"
+                            />
+                          </Form.Item>
+                        </Col>
 
-  {/* VRID */}
-  <Col xs={24} md={4}>
-    <Form.Item
-      {...restField}
-      label="VRID"
-      name={[name, "vrid"]}
-      rules={[{ required: true, message: "Required" }]}
-      style={{ marginBottom: 8 }}
-      labelCol={{ style: { fontWeight: 600, color: "#475569", fontSize: 11 } }}
-    >
-      <Input 
-        placeholder="VRID" 
-        style={{ textTransform: "uppercase", borderRadius: 4 }} 
-        size="middle"
-      />
-    </Form.Item>
-  </Col>
+                        {/* VRID */}
+                        <Col span={4}>
+                          <span style={labelStyle}>VRID</span>
+                          <Form.Item
+                            {...restField}
+                            name={[name, "vrid"]}
+                            rules={[{ required: true, message: "Required" }]}
+                            style={{ marginBottom: 0 }}
+                          >
+                            <Input 
+                              placeholder="VRID" 
+                              style={{ textTransform: "uppercase", borderRadius: 4 }} 
+                              size="middle"
+                            />
+                          </Form.Item>
+                        </Col>
 
-  {/* Route */}
-  <Col xs={24} md={4}>
-    <Form.Item 
-      {...restField} 
-      label="Route" 
-      name={[name, "route"]} 
-      style={{ marginBottom: 8 }}
-      labelCol={{ style: { fontWeight: 600, color: "#475569", fontSize: 11 } }}
-    >
-      <Input 
-        placeholder="e.g. YHM1 → YYZ1" 
-        size="middle"
-        style={{ borderRadius: 4 }}
-      />
-    </Form.Item>
-  </Col>
+                        {/* Route */}
+                        <Col span={4}>
+                          <span style={labelStyle}>Route</span>
+                          <Form.Item {...restField} name={[name, "route"]} style={{ marginBottom: 0 }}>
+                            <Input placeholder="e.g. YHM1 → YYZ1" size="middle" style={{ borderRadius: 4 }} />
+                          </Form.Item>
+                        </Col>
 
-  {/* Pickup Location */}
-  <Col xs={24} md={6}>
-    <Form.Item 
-      {...restField} 
-      label="Pickup Location" 
-      name={[name, "pickup"]} 
-      style={{ marginBottom: 8 }}
-      labelCol={{ style: { fontWeight: 600, color: "#475569", fontSize: 11 } }}
-    >
-      <Input 
-        placeholder="Pickup Location" 
-        size="middle"
-        style={{ borderRadius: 4 }}
-      />
-    </Form.Item>
-  </Col>
+                        {/* Pickup Location */}
+                        <Col span={6}>
+                          <span style={labelStyle}>Pickup Location</span>
+                          <Form.Item {...restField} name={[name, "pickup"]} style={{ marginBottom: 0 }}>
+                            <Input placeholder="Pickup Location" size="middle" style={{ borderRadius: 4 }} />
+                          </Form.Item>
+                        </Col>
 
-  {/* Drop Location */}
-  <Col xs={24} md={6}>
-    <Form.Item 
-      {...restField} 
-      label="Drop Location" 
-      name={[name, "drop"]} 
-      style={{ marginBottom: 8 }}
-      labelCol={{ style: { fontWeight: 600, color: "#475569", fontSize: 11 } }}
-    >
-      <Input 
-        placeholder="Drop Location" 
-        size="middle"
-        style={{ borderRadius: 4 }}
-      />
-    </Form.Item>
-  </Col>
-</Row>
+                        {/* Drop Location */}
+                        <Col span={6}>
+                          <span style={labelStyle}>Drop Location</span>
+                          <Form.Item {...restField} name={[name, "drop"]} style={{ marginBottom: 0 }}>
+                            <Input placeholder="Drop Location" size="middle" style={{ borderRadius: 4 }} />
+                          </Form.Item>
+                        </Col>
+                      </Row>
 
-                    {/* Calculations Values Sub-Row */}
-                    <Row 
-                      gutter={[{ xs: 4, sm: 6, md: 8 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 8, { xs: 4, sm: 6, md: 8 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 8]} 
-                      style={{ 
-                        marginTop: { xs: 2, sm: 3, md: 4 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 4, 
-                        paddingTop: { xs: 4, sm: 6, md: 8 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 8, 
-                        borderTop: "1px dashed #e2e8f0" 
-                      }}
-                    >
-                      <Col xs={24} md={8}>
-                        <Form.Item 
-                          {...restField} 
-                          label="Total Charges" 
-                          name={[name, "totalCharges"]} 
-                          style={{ marginBottom: 0 }}
-                          labelCol={{ style: { fontWeight: 600, color: "#475569", fontSize: 11 } }}
-                        >
-                          <InputNumber 
-                            style={{ 
-                              width: "100%", 
-                              borderRadius: 4
-                            }} 
-                            min={0} 
-                            size="middle"
-                            precision={2} 
-                            formatter={(value) => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-                            parser={(value) => parseFloat(value!.replace(/\$\s?|(,*)/g, "") || "0") as any}
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col xs={24} md={8}>
-                        <Form.Item 
-                          {...restField} 
-                          label="Dispatch %" 
-                          name={[name, "dispatchPercent"]} 
-                          style={{ marginBottom: 0 }}
-                          labelCol={{ style: { fontWeight: 600, color: "#475569", fontSize: 11 } }}
-                        >
-                          <InputNumber 
-                            style={{ 
-                              width: "100%", 
-                              borderRadius: 4
-                            }} 
-                            min={0} 
-                            max={100} 
-                            size="middle"
-                            formatter={(value) => `${value}%`}
-                            parser={(value) => parseFloat(value!.replace("%", "") || "0") as any}
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col xs={24} md={8}>
-                        <Form.Item 
-                          label="Dispatch Pay" 
-                          style={{ marginBottom: 0 }}
-                          labelCol={{ style: { fontWeight: 600, color: "#475569", fontSize: 11 } }}
-                        >
-                          <InputNumber 
-                            disabled 
-                            size="middle"
-                            style={{ 
-                              width: "100%", 
-                              background: "#fef2f2", 
-                              color: "#dc2626", 
-                              fontWeight: "700",
-                              borderRadius: 4
-                            }} 
-                            precision={2} 
-                            value={dispatchAmount}
-                            formatter={(value) => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-                          />
-                        </Form.Item>
-                      </Col>
-                    </Row>
+                      {/* Calculations Values Sub-Row */}
+                      <Row gutter={12} style={{ borderTop: "1px dashed #e2e8f0", paddingTop: "14px" }}>
+                        <Col span={8}>
+                          <span style={labelStyle}>Total Charges</span>
+                          <Form.Item {...restField} name={[name, "totalCharges"]} style={{ marginBottom: 0 }}>
+                            <InputNumber 
+                              style={{ width: "100%", borderRadius: 4 }} 
+                              min={0} 
+                              size="middle"
+                              precision={2} 
+                              formatter={(value) => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                              parser={(value) => parseFloat(value!.replace(/\$\s?|(,*)/g, "") || "0") as any}
+                            />
+                          </Form.Item>
+                        </Col>
+                        
+                        <Col span={8}>
+                          <span style={labelStyle}>Dispatch %</span>
+                          <Form.Item {...restField} name={[name, "dispatchPercent"]} style={{ marginBottom: 0 }}>
+                            <InputNumber 
+                              style={{ width: "100%", borderRadius: 4 }} 
+                              min={0} 
+                              max={100} 
+                              size="middle"
+                              formatter={(value) => `${value}%`}
+                              parser={(value) => parseFloat(value!.replace("%", "") || "0") as any}
+                            />
+                          </Form.Item>
+                        </Col>
+
+                        <Col span={8}>
+                          <span style={labelStyle}>Dispatch Pay</span>
+                          <Form.Item style={{ marginBottom: 0 }}>
+                            <InputNumber 
+                              disabled 
+                              size="middle"
+                              style={{ 
+                                width: "100%", 
+                                background: "#fef2f2", 
+                                color: "#dc2626", 
+                                fontWeight: "700",
+                                borderRadius: 4
+                              }} 
+                              precision={2} 
+                              value={dispatchAmount}
+                              formatter={(value) => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                            />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+
+                    </div>
                   </Card>
                 );
               })}
 
-            {/* Bottom Actions Splitter Bar */}
-            <Space 
-              style={{ 
-                width: "100%", 
-                justifyContent: "space-between", 
-                alignItems: "center", 
-                marginTop: 8 
-              }}
-            >
-              {isMultipleMode ? (
-                <Button
-                  icon={<PlusOutlined />}
-                  type="dashed"
-                  size="middle"
-                  onClick={() => add({ dispatchPercent: 10, totalCharges: 0 })}
-                  style={{ 
-                    borderRadius: 4, 
-                    fontWeight: 600, 
-                    color: "#2563eb", 
-                    borderColor: "#bfdbfe",
-                    height: 34
-                  }}
-                >
-                  Add Another Trip
-                </Button>
-              ) : (
-                <div />
-              )}
+              {/* Bottom Actions Splitter Bar */}
+              <Space 
+                style={{ 
+                  width: "100%", 
+                  justifyContent: "space-between", 
+                  alignItems: "center", 
+                  marginTop: 4 
+                }}
+              >
+                {isMultipleMode ? (
+                  <Button
+                    icon={<PlusOutlined />}
+                    type="dashed"
+                    size="middle"
+                    onClick={() => add({ dispatchPercent: 10, totalCharges: 0 })}
+                    style={{ 
+                      borderRadius: 4, 
+                      fontWeight: 600, 
+                      color: "#2563eb", 
+                      borderColor: "#bfdbfe",
+                      height: 36
+                    }}
+                  >
+                    Add Another Trip
+                  </Button>
+                ) : (
+                  <div />
+                )}
 
-              <div style={{ 
-                textAlign: "right", 
-                padding: "6px 12px", 
-                background: "#f0fdf4", 
-                border: "1px solid #bbf7d0", 
-                borderRadius: 6,
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)"
-              }}>
-                <span style={{ fontSize: 11, color: "#16a34a", fontWeight: 600 }}>Total:</span>
-                <strong style={{ fontSize: 13, color: "#166534", fontVariantNumeric: "tabular-nums", fontWeight: 700 }}>
-                  ${totalChargesSum.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </strong>
-              </div>
-            </Space>
-          </>
-        )}
-      </Form.List>
+                <div style={{ 
+                  textAlign: "right", 
+                  padding: "6px 14px", 
+                  background: "#f0fdf4", 
+                  border: "1px solid #bbf7d0", 
+                  borderRadius: 6,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)"
+                }}>
+                  <span style={{ fontSize: 12, color: "#16a34a", fontWeight: 600 }}>Total:</span>
+                  <strong style={{ fontSize: 14, color: "#166534", fontVariantNumeric: "tabular-nums", fontWeight: 700 }}>
+                    ${totalChargesSum.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </strong>
+                </div>
+              </Space>
+            </>
+          )}
+        </Form.List>
       </Card>
     </div>
   );

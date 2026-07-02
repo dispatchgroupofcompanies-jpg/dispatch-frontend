@@ -1,6 +1,6 @@
 "use client";
 
-import { Form, Modal, Button, message } from "antd";
+import { Form, Modal, Button, message, Row, Col } from "antd";
 import { useMemo, useEffect, useState } from "react";
 import dayjs from "dayjs";
 
@@ -10,24 +10,50 @@ import PayToDetails from "./PayToDetails";
 import TripSection from "./TripSection";
 import SummaryCard from "./SummaryCard";
 import { createInvoice, updateInvoice } from "./route";
+import { getCompanyProfile } from "../../modules/company/route";
 
-export default function CreateInvoiceModal({ open, onClose, editData }: { open: boolean; onClose: () => void; editData?: any }) {
+export default function CreateInvoiceModal({
+  open,
+  onClose,
+  editData,
+}: {
+  open: boolean;
+  onClose: () => void;
+  editData?: any;
+}) {
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
-  
+  const [companies, setCompanies] = useState<any[]>([]);
+
   const trips = Form.useWatch("trips", form);
   const invoiceType = Form.useWatch("invoiceType", form);
   const isEditMode = !!editData;
 
+  const fetchCompaniesList = async () => {
+    try {
+      const res = await getCompanyProfile();
+      console.log("Fetched Companies List:", res);
+      if (res && res.success && res.data) {
+        const data = Array.isArray(res.data) ? res.data : [res.data];
+        setCompanies(data);
+      }
+    } catch (err) {
+      console.error("Error loading profile dataset:", err);
+    }
+  };
+
   useEffect(() => {
     if (open) {
+      fetchCompaniesList();
       if (editData) {
         const formattedEditData = {
           ...editData,
-          invoicePeriod: editData.invoicePeriod?.startDate ? [
-            dayjs(editData.invoicePeriod.startDate),
-            dayjs(editData.invoicePeriod.endDate)
-          ] : null,
+          invoicePeriod: editData.invoicePeriod?.startDate
+            ? [
+                dayjs(editData.invoicePeriod.startDate),
+                dayjs(editData.invoicePeriod.endDate),
+              ]
+            : null,
           trips: (editData.trips || []).map((trip: any) => ({
             ...trip,
             tripDate: trip.tripDate ? dayjs(trip.tripDate) : null,
@@ -42,7 +68,10 @@ export default function CreateInvoiceModal({ open, onClose, editData }: { open: 
 
   const invoiceSubtotal = useMemo(() => {
     if (!trips || !Array.isArray(trips)) return 0;
-    return trips.reduce((total, trip) => total + Number(trip?.totalCharges || 0), 0);
+    return trips.reduce(
+      (total, trip) => total + Number(trip?.totalCharges || 0),
+      0,
+    );
   }, [trips]);
 
   const handleSubmit = async (values: any) => {
@@ -68,7 +97,7 @@ export default function CreateInvoiceModal({ open, onClose, editData }: { open: 
       if (values.invoicePeriod && Array.isArray(values.invoicePeriod)) {
         invoicePeriod = [
           values.invoicePeriod[0].toISOString(),
-          values.invoicePeriod[1].toISOString()
+          values.invoicePeriod[1].toISOString(),
         ];
       }
 
@@ -80,6 +109,12 @@ export default function CreateInvoiceModal({ open, onClose, editData }: { open: 
         tax: hstAmount,
         grandTotal: grandTotal,
       };
+
+      console.log("🔴 FINAL PAYLOAD BEING SENT TO BACKEND:", finalPayload);
+      console.log(
+        "🔴 E-TRANSFER IN PAYLOAD:",
+        finalPayload.payee?.eTransferAddress,
+      );
 
       if (isEditMode) {
         await updateInvoice(editData._id, finalPayload);
@@ -93,7 +128,9 @@ export default function CreateInvoiceModal({ open, onClose, editData }: { open: 
       onClose();
     } catch (error) {
       console.error(error);
-        message.error((error as any)?.response?.data?.message || "Operation failed");
+      message.error(
+        (error as any)?.response?.data?.message || "Operation failed",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -101,16 +138,33 @@ export default function CreateInvoiceModal({ open, onClose, editData }: { open: 
 
   return (
     <Modal
-      title={<span style={{ fontSize: window.innerWidth < 640 ? "13px" : "15px", fontWeight: 700 }}>{isEditMode ? "✏️ Edit Invoice Master Log" : "➕ Generate New Bill Statement"}</span>}
+      title={
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            paddingBottom: "4px",
+          }}
+        >
+          <span style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a" }}>
+            {isEditMode
+              ? "✏️ Edit Invoice Master Log"
+              : "➕ Generate New Bill Statement"}
+          </span>
+        </div>
+      }
       open={open}
       onCancel={() => {
         form.resetFields();
         onClose();
       }}
       footer={null}
-      width={window.innerWidth < 640 ? "98%" : window.innerWidth < 768 ? "95%" : 1300}
-      style={{ top: window.innerWidth < 640 ? 0 : 20 }}
-      styles={{ body: { padding: { xs: "4px 8px", sm: "6px 12px", md: "8px 16px" }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || "8px 16px" } }}
+      width={1200}
+      style={{ top: 15 }}
+      styles={{
+        body: { padding: "0px 8px 8px 8px" },
+      }}
     >
       <Form
         form={form}
@@ -124,49 +178,111 @@ export default function CreateInvoiceModal({ open, onClose, editData }: { open: 
           trips: [{ dispatchPercent: 10, totalCharges: 0 }],
         }}
       >
-        <InvoiceDetails />
-        <PayeeDetails />
-        <PayToDetails />
-        
-        {/* Dynamic Trips Container */}
-        <div style={{ 
-          background: "#f8fafc", 
-          padding: { xs: "6px 8px", sm: "8px 12px", md: "10px 14px" }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || "10px 14px", 
-          borderRadius: 6, 
-          border: "1px solid #e2e8f0", 
-          marginBottom: { xs: 6, sm: 8, md: 10 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 10 
-        }}>
-          <h3 style={{ 
-            fontSize: { xs: 11, sm: 12, md: 13 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 13, 
-            fontWeight: 700, 
-            margin: "0 0 8px 0", 
-            color: "#1e3a8a" 
-          }}>
-            📋 Trips — Mode: <span style={{ textTransform: "uppercase", color: "#2563eb" }}>{invoiceType}</span>
-          </h3>
-          <TripSection form={form} allowMultiple={invoiceType === "multiple" || invoiceType === "Multiple"} />
+        {/* Top Metadata */}
+        <div
+          style={{
+            background: "#ffffff",
+            padding: "8px 12px",
+            borderRadius: 6,
+            border: "1px solid #e2e8f0",
+            marginBottom: 8,
+          }}
+        >
+          <InvoiceDetails />
         </div>
-        
-        <SummaryCard subtotal={invoiceSubtotal}  />
 
-        <div style={{ 
-          display: "flex", 
-          justifyContent: "flex-end", 
-          gap: { xs: 6, sm: 8, md: 8 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 8, 
-          marginTop: { xs: 10, sm: 12, md: 16 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 16, 
-          paddingBottom: { xs: 6, sm: 8, md: 10 }[window.innerWidth < 640 ? 'xs' : window.innerWidth < 768 ? 'sm' : 'md'] || 10 
-        }}>
-          <Button size={window.innerWidth < 640 ? "small" : "middle"} onClick={() => { form.resetFields(); onClose(); }}>
+        <Row gutter={[8, 8]} style={{ marginBottom: 8 }}>
+          <Col span={12} style={{ display: "flex", flexDirection: "column" }}>
+            <PayeeDetails formInstance={form} companiesList={companies} />
+          </Col>
+          <Col span={12} style={{ display: "flex", flexDirection: "column" }}>
+            <PayToDetails />
+          </Col>
+        </Row>
+
+        <div
+          style={{
+            background: "#f8fafc",
+            padding: "8px 12px",
+            borderRadius: 6,
+            border: "1px solid #e2e8f0",
+            marginBottom: 8,
+          }}
+        >
+          <h3
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              margin: "0 0 6px 0",
+              color: "#1e3a8a",
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            📋 Trips Ledger &mdash; Mode:
+            <span
+              style={{
+                textTransform: "uppercase",
+                color: "#2563eb",
+                background: "#dbeafe",
+                padding: "1px 6px",
+                borderRadius: 3,
+                fontSize: 10,
+              }}
+            >
+              {invoiceType || "single"}
+            </span>
+          </h3>
+          <TripSection
+            form={form}
+            allowMultiple={
+              invoiceType === "multiple" || invoiceType === "Multiple"
+            }
+          />
+        </div>
+
+        <div style={{ marginBottom: 8 }}>
+          <SummaryCard subtotal={invoiceSubtotal} />
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: 6,
+            marginTop: 10,
+          }}
+        >
+          <Button
+            size="small"
+            style={{ borderRadius: 4, fontWeight: 500, minWidth: 80 }}
+            onClick={() => {
+              form.resetFields();
+              onClose();
+            }}
+          >
             Cancel
           </Button>
-          <Button 
-            size={window.innerWidth < 640 ? "small" : "middle"} 
-            type="primary" 
-            htmlType="submit" 
-            style={{ fontWeight: 600 }} 
+          <Button
+            type="primary"
+            htmlType="submit"
+            size="small"
             loading={submitting}
+            style={{
+              fontWeight: 600,
+              borderRadius: 4,
+              minWidth: 120,
+              background: "#2563eb",
+            }}
           >
-            {submitting ? (isEditMode ? "Saving..." : "Sending...") : (isEditMode ? "Save Changes" : "Compile & Send")}
+            {submitting
+              ? isEditMode
+                ? "Saving..."
+                : "Sending..."
+              : isEditMode
+                ? "Compile"
+                : "Send"}
           </Button>
         </div>
       </Form>

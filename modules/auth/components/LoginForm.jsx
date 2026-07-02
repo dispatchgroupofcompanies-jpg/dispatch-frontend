@@ -18,35 +18,47 @@ export default function
   const router = useRouter();
 
 
- const handleFinish = async (values) => {
+const handleFinish = async (values) => {
   setLoading(true);
 
   try {
     const res = await signin(values);
-
+    console.log("Login response:", res);
 
     if (res.success) {
       message.success("Login successful! Redirecting...");
 
-      // 🔥 STORE TOKEN (IMPORTANT)
+      // 1. 🔥 STORE TOKEN
       if (res.token) {
         localStorage.setItem("token", res.token);
       }
 
-      // store user info
-      if (res.user) {
-        localStorage.setItem("userData", JSON.stringify(res.user));
+      // 2. DETECT ROLE & STORE DATA
+      // Check karte hain ki backend se admin data aaya hai ya user data
+      const accountData = res.admin || res.user;
+      const isAdmin = res.admin || (accountData && accountData.role === "admin");
+
+      if (accountData) {
+        localStorage.setItem("userData", JSON.stringify(accountData));
       }
 
+      // 3. 🔥 CONDITIONAL REDIRECTION
       setTimeout(() => {
-        router.push("/user/dashboard");
+        if (isAdmin) {
+          console.log("Redirecting to Admin Dashboard...");
+          router.push("/admin/dashboard"); // 👈 Admin Dashboard Route
+        } else {
+          console.log("Redirecting to User Dashboard...");
+          router.push("/user/dashboard");  // 👈 Regular User Dashboard Route
+        }
       }, 1000);
+
     } else {
-      message.error(res.message);
+      message.error(res.message || "Invalid credentials");
     }
   } catch (error) {
-    console.error(error);
-    message.error("Login failed");
+    console.error("Login component error:", error);
+    message.error("Login failed. Please check your connection.");
   } finally {
     setLoading(false);
   }

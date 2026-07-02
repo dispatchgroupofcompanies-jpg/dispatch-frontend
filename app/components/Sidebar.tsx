@@ -3,6 +3,7 @@
 import { Layout, Menu } from "antd";
 import {
   BankOutlined,
+  CalendarOutlined,
   DashboardOutlined,
   FileAddOutlined,
   HistoryOutlined,
@@ -28,6 +29,8 @@ export default function Sidebar() {
         return "1";
       case "/user/createInvoice":
         return "2";
+      case "/user/appointment":
+        return "3";
       case "/user/company-record":
         return "6";
       case "/user/company-history":
@@ -56,7 +59,6 @@ export default function Sidebar() {
         zIndex: 1000,
       }}
     >
-      {/* Logo */}
       <div
         style={{
           display: "flex",
@@ -72,8 +74,7 @@ export default function Sidebar() {
             width: 52,
             height: 52,
             borderRadius: 14,
-            background:
-              "linear-gradient(135deg,#1677ff 0%,#69b1ff 100%)",
+            background: "linear-gradient(135deg,#1677ff 0%,#69b1ff 100%)",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
@@ -137,6 +138,12 @@ export default function Sidebar() {
             icon: <FileAddOutlined />,
             label: "Create Invoice",
             onClick: () => router.push("/user/createInvoice"),
+          },
+          {
+            key: "3",
+            icon: <CalendarOutlined />,
+            label: "Book Appointment",
+            onClick: () => router.push("/user/appointment"),
           },
           {
             key: "6",
