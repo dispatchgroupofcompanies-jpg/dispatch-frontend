@@ -2,67 +2,75 @@
 
 import { Form, Input, Button, message, Spin, Checkbox, Typography } from "antd";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { signin } from "../route";
 import { EyeInvisibleOutlined, EyeTwoTone, LockOutlined, MailOutlined } from "@ant-design/icons";
 
 const { Text, Title } = Typography;
 
-export default function
-  LoginForm() {
+export default function LoginForm() {
   const [form] = Form.useForm();
   const savedEmail = typeof window !== "undefined" ? localStorage.getItem("rememberEmail") : null;
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(() => !!savedEmail);
-  const router = useRouter();
 
+  const handleFinish = async (values) => {
+    setLoading(true);
 
-const handleFinish = async (values) => {
-  setLoading(true);
+    try {
+      const res = await signin(values);
+      console.log("Login response:", res);
 
-  try {
-    const res = await signin(values);
-    console.log("Login response:", res);
+      if (res.success) {
+        message.success("Login successful! Redirecting...");
 
-    if (res.success) {
-      message.success("Login successful! Redirecting...");
-
-      // 1. 🔥 STORE TOKEN
-      if (res.token) {
-        localStorage.setItem("token", res.token);
-      }
-
-      // 2. DETECT ROLE & STORE DATA
-      // Check karte hain ki backend se admin data aaya hai ya user data
-      const accountData = res.admin || res.user;
-      const isAdmin = res.admin || (accountData && accountData.role === "admin");
-
-      if (accountData) {
-        localStorage.setItem("userData", JSON.stringify(accountData));
-      }
-
-      // 3. 🔥 CONDITIONAL REDIRECTION
-      setTimeout(() => {
-        if (isAdmin) {
-          console.log("Redirecting to Admin Dashboard...");
-          router.push("/admin/dashboard"); // 👈 Admin Dashboard Route
+        // Remember Me Logic Handling
+        if (rememberMe) {
+          localStorage.setItem("rememberEmail", values.email);
         } else {
-          console.log("Redirecting to User Dashboard...");
-          router.push("/user/dashboard");  // 👈 Regular User Dashboard Route
+          localStorage.removeItem("rememberEmail");
         }
-      }, 1000);
 
-    } else {
-      message.error(res.message || "Invalid credentials");
+        // 1. STORE TOKEN (Sabse pehle token update hona chahiye)
+        if (res.token) {
+          localStorage.setItem("token", res.token);
+        }
+
+        // 2. DETECT ROLE & STORE DATA
+        const accountData = res.admin || res.user;
+        const isAdmin = res.admin || (accountData && accountData.role === "admin");
+
+        if (accountData) {
+          localStorage.setItem("userData", JSON.stringify(accountData));
+        }
+
+        // 3. 🔥 FIX REDIRECTION LOOP (Bypassing Next.js Cache router)
+        setTimeout(() => {
+          const urlParams = new URLSearchParams(window.location.search);
+          const customRedirect = urlParams.get("redirect");
+
+          if (customRedirect) {
+            console.log("Redirecting to targeted query path...", customRedirect);
+            window.location.href = customRedirect; // URL query parameters ka redirection handle karega
+          } else if (isAdmin) {
+            console.log("Redirecting to Admin Dashboard...");
+            window.location.href = "/admin/dashboard"; // Forces full fresh load
+          } else {
+            console.log("Redirecting to User Dashboard...");
+            window.location.href = "/user/dashboard";
+          }
+        }, 800);
+
+      } else {
+        message.error(res.message || "Invalid credentials");
+      }
+    } catch (error) {
+      console.error("Login component error:", error);
+      message.error("Login failed. Please check your connection.");
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error("Login component error:", error);
-    message.error("Login failed. Please check your connection.");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center px-4 py-8">
@@ -133,7 +141,6 @@ const handleFinish = async (values) => {
                   scrollToFirstError
                   className="space-y-4"
                 >
-                  
                   <Form.Item
                     label={<span className="text-gray-700 dark:text-gray-300 font-semibold">Email Address</span>}
                     name="email"
@@ -178,12 +185,6 @@ const handleFinish = async (values) => {
                         <span className="text-sm">Remember me</span>
                       </Checkbox>
                     </Form.Item>
-                    <Link
-                      href="/forgot-password"
-                      className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 font-medium"
-                    >
-                      Forgot password?
-                    </Link>
                   </div>
 
                   <Button
@@ -204,6 +205,7 @@ const handleFinish = async (values) => {
                     Don't have an account?{" "}
                     <Link
                       href="/signup"
+                      prefetch={false}
                       className="text-blue-600 dark:text-blue-400 font-semibold hover:text-blue-700"
                     >
                       Create account
