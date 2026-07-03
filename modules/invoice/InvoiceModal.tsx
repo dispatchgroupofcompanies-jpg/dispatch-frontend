@@ -11,6 +11,9 @@ import TripSection from "./TripSection";
 import SummaryCard from "./SummaryCard";
 import { createInvoice, updateInvoice } from "./route";
 import { getCompanyProfile } from "../../modules/company/route";
+import type { CompanyProfile } from "../../src/types/company";
+import type { InvoiceFormValues, TripForm } from "../../src/types/invoiceForm";
+import type { Invoice } from "../../src/types/invoice";
 
 export default function CreateInvoiceModal({
   open,
@@ -19,11 +22,11 @@ export default function CreateInvoiceModal({
 }: {
   open: boolean;
   onClose: () => void;
-  editData?: any;
+  editData?: Invoice | (InvoiceFormValues & { _id?: string });
 }) {
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
-  const [companies, setCompanies] = useState<any[]>([]);
+  const [companies, setCompanies] = useState<CompanyProfile[]>([]);
 
   const trips = Form.useWatch("trips", form);
   const invoiceType = Form.useWatch("invoiceType", form);
@@ -34,7 +37,9 @@ export default function CreateInvoiceModal({
       const res = await getCompanyProfile();
       console.log("Fetched Companies List:", res);
       if (res && res.success && res.data) {
-        const data = Array.isArray(res.data) ? res.data : [res.data];
+        const data = Array.isArray(res.data)
+          ? (res.data as CompanyProfile[])
+          : [res.data as CompanyProfile];
         setCompanies(data);
       }
     } catch (err) {
@@ -46,15 +51,24 @@ export default function CreateInvoiceModal({
     if (open) {
       fetchCompaniesList();
       if (editData) {
+        const period = editData.invoicePeriod;
+
+        // Explicitly check that period is an object containing 'startDate' and not an array
+        const hasObjectDates =
+          period &&
+          !Array.isArray(period) &&
+          typeof period === "object" &&
+          "startDate" in period;
+
         const formattedEditData = {
           ...editData,
-          invoicePeriod: editData.invoicePeriod?.startDate
+          invoicePeriod: hasObjectDates
             ? [
-                dayjs(editData.invoicePeriod.startDate),
-                dayjs(editData.invoicePeriod.endDate),
+                dayjs((period as { startDate: string }).startDate),
+                dayjs((period as { endDate: string }).endDate),
               ]
             : null,
-          trips: (editData.trips || []).map((trip: any) => ({
+          trips: (editData.trips || []).map((trip: TripForm) => ({
             ...trip,
             tripDate: trip.tripDate ? dayjs(trip.tripDate) : null,
           })),
@@ -69,12 +83,13 @@ export default function CreateInvoiceModal({
   const invoiceSubtotal = useMemo(() => {
     if (!trips || !Array.isArray(trips)) return 0;
     return trips.reduce(
-      (total, trip) => total + Number(trip?.totalCharges || 0),
+      (total: number, trip: TripForm) =>
+        total + Number(trip?.totalCharges || 0),
       0,
     );
   }, [trips]);
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: InvoiceFormValues) => {
     try {
       setSubmitting(true);
       const hstRate = 13;
@@ -82,7 +97,7 @@ export default function CreateInvoiceModal({
       const hstAmount = (calculatedSubtotal * hstRate) / 100;
       const grandTotal = calculatedSubtotal + hstAmount;
 
-      const formattedTrips = (values.trips || []).map((trip: any) => {
+      const formattedTrips = (values.trips || []).map((trip: TripForm) => {
         const tCharges = Number(trip?.totalCharges || 0);
         const dPercent = Number(trip?.dispatchPercent || 0);
         return {
@@ -116,12 +131,17 @@ export default function CreateInvoiceModal({
         finalPayload.payee?.eTransferAddress,
       );
 
-      if (isEditMode) {
+      // TypeScript Fixed Condition block below
+      if (isEditMode && editData?._id) {
         await updateInvoice(editData._id, finalPayload);
         message.success("Invoice Updated Successfully");
-      } else {
+      } else if (!isEditMode) {
         await createInvoice(finalPayload);
         message.success("Invoice Dispatched Successfully");
+      } else {
+        throw new Error(
+          "Unable to update: Unique document identification ID is missing.",
+        );
       }
 
       form.resetFields();
@@ -129,7 +149,8 @@ export default function CreateInvoiceModal({
     } catch (error) {
       console.error(error);
       message.error(
-        (error as any)?.response?.data?.message || "Operation failed",
+        (error as unknown as { response?: { data?: { message?: string } } })
+          ?.response?.data?.message || "Operation failed",
       );
     } finally {
       setSubmitting(false);

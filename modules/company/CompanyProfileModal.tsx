@@ -6,10 +6,12 @@ import { saveCompanyProfile } from "./route";
 
 const { Option } = Select;
 
+import type { CompanyProfile } from "../../src/types/company";
+
 interface ModalProps {
   open: boolean;
   onClose: () => void;
-  initialData: any;
+  initialData?: CompanyProfile | null;
 }
 
 export default function CompanyProfileModal({
@@ -30,7 +32,7 @@ export default function CompanyProfileModal({
     }
   }, [open, initialData, form]);
 
-  const handleSubmit = async (values: Record<string, unknown>) => {
+  const handleSubmit = async (values: CompanyProfile) => {
     try {
       setSubmitting(true);
       const result = await saveCompanyProfile(values);
@@ -41,9 +43,13 @@ export default function CompanyProfileModal({
       } else {
         throw new Error(result.error || "Failed to save profile configs");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
-      message.error(error.message || "An error occurred while saving profile");
+      const errMsg =
+        error && typeof error === "object" && "message" in error
+          ? (error as { message?: unknown }).message
+          : String(error ?? "An error occurred while saving profile");
+      message.error(String(errMsg));
     } finally {
       setSubmitting(false);
     }

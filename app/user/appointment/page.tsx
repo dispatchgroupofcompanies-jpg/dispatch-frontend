@@ -1,117 +1,43 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  Button,
-  Table,
-  Card,
-  Modal,
-  Form,
-  Input,
-  DatePicker,
-  Select,
-  message,
-  Space,
-  Tag,
-  Row,
-  Col,
-} from "antd";
-import {
-  PlusOutlined,
-  EyeOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  DownloadOutlined,
-} from "@ant-design/icons";
-import { Popconfirm } from "antd";
-import axios from "axios";
-import dayjs from "dayjs";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 
-const API = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api",
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-API.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+// Helper function to safely format dates
+const formatDate = (dateString?: string) => {
+  if (!dateString) return "-";
+  try {
+    return new Date(dateString).toLocaleDateString("en-CA", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch (e) {
+    return "-";
   }
-  return config;
-});
+};
 
-interface Appointment {
-  _id: string;
-  companyId: string;
-  companyName: string;
-  contactPerson: string;
-  email: string;
-  phone: string;
-  addressLine1: string;
-  addressLine2: string;
-  city: string;
-  province: string;
-  state: string;
-  postCode: string;
-  country: string;
-  nsc: string;
-  ifta: string;
-  gstHst: string;
-  qst: string;
-  eTransfer: string;
-  companyLogo?: string;
-  appointmentDate: string;
-  appointmentTime: string;
-  serviceType: string;
-  notes?: string;
-  status: string;
-  createdAt: string;
-}
-
-const serviceTypeOptions = [
-  { value: "Logistics Consultation", label: "Logistics Consultation" },
-  { value: "Freight Quote", label: "Freight Quote" },
-  { value: "Pickup Scheduling", label: "Pickup Scheduling" },
-  { value: "Delivery Tracking", label: "Delivery Tracking" },
-  { value: "Account Setup", label: "Account Setup" },
-  { value: "Other", label: "Other" },
-];
-
-const timeSlotOptions = [
-  { value: "09:00", label: "09:00 AM" },
-  { value: "10:00", label: "10:00 AM" },
-  { value: "11:00", label: "11:00 AM" },
-  { value: "12:00", label: "12:00 PM" },
-  { value: "13:00", label: "01:00 PM" },
-  { value: "14:00", label: "02:00 PM" },
-  { value: "15:00", label: "03:00 PM" },
-  { value: "16:00", label: "04:00 PM" },
-  { value: "17:00", label: "05:00 PM" },
-];
-
-interface Company {
-  _id: string;
-  companyName: string;
-  carrierIdentifier: string;
-  email: string;
-  phone: string;
-  addressLine1: string;
-  addressLine2: string;
-  city: string;
-  province: string;
-  postCode: string;
-  country: string;
-  nsc: string;
-  ifta: string;
-  gstHst: string;
-  qst: string;
-  eTransfer: string;
-  companyLogo?: string;
-}
+import { Button, Table, Card, Modal, Form, message, Tag } from "antd";
+import { PlusOutlined, DownloadOutlined } from "@ant-design/icons";
+import dayjs from "dayjs";
+import TripInfoSection from "./components/TripInfoSection";
+import CarrierInfoSection from "./components/CarrierInfoSection";
+import ShipmentScheduleSection from "./components/ShipmentScheduleSection";
+import ShipperSection from "./components/ShipperSection";
+import ConsigneeSection from "./components/ConsigneeSection";
+import ChargesSection from "./components/ChargesSection";
+import ConfirmationSection from "./components/ConfirmationSection";
+import NotesSection from "./components/NotesSection";
+import { createColumns } from "./components/AppointmentTableColumns";
+import ExpandedRowContent from "./components/ExpandedRowContent";
+import {
+  fetchAppointments as apiFetchAppointments,
+  fetchCompanyProfile,
+  createAppointment,
+  updateAppointment,
+  deleteAppointment,
+  downloadAppointmentPDF,
+} from "./lib/appointmentApi";
+import type { Appointment, Company } from "./lib/appointmentApi";
 
 function AppointmentPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -128,86 +54,29 @@ function AppointmentPage() {
 
   const [form] = Form.useForm();
   const [editForm] = Form.useForm();
+  const mountedRef = useRef(true);
 
-  // Handle responsive layout
   useEffect(() => {
-    const checkScreenSize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
+    const checkScreenSize = () => setIsMobile(window.innerWidth < 768);
     checkScreenSize();
     window.addEventListener("resize", checkScreenSize);
-
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
-  // Fetch companies
   const fetchCompanies = async () => {
     try {
-      const res = await API.get("/company/company-profile");
-      console.log("Companies API Response:", res.data);
-      if (res.data?.success && res.data?.data) {
-        // Company profile returns single object, convert to array
-        const profile = res.data.data;
-        const data =
-          profile && Object.keys(profile).length > 0 ? [profile] : [];
-        setCompanies(data);
-        console.log("Companies loaded:", data);
-      } else {
-        console.log("No companies found in response");
-        setCompanies([]);
-      }
+      const data = await fetchCompanyProfile();
+      if (mountedRef.current) setCompanies(data);
     } catch (err) {
       console.error("Error fetching companies:", err);
     }
   };
 
-  // Handle company selection
-  const handleCompanySelect = (companyId: string) => {
-    const company = companies.find((c) => c._id === companyId);
-    if (company) {
-      form.setFieldsValue({
-        companyId: company._id,
-        companyName: company.companyName,
-        contactPerson: company.carrierIdentifier,
-        email: company.email,
-        phone: company.phone,
-        province: company.province,
-        nsc: company.nsc,
-        ifta: company.ifta,
-        gstHst: company.gstHst,
-        qst: company.qst,
-        eTransfer: company.eTransfer,
-        companyLogo: company.companyLogo,
-        addressLine1: company.addressLine1,
-        addressLine2: company.addressLine2,
-        city: company.city,
-        state: company.province,
-        postCode: company.postCode,
-        country: company.country,
-      });
-    }
-  };
-
-  // Handle company clear
-  const handleCompanyClear = () => {
-    form.setFieldsValue({
-      companyId: undefined,
-      companyName: undefined,
-      contactPerson: undefined,
-      email: undefined,
-      phone: undefined,
-      address: undefined,
-      gstHst: undefined,
-    });
-  };
-
-  // Fetch appointments
   const fetchAppointments = async () => {
     try {
       setLoading(true);
-      const res = await API.get("/appointments");
-      setAppointments(res.data?.data || []);
+      const data = await apiFetchAppointments();
+      if (mountedRef.current) setAppointments(data);
     } catch (err) {
       console.error(err);
       message.error("Failed to fetch appointments");
@@ -217,28 +86,79 @@ function AppointmentPage() {
   };
 
   useEffect(() => {
-    fetchAppointments();
-    fetchCompanies();
+    mountedRef.current = true;
+    const loadData = async () => {
+      await fetchAppointments();
+      await fetchCompanies();
+    };
+    loadData();
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
-  // Handle form submission
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: Record<string, unknown>) => {
     try {
       setSubmitting(true);
 
-      const payload = {
-        ...values,
-        appointmentDate: values.appointmentDate.format("YYYY-MM-DD"),
-      };
+      // Format date fields for backend
+      const formattedValues = { ...values };
 
-      const res = await API.post("/appointments", payload);
-
-      if (res.data?.success) {
-        message.success("Appointment booked successfully!");
-        form.resetFields();
-        setOpen(false);
-        fetchAppointments();
+      // Convert pickupDate if present
+      if (
+        formattedValues.pickupDate &&
+        dayjs.isDayjs(formattedValues.pickupDate)
+      ) {
+        formattedValues.pickupDate =
+          formattedValues.pickupDate.format("YYYY-MM-DD");
       }
+
+      // Convert deliveryDate if present
+      if (
+        formattedValues.deliveryDate &&
+        dayjs.isDayjs(formattedValues.deliveryDate)
+      ) {
+        formattedValues.deliveryDate =
+          formattedValues.deliveryDate.format("YYYY-MM-DD");
+      }
+
+      // Convert signatureDate if present
+      if (
+        formattedValues.signatureDate &&
+        dayjs.isDayjs(formattedValues.signatureDate)
+      ) {
+        formattedValues.signatureDate =
+          formattedValues.signatureDate.format("YYYY-MM-DD");
+      }
+
+      // Convert time fields if present
+      if (
+        formattedValues.pickupTimeStart &&
+        dayjs.isDayjs(formattedValues.pickupTimeStart)
+      ) {
+        formattedValues.pickupTimeStart =
+          formattedValues.pickupTimeStart.format("HH:mm");
+      }
+      if (
+        formattedValues.pickupTimeEnd &&
+        dayjs.isDayjs(formattedValues.pickupTimeEnd)
+      ) {
+        formattedValues.pickupTimeEnd =
+          formattedValues.pickupTimeEnd.format("HH:mm");
+      }
+      if (
+        formattedValues.deliveryTime &&
+        dayjs.isDayjs(formattedValues.deliveryTime)
+      ) {
+        formattedValues.deliveryTime =
+          formattedValues.deliveryTime.format("HH:mm");
+      }
+
+      await createAppointment(formattedValues);
+      message.success("Appointment booked successfully!");
+      form.resetFields();
+      setOpen(false);
+      fetchAppointments();
     } catch (err) {
       console.error(err);
       message.error("Failed to book appointment. Please try again.");
@@ -247,38 +167,23 @@ function AppointmentPage() {
     }
   };
 
-  // Handle status update
-  const handleStatusUpdate = async (id: string, status: string) => {
-    try {
-      await API.patch(`/appointments/${id}/status`, { status });
-      message.success(`Appointment marked as ${status}`);
-      fetchAppointments();
-    } catch (err) {
-      console.error(err);
-      message.error("Failed to update status");
-    }
-  };
+  console.log("🚀 Appointments Data:", appointments);
 
-  // Handle delete
-  const handleDelete = async (id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
     try {
-      await API.delete(`/appointments/${id}`);
+      await deleteAppointment(id);
       message.success("Appointment deleted successfully");
       fetchAppointments();
     } catch (err) {
       console.error(err);
       message.error("Failed to delete appointment");
     }
-  };
+  }, []);
 
-  // Download appointment PDF
-  const handleDownloadPDF = async (id: string) => {
+  const handleDownloadPDF = useCallback(async (id: string) => {
     try {
-      const response = await API.get(`/appointments/${id}/download`, {
-        responseType: "blob",
-      });
-
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const blob = await downloadAppointmentPDF(id);
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
       link.setAttribute("download", `appointment-${id}.pdf`);
@@ -286,180 +191,140 @@ function AppointmentPage() {
       link.click();
       link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
-
       message.success("PDF downloaded successfully!");
     } catch (err) {
       console.error(err);
       message.error("Failed to download PDF");
     }
+  }, []);
+
+  const openEdit = useCallback(
+    (record: Appointment) => {
+      setEditingId(record._id);
+
+      // Format dates and times for the form
+      const formData: Record<string, unknown> = { ...record };
+      try {
+        // Format date fields
+        if (
+          record.appointmentDate &&
+          typeof record.appointmentDate === "string"
+        ) {
+          const d = dayjs(record.appointmentDate);
+          if (d.isValid()) formData.appointmentDate = d;
+        }
+        if (record.pickupDate && typeof record.pickupDate === "string") {
+          const d = dayjs(record.pickupDate);
+          if (d.isValid()) formData.pickupDate = d;
+        }
+        if (record.deliveryDate && typeof record.deliveryDate === "string") {
+          const d = dayjs(record.deliveryDate);
+          if (d.isValid()) formData.deliveryDate = d;
+        }
+        if (record.signatureDate && typeof record.signatureDate === "string") {
+          const d = dayjs(record.signatureDate);
+          if (d.isValid()) formData.signatureDate = d;
+        }
+
+        // Format time fields safely for TimePicker
+        if (
+          record.pickupTimeStart &&
+          typeof record.pickupTimeStart === "string"
+        ) {
+          const t = dayjs(record.pickupTimeStart, "HH:mm");
+          if (t.isValid()) formData.pickupTimeStart = t;
+        }
+        if (record.pickupTimeEnd && typeof record.pickupTimeEnd === "string") {
+          const t = dayjs(record.pickupTimeEnd, "HH:mm");
+          if (t.isValid()) formData.pickupTimeEnd = t;
+        }
+        if (record.deliveryTime && typeof record.deliveryTime === "string") {
+          const t = dayjs(record.deliveryTime, "HH:mm");
+          if (t.isValid()) formData.deliveryTime = t;
+        }
+      } catch (e) {
+        console.error("Error formatting dates/times:", e);
+      }
+
+      editForm.setFieldsValue(formData);
+      setEditOpen(true);
+    },
+    [editForm],
+  );
+
+  const handleEditSubmit = useCallback(
+    async (values: Record<string, unknown>) => {
+      try {
+        // Format date fields for backend
+        const formattedValues = { ...values };
+
+        if (
+          formattedValues.appointmentDate &&
+          dayjs.isDayjs(formattedValues.appointmentDate)
+        ) {
+          formattedValues.appointmentDate =
+            formattedValues.appointmentDate.format("YYYY-MM-DD");
+        }
+
+        await updateAppointment(editingId!, formattedValues);
+        message.success("Appointment updated successfully!");
+        setEditOpen(false);
+        setEditingId(null);
+        editForm.resetFields();
+        fetchAppointments();
+      } catch (err) {
+        console.error(err);
+        message.error("Failed to update appointment");
+      }
+    },
+    [editingId, editForm],
+  );
+
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const columns = useMemo(
+    () =>
+      createColumns({
+        onEdit: openEdit,
+        onDelete: handleDelete,
+      }),
+    [openEdit, handleDelete],
+  );
+
+  const expandedRowRender = (record: Appointment) => {
+    const isExpanded = expandedRow === record._id;
+    return (
+      <ExpandedRowContent
+        record={record}
+        isExpanded={isExpanded}
+        onToggle={() => setExpandedRow(isExpanded ? null : record._id)}
+      />
+    );
   };
-
-  // View appointment details
-  const openView = (record: Appointment) => {
-    setSelectedAppointment(record);
-    setViewOpen(true);
-  };
-
-  // Open edit modal
-  const openEdit = (record: Appointment) => {
-    setEditingId(record._id);
-    editForm.setFieldsValue({
-      appointmentDate: record.appointmentDate
-        ? dayjs(record.appointmentDate)
-        : null,
-    });
-    setEditOpen(true);
-  };
-
-  // Handle edit form submission
-  const handleEditSubmit = async (values: any) => {
-    try {
-      const payload = {
-        ...values,
-        appointmentDate: values.appointmentDate
-          ? values.appointmentDate.format("YYYY-MM-DD")
-          : null,
-      };
-
-      await API.put(`/appointments/${editingId}`, payload);
-      message.success("Appointment updated successfully!");
-      setEditOpen(false);
-      setEditingId(null);
-      editForm.resetFields();
-      fetchAppointments();
-    } catch (err) {
-      console.error(err);
-      message.error("Failed to update appointment");
-    }
-  };
-
-  // Table columns
-  const columns = [
-    {
-      title: "Company Name",
-      dataIndex: "companyName",
-      key: "companyName",
-      width: 200,
-      render: (text: string) => (
-        <span style={{ fontWeight: 600, color: "#1e3a8a" }}>{text}</span>
-      ),
-    },
-    {
-      title: "Email",
-      dataIndex: "email",
-      key: "email",
-      width: 200,
-      render: (text: string) => (
-        <span style={{ color: "#64748b" }}>{text}</span>
-      ),
-    },
-    {
-      title: "Phone",
-      dataIndex: "phone",
-      key: "phone",
-      width: 150,
-    },
-    {
-      title: "Service Type",
-      dataIndex: "serviceType",
-      key: "serviceType",
-      width: 180,
-      render: (text: string) => <Tag color="blue">{text}</Tag>,
-    },
-    {
-      title: "Appointment Date",
-      dataIndex: "appointmentDate",
-      key: "appointmentDate",
-      width: 150,
-      render: (date: string) => (
-        <span style={{ color: "#475569" }}>
-          {date
-            ? new Date(date).toLocaleDateString("en-CA", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })
-            : "-"}
-        </span>
-      ),
-    },
-    {
-      title: "Time",
-      dataIndex: "appointmentTime",
-      key: "appointmentTime",
-      width: 100,
-    },
-    {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      width: 120,
-      render: (status: string) => {
-        const colorMap: Record<string, string> = {
-          draft: "default",
-          confirmed: "processing",
-          completed: "success",
-          cancelled: "error",
-        };
-        return (
-          <Tag color={colorMap[status] || "default"}>
-            {status.toUpperCase()}
-          </Tag>
-        );
-      },
-    },
-    {
-      title: "Actions",
-      key: "action",
-      width: 180,
-      render: (_: unknown, record: Appointment) => (
-        <Space size="small">
-          <Button
-            type="default"
-            size="small"
-            icon={<EyeOutlined />}
-            onClick={() => openView(record)}
-          >
-            View
-          </Button>
-
-          <Button
-            type="primary"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => openEdit(record)}
-          >
-            Edit
-          </Button>
-
-          <Popconfirm
-            title="Delete Appointment"
-            description="Are you sure you want to delete this appointment?"
-            onConfirm={() => handleDelete(record._id)}
-            okText="Yes"
-            cancelText="No"
-            okButtonProps={{ danger: true }}
-          >
-            <Button danger size="small" icon={<DeleteOutlined />} />
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
 
   return (
     <div
       style={{
-        padding: "16px",
+        padding: isMobile ? "12px" : "24px",
         minHeight: "100vh",
         backgroundColor: "#f8fafc",
       }}
     >
       <Card
+        styles={{
+          header: {
+            padding: isMobile ? "16px" : "16px 24px",
+            borderBottom: "1px solid #f1f5f9",
+          },
+          body: { padding: isMobile ? "12px" : "24px" },
+        }}
         style={{
           boxShadow:
             "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
           borderRadius: "16px",
+          background: "#ffffff",
+          overflow: "hidden",
         }}
         title={
           <div
@@ -469,7 +334,7 @@ function AppointmentPage() {
               justifyContent: "space-between",
               alignItems: isMobile ? "flex-start" : "center",
               width: "100%",
-              gap: isMobile ? "12px" : "0",
+              gap: isMobile ? "16px" : "0",
             }}
           >
             <div>
@@ -479,6 +344,7 @@ function AppointmentPage() {
                   fontSize: isMobile ? "20px" : "24px",
                   fontWeight: 700,
                   color: "#0f172a",
+                  letterSpacing: "-0.02em",
                 }}
               >
                 Appointment Management
@@ -497,7 +363,11 @@ function AppointmentPage() {
               type="primary"
               size={isMobile ? "middle" : "large"}
               icon={<PlusOutlined />}
-              style={{ borderRadius: "8px", fontWeight: 600 }}
+              style={{
+                borderRadius: "8px",
+                fontWeight: 600,
+                width: isMobile ? "100%" : "auto",
+              }}
               onClick={() => setOpen(true)}
             >
               Book Appointment
@@ -505,13 +375,7 @@ function AppointmentPage() {
           </div>
         }
       >
-        <div
-          style={{
-            overflowX: "auto",
-            WebkitOverflowScrolling: "touch",
-            position: "relative",
-          }}
-        >
+        <div style={{ width: "100%", overflowX: "auto" }}>
           <Table
             dataSource={appointments}
             columns={columns}
@@ -519,21 +383,32 @@ function AppointmentPage() {
             loading={loading}
             pagination={{
               pageSize: 10,
-              position: ["bottomCenter"],
+              placement: ["bottomCenter"],
               size: isMobile ? "small" : "middle",
             }}
-            size="middle"
-            scroll={{ x: isMobile ? 1200 : undefined }}
+            size={isMobile ? "small" : "middle"}
+            scroll={{ x: isMobile ? 1000 : "100%" }}
+            tableLayout="fixed"
             bordered={false}
+            expandable={{
+              expandedRowRender,
+              onExpandedRowsChange: (expandedRows) => {
+                if (expandedRows.length > 0) {
+                  setExpandedRow(expandedRows[0] as string);
+                } else {
+                  setExpandedRow(null);
+                }
+              },
+              expandedRowKeys: expandedRow ? [expandedRow] : [],
+            }}
           />
         </div>
       </Card>
 
-      {/* Book Appointment Modal */}
       <Modal
         title={
           <div style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>
-            📅 Book New Appointment
+            📋 Load Confirmation Form
           </div>
         }
         open={open}
@@ -542,7 +417,9 @@ function AppointmentPage() {
           setOpen(false);
         }}
         footer={null}
-        width={800}
+        width={1100}
+        centered
+        style={{ maxWidth: "100%", padding: isMobile ? "8px" : "24px" }}
       >
         <Form
           form={form}
@@ -551,374 +428,19 @@ function AppointmentPage() {
           requiredMark={false}
           style={{ marginTop: "20px" }}
         >
-          {/* Company Selection */}
-          <Row gutter={16}>
-            <Col span={24}>
-              <Form.Item
-                name="companyId"
-                label="Select Company"
-                rules={[{ required: true, message: "Please select a company" }]}
-              >
-                <Select
-                  placeholder="Choose company for appointment..."
-                  size="large"
-                  showSearch
-                  optionFilterProp="label"
-                  onChange={handleCompanySelect}
-                  onClear={handleCompanyClear}
-                  allowClear
-                  options={companies.map((company) => ({
-                    value: company._id,
-                    label: company.companyName,
-                  }))}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          {/* Company Details (Auto-filled but Editable) */}
-          <div
-            style={{
-              backgroundColor: "#f8fafc",
-              padding: "16px",
-              borderRadius: "6px",
-              border: "1px solid #e2e8f0",
-              marginBottom: "16px",
-            }}
-          >
-            <h4
-              style={{
-                fontSize: "12px",
-                fontWeight: 700,
-                color: "#1e3a8a",
-                margin: "0 0 12px 0",
-              }}
-            >
-              Company Details
-            </h4>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Company Name
-                  </div>
-                  <Form.Item name="companyName" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Carrier Identifier
-                  </div>
-                  <Form.Item name="contactPerson" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Official Email
-                  </div>
-                  <Form.Item name="email" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Phone Contact
-                  </div>
-                  <Form.Item name="phone" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Province/Territory
-                  </div>
-                  <Form.Item name="province" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    NSC Number
-                  </div>
-                  <Form.Item name="nsc" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    IFTA
-                  </div>
-                  <Form.Item name="ifta" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    GST/HST
-                  </div>
-                  <Form.Item name="gstHst" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    QST (Optional)
-                  </div>
-                  <Form.Item name="qst" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#2563eb",
-                      fontWeight: 600,
-                      marginBottom: "4px",
-                    }}
-                  >
-                    💥 E-Transfer Email
-                  </div>
-                  <Form.Item name="eTransfer" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={24}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Address Line 1
-                  </div>
-                  <Form.Item name="addressLine1" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={24}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Address Line 2 (Optional)
-                  </div>
-                  <Form.Item name="addressLine2" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    City
-                  </div>
-                  <Form.Item name="city" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    State/Province
-                  </div>
-                  <Form.Item name="state" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Postal/ZIP Code
-                  </div>
-                  <Form.Item name="postCode" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Country
-                  </div>
-                  <Form.Item name="country" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-            </Row>
-          </div>
-
-          {/* Appointment Details */}
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="serviceType"
-                label="Service Type"
-                rules={[
-                  { required: true, message: "Please select service type" },
-                ]}
-              >
-                <Select
-                  placeholder="Select service"
-                  size="large"
-                  options={serviceTypeOptions}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="appointmentDate"
-                label="Appointment Date"
-                rules={[{ required: true, message: "Please select date" }]}
-              >
-                <DatePicker
-                  style={{ width: "100%" }}
-                  size="large"
-                  disabledDate={(current) =>
-                    current && current < dayjs().startOf("day")
-                  }
-                  format="YYYY-MM-DD"
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="appointmentTime"
-                label="Appointment Time"
-                rules={[{ required: true, message: "Please select time" }]}
-              >
-                <Select
-                  placeholder="Select time"
-                  size="large"
-                  options={timeSlotOptions}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          {/* Notes - Last Field */}
-          <Form.Item name="notes" label="Notes">
-            <Input.TextArea
-              rows={3}
-              placeholder="Any additional notes or special requirements..."
-            />
-          </Form.Item>
+          <TripInfoSection />
+          <CarrierInfoSection />
+          <ShipmentScheduleSection />
+          <ShipperSection />
+          <ConsigneeSection />
+          <ChargesSection />
+          <ConfirmationSection />
+          <NotesSection />
 
           <div
             style={{
               display: "flex",
+              flexDirection: isMobile ? "column-reverse" : "row",
               justifyContent: "flex-end",
               gap: "8px",
               marginTop: "20px",
@@ -926,6 +448,7 @@ function AppointmentPage() {
           >
             <Button
               size="large"
+              style={{ width: isMobile ? "100%" : "auto" }}
               onClick={() => {
                 form.resetFields();
                 setOpen(false);
@@ -942,15 +465,15 @@ function AppointmentPage() {
                 background: "#2563eb",
                 borderRadius: "6px",
                 fontWeight: 600,
+                width: isMobile ? "100%" : "auto",
               }}
             >
-              Book Appointment
+              Submit Load Confirmation
             </Button>
           </div>
         </Form>
       </Modal>
 
-      {/* View Appointment Modal */}
       <Modal
         title={
           <div style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>
@@ -963,16 +486,16 @@ function AppointmentPage() {
           <Button
             size="large"
             onClick={() => setViewOpen(false)}
-            style={{ borderRadius: "6px" }}
+            style={{ borderRadius: "6px", width: isMobile ? "100%" : "auto" }}
           >
             Close
           </Button>
         }
         width={600}
+        centered
       >
         {selectedAppointment && (
           <div style={{ padding: "20px 0" }}>
-            {/* Circular Logo Display */}
             {selectedAppointment.companyLogo && (
               <div
                 style={{
@@ -1006,8 +529,6 @@ function AppointmentPage() {
                 </div>
               </div>
             )}
-
-            {/* Download PDF Button */}
             <div style={{ marginBottom: "20px", textAlign: "center" }}>
               <Button
                 type="primary"
@@ -1018,15 +539,139 @@ function AppointmentPage() {
                   background: "#2563eb",
                   borderRadius: "6px",
                   fontWeight: 600,
+                  width: isMobile ? "100%" : "auto",
                 }}
               >
                 Download Appointment PDF
               </Button>
             </div>
-
-            <Row gutter={[16, 16]}>
-              <Col span={12}>
-                <div style={{ marginBottom: "12px" }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
+                gap: "16px",
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "#64748b",
+                    marginBottom: "4px",
+                  }}
+                >
+                  Company Name
+                </div>
+                <div
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    color: "#1e3a8a",
+                  }}
+                >
+                  {selectedAppointment.companyName}
+                </div>
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "#64748b",
+                    marginBottom: "4px",
+                  }}
+                >
+                  Email
+                </div>
+                <div
+                  style={{
+                    fontSize: "14px",
+                    color: "#334155",
+                    wordBreak: "break-word",
+                  }}
+                >
+                  {selectedAppointment.email}
+                </div>
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "#64748b",
+                    marginBottom: "4px",
+                  }}
+                >
+                  Phone
+                </div>
+                <div style={{ fontSize: "14px", color: "#334155" }}>
+                  {selectedAppointment.phone}
+                </div>
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "#64748b",
+                    marginBottom: "4px",
+                  }}
+                >
+                  Service Type
+                </div>
+                <Tag color="blue">{selectedAppointment.serviceType}</Tag>
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "#64748b",
+                    marginBottom: "4px",
+                  }}
+                >
+                  Appointment Date
+                </div>
+                <div style={{ fontSize: "14px", color: "#334155" }}>
+                  {formatDate(selectedAppointment.appointmentDate)}
+                </div>
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "#64748b",
+                    marginBottom: "4px",
+                  }}
+                >
+                  Time
+                </div>
+                <div style={{ fontSize: "14px", color: "#334155" }}>
+                  {selectedAppointment.appointmentTime}
+                </div>
+              </div>
+              <div style={{ gridColumn: "1 / -1" }}>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "#64748b",
+                    marginBottom: "4px",
+                  }}
+                >
+                  Status
+                </div>
+                <Tag
+                  color={
+                    selectedAppointment.status === "confirmed"
+                      ? "success"
+                      : selectedAppointment.status === "cancelled"
+                        ? "error"
+                        : selectedAppointment.status === "completed"
+                          ? "success"
+                          : "warning"
+                  }
+                >
+                  {selectedAppointment.status.toUpperCase()}
+                </Tag>
+              </div>
+              {selectedAppointment.notes && (
+                <div style={{ gridColumn: "1 / -1" }}>
                   <div
                     style={{
                       fontSize: "12px",
@@ -1034,165 +679,31 @@ function AppointmentPage() {
                       marginBottom: "4px",
                     }}
                   >
-                    Company Name
+                    Notes
                   </div>
                   <div
                     style={{
                       fontSize: "14px",
-                      fontWeight: 600,
-                      color: "#1e3a8a",
+                      color: "#334155",
+                      padding: "8px",
+                      backgroundColor: "#f8fafc",
+                      borderRadius: "4px",
+                      wordBreak: "break-word",
                     }}
                   >
-                    {selectedAppointment.companyName}
+                    {selectedAppointment.notes}
                   </div>
                 </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "12px" }}>
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Email
-                  </div>
-                  <div style={{ fontSize: "14px", color: "#334155" }}>
-                    {selectedAppointment.email}
-                  </div>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "12px" }}>
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Phone
-                  </div>
-                  <div style={{ fontSize: "14px", color: "#334155" }}>
-                    {selectedAppointment.phone}
-                  </div>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "12px" }}>
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Service Type
-                  </div>
-                  <Tag color="blue">{selectedAppointment.serviceType}</Tag>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "12px" }}>
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Appointment Date
-                  </div>
-                  <div style={{ fontSize: "14px", color: "#334155" }}>
-                    {new Date(
-                      selectedAppointment.appointmentDate,
-                    ).toLocaleDateString("en-CA", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </div>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "12px" }}>
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Time
-                  </div>
-                  <div style={{ fontSize: "14px", color: "#334155" }}>
-                    {selectedAppointment.appointmentTime}
-                  </div>
-                </div>
-              </Col>
-              <Col span={24}>
-                <div style={{ marginBottom: "12px" }}>
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Status
-                  </div>
-                  <Tag
-                    color={
-                      selectedAppointment.status === "confirmed"
-                        ? "success"
-                        : selectedAppointment.status === "cancelled"
-                          ? "error"
-                          : selectedAppointment.status === "completed"
-                            ? "success"
-                            : "warning"
-                    }
-                  >
-                    {selectedAppointment.status.toUpperCase()}
-                  </Tag>
-                </div>
-              </Col>
-              {selectedAppointment.notes && (
-                <Col span={24}>
-                  <div style={{ marginBottom: "12px" }}>
-                    <div
-                      style={{
-                        fontSize: "12px",
-                        color: "#64748b",
-                        marginBottom: "4px",
-                      }}
-                    >
-                      Notes
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "14px",
-                        color: "#334155",
-                        padding: "8px",
-                        backgroundColor: "#f8fafc",
-                        borderRadius: "4px",
-                      }}
-                    >
-                      {selectedAppointment.notes}
-                    </div>
-                  </div>
-                </Col>
               )}
-            </Row>
+            </div>
           </div>
         )}
       </Modal>
 
-      {/* Edit Appointment Modal */}
       <Modal
         title={
           <div style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>
-            ✏️ Edit Appointment
+            ✏️ Edit Load Confirmation
           </div>
         }
         open={editOpen}
@@ -1202,7 +713,9 @@ function AppointmentPage() {
           editForm.resetFields();
         }}
         footer={null}
-        width={800}
+        width={1100}
+        centered
+        style={{ maxWidth: "100%", padding: isMobile ? "8px" : "24px" }}
       >
         <Form
           form={editForm}
@@ -1211,360 +724,19 @@ function AppointmentPage() {
           requiredMark={false}
           style={{ marginTop: "20px" }}
         >
-          {/* Company Details */}
-          <div
-            style={{
-              backgroundColor: "#f8fafc",
-              padding: "16px",
-              borderRadius: "6px",
-              border: "1px solid #e2e8f0",
-              marginBottom: "16px",
-            }}
-          >
-            <h4
-              style={{
-                fontSize: "12px",
-                fontWeight: 700,
-                color: "#1e3a8a",
-                margin: "0 0 12px 0",
-              }}
-            >
-              Company Details
-            </h4>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Company Name
-                  </div>
-                  <Form.Item name="companyName" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Carrier Identifier
-                  </div>
-                  <Form.Item name="contactPerson" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Official Email
-                  </div>
-                  <Form.Item name="email" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Phone Contact
-                  </div>
-                  <Form.Item name="phone" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Province/Territory
-                  </div>
-                  <Form.Item name="province" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    NSC Number
-                  </div>
-                  <Form.Item name="nsc" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    IFTA
-                  </div>
-                  <Form.Item name="ifta" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    GST/HST
-                  </div>
-                  <Form.Item name="gstHst" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    QST (Optional)
-                  </div>
-                  <Form.Item name="qst" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#2563eb",
-                      fontWeight: 600,
-                      marginBottom: "4px",
-                    }}
-                  >
-                    💥 E-Transfer Email
-                  </div>
-                  <Form.Item name="eTransfer" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={24}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Address Line 1
-                  </div>
-                  <Form.Item name="addressLine1" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={24}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Address Line 2 (Optional)
-                  </div>
-                  <Form.Item name="addressLine2" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    City
-                  </div>
-                  <Form.Item name="city" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    State/Province
-                  </div>
-                  <Form.Item name="state" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Postal/ZIP Code
-                  </div>
-                  <Form.Item name="postCode" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Country
-                  </div>
-                  <Form.Item name="country" style={{ marginBottom: 0 }}>
-                    <Input size="large" />
-                  </Form.Item>
-                </div>
-              </Col>
-            </Row>
-          </div>
-
-          {/* Appointment Details */}
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="serviceType"
-                label="Service Type"
-                rules={[
-                  { required: true, message: "Please select service type" },
-                ]}
-              >
-                <Select
-                  placeholder="Select service"
-                  size="large"
-                  options={serviceTypeOptions}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="appointmentDate"
-                label="Appointment Date"
-                rules={[{ required: true, message: "Please select date" }]}
-              >
-                <DatePicker
-                  style={{ width: "100%" }}
-                  size="large"
-                  format="YYYY-MM-DD"
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="appointmentTime"
-                label="Appointment Time"
-                rules={[{ required: true, message: "Please select time" }]}
-              >
-                <Select
-                  placeholder="Select time"
-                  size="large"
-                  options={timeSlotOptions}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="status"
-                label="Status"
-                rules={[{ required: true, message: "Please select status" }]}
-              >
-                <Select
-                  placeholder="Select status"
-                  size="large"
-                  options={[
-                    { value: "pending", label: "Pending" },
-                    { value: "confirmed", label: "Confirmed" },
-                    { value: "completed", label: "Completed" },
-                    { value: "cancelled", label: "Cancelled" },
-                  ]}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Form.Item name="notes" label="Notes">
-            <Input.TextArea rows={3} placeholder="Any additional notes..." />
-          </Form.Item>
+          <TripInfoSection />
+          <CarrierInfoSection />
+          <ShipmentScheduleSection />
+          <ShipperSection />
+          <ConsigneeSection />
+          <ChargesSection />
+          <ConfirmationSection />
+          <NotesSection />
 
           <div
             style={{
               display: "flex",
+              flexDirection: isMobile ? "column-reverse" : "row",
               justifyContent: "flex-end",
               gap: "8px",
               marginTop: "20px",
@@ -1572,6 +744,7 @@ function AppointmentPage() {
           >
             <Button
               size="large"
+              style={{ width: isMobile ? "100%" : "auto" }}
               onClick={() => {
                 setEditOpen(false);
                 setEditingId(null);
@@ -1588,9 +761,10 @@ function AppointmentPage() {
                 background: "#2563eb",
                 borderRadius: "6px",
                 fontWeight: 600,
+                width: isMobile ? "100%" : "auto",
               }}
             >
-              Update Appointment
+              Update Load Confirmation
             </Button>
           </div>
         </Form>

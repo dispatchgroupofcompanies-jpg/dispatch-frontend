@@ -11,7 +11,6 @@ import {
   Col,
   Popconfirm,
   Tag,
-  Select,
   Tooltip,
   message,
 } from "antd";
@@ -27,70 +26,20 @@ import {
   DownloadOutlined,
 } from "@ant-design/icons";
 import CreateInvoiceModal from "../../../modules/invoice/InvoiceModal";
-import {
-  getInvoices,
-  updateInvoiceStatus,
-  deleteInvoiceAPI,
-} from "../../../modules/invoice/route";
-
-interface Invoice {
-  eTransfer?: any;
-  _id: string;
-  invoiceNumber: string;
-  invoiceStatus: string;
-  grandTotal: number;
-  currency?: string;
-  subtotal: number;
-  tax: number;
-  customer: {
-    address: any;
-    phone: string;
-    email: string;
-    gstNumber: string;
-    contactPerson: string;
-    companyName: string;
-  };
-  createdAt: string;
-  payee?: {
-    eTransferAddress?: string;
-    eTransfer?: string;
-    companyName: string;
-    address1?: string;
-    address?: string;
-    contactPerson?: string;
-    driverName?: string;
-    phone?: string;
-    email?: string;
-    gstNumber?: string;
-  };
-  trips?: Array<{
-    tripDate: string;
-    vrid: string;
-    route: string;
-    pickup: string;
-    drop: string;
-    totalCharges: number;
-    dispatchPercent: number;
-    dispatchAmount: number;
-  }>;
-  invoicePeriod?: {
-    startDate: string;
-    endDate: string;
-  };
-  accountNumber?: string;
-  institutionNumber?: string;
-  transitNumber?: string;
-  notes?: string;
-}
+import InvoicePreview from "../../../src/components/InvoicePreview";
+import { getInvoices, deleteInvoiceAPI } from "../../../modules/invoice/route";
+import type { Invoice as InvoiceType } from "../../../src/types/invoice";
 
 function DashboardComponent() {
   const [open, setOpen] = useState(false);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [invoices, setInvoices] = useState<InvoiceType[]>([]);
   const [loading, setLoading] = useState(false);
 
   const [viewOpen, setViewOpen] = useState(false);
-  const [selected, setSelected] = useState<Invoice | null>(null);
-  const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
+  const [selected, setSelected] = useState<InvoiceType | null>(null);
+  const [editingInvoice, setEditingInvoice] = useState<InvoiceType | null>(
+    null,
+  );
   const [sharing, setSharing] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
@@ -112,7 +61,27 @@ function DashboardComponent() {
   };
 
   useEffect(() => {
-    fetchInvoices();
+    let active = true;
+
+    const loadInvoices = async () => {
+      try {
+        setLoading(true);
+        const res = await getInvoices();
+        if (!active) return;
+        console.log("Fetched Invoices Complete Data:", res);
+        setInvoices(res.data?.data || []);
+      } catch (err) {
+        console.error(err);
+        if (active) message.error("Failed to fetch invoices");
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    loadInvoices();
+    return () => {
+      active = false;
+    };
   }, []);
 
   // -------------------------
@@ -133,7 +102,7 @@ function DashboardComponent() {
   // -------------------------
   // HIGH PRECISION ISOLATED SECTION PDF CAPTURE HANDLER
   // -------------------------
-  const triggerDownloadPDF = async (record: Invoice) => {
+  const triggerDownloadPDF = async (record: InvoiceType) => {
     if (!record || typeof window === "undefined") return;
     setDownloading(true);
     const hideLoading = message.loading(
@@ -183,7 +152,7 @@ function DashboardComponent() {
   // -------------------------
   // SHARE INVOICE HANDLER
   // -------------------------
-  const triggerShareInvoice = async (record: Invoice) => {
+  const triggerShareInvoice = async (record: InvoiceType) => {
     if (typeof window === "undefined" || typeof navigator === "undefined") {
       return;
     }
@@ -238,7 +207,7 @@ function DashboardComponent() {
     }
   };
 
-  const openView = (record: Invoice) => {
+  const openView = (record: InvoiceType) => {
     console.log("🔴 CURRENT SELECTED INVOICE OBJECT:", record);
     console.log("🔴 E-TRANSFER DATA:", {
       eTransfer: record.eTransfer,
@@ -249,7 +218,7 @@ function DashboardComponent() {
     setViewOpen(true);
   };
 
-  const openEditModal = (record: Invoice) => {
+  const openEditModal = (record: InvoiceType) => {
     setEditingInvoice(record);
     setOpen(true);
   };
@@ -274,36 +243,15 @@ function DashboardComponent() {
     }
   };
 
-  const handleStatusChange = async (id: string, newStatus: string) => {
-    try {
-      setLoading(true);
-      await updateInvoiceStatus(id, newStatus);
-      setInvoices((prev) =>
-        prev.map((inv) =>
-          inv._id === id ? { ...inv, invoiceStatus: newStatus } : inv,
-        ),
-      );
-      message.success(`Status updated to ${newStatus.toUpperCase()}`);
-    } catch (err) {
-      console.error(err);
-      const error = err as {
-        response?: { data?: { message?: string } };
-        message?: string;
-      };
-      message.error(error?.response?.data?.message || "Status sync error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // -------------------------
   // TABLE MASTER COLUMNS
   // -------------------------
   const columns = [
     {
-      title: "Invoice Identification",
+      title: "Invoice #",
       dataIndex: "invoiceNumber",
       key: "invoiceNumber",
+      width: 140,
       render: (text: string) => (
         <span
           style={{ fontWeight: 700, color: "#1e3a8a", letterSpacing: "0.5px" }}
@@ -313,9 +261,9 @@ function DashboardComponent() {
       ),
     },
     {
-      title: "Client Entity",
-      dataIndex: ["customer", "companyName"],
-      key: "customer",
+      title: "Vendor",
+      dataIndex: ["payee", "companyName"],
+      key: "payeeCompany",
       render: (text: string) => (
         <span style={{ fontWeight: 500, color: "#334155" }}>
           {text || "N/A"}
@@ -323,10 +271,11 @@ function DashboardComponent() {
       ),
     },
     {
-      title: "Grand Evaluation",
+      title: "Amount",
       dataIndex: "grandTotal",
       key: "grandTotal",
-      render: (val: number, record: Invoice) => (
+      width: 160,
+      render: (val: number, record: InvoiceType) => (
         <span style={{ fontWeight: 700, color: "#0f172a" }}>
           {record.currency || "CAD"} $
           {val?.toLocaleString(undefined, {
@@ -337,54 +286,28 @@ function DashboardComponent() {
       ),
     },
     {
-      title: "Pipeline Status Monitor",
+      title: "Status",
       dataIndex: "invoiceStatus",
       key: "invoiceStatus",
-      render: (status: string, record: Invoice) => {
+      width: 140,
+      render: (status: string) => {
         const cleanStatus = status?.toLowerCase() || "draft";
-        const tagColor =
-          cleanStatus === "paid"
-            ? "success"
-            : cleanStatus === "sent"
-              ? "processing"
-              : "warning";
-
+        const colorMap: Record<string, string> = {
+          draft: "default",
+          pending: "warning",
+          approved: "success",
+          paid: "processing",
+          rejected: "error",
+        };
         return (
-          <Space
-            orientation="horizontal"
-            size={12}
-            style={{ alignItems: "center" }}
-          >
-            <Tag
-              color={tagColor}
-              style={{
-                textTransform: "uppercase",
-                fontWeight: 700,
-                borderRadius: "4px",
-                padding: "2px 8px",
-              }}
-            >
-              {status || "DRAFT"}
-            </Tag>
-            <Select
-              size="small"
-              variant="filled"
-              value={cleanStatus}
-              style={{ width: 95, borderRadius: "4px" }}
-              onChange={(newStatus) =>
-                handleStatusChange(record._id, newStatus)
-              }
-              options={[
-                { value: "draft", label: "Draft" },
-                { value: "paid", label: "Paid" },
-              ]}
-            />
-          </Space>
+          <Tag color={colorMap[cleanStatus] || "default"}>
+            {status?.toUpperCase() || "DRAFT"}
+          </Tag>
         );
       },
     },
     {
-      title: "Creation Date",
+      title: "Created",
       dataIndex: "createdAt",
       key: "createdAt",
       render: (val: string) => (
@@ -400,17 +323,16 @@ function DashboardComponent() {
       ),
     },
     {
-      title: "Administrative Actions",
+      title: "Actions",
       key: "action",
-      render: (_: unknown, record: Invoice) => {
+      width: 260,
+      render: (_: unknown, record: InvoiceType) => {
         const isDraft =
           (record.invoiceStatus || "draft").toLowerCase() === "draft";
-
         return (
           <Space size="small">
             <Button
               type="primary"
-              variant="outlined"
               icon={<EyeOutlined />}
               onClick={() => openView(record)}
             >
@@ -463,7 +385,7 @@ function DashboardComponent() {
 
             <Popconfirm
               title="Purge Invoice Record"
-              description="Are you absolutely sure you want to delete this invoice statement permanently?"
+              description="Are you  sure you want to delete this invoice statement permanently?"
               onConfirm={() => handleDeleteInvoice(record._id)}
               okText="Confirm Delete"
               cancelText="Cancel"
@@ -480,13 +402,12 @@ function DashboardComponent() {
   return (
     <div
       style={{
-        padding: "24px",
+        padding: 0,
         minHeight: "100vh",
         backgroundColor: "#f8fafc",
         overflow: "auto",
       }}
     >
-      {/* 📊 RUNTIME ANALYTICS CARDS ROW */}
       <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
         <Col xs={24} sm={12} md={8}>
           <Card
@@ -617,7 +538,7 @@ function DashboardComponent() {
         <Table
           dataSource={invoices}
           columns={columns}
-          rowKey={(record: Invoice) => record._id}
+          rowKey={(record: InvoiceType) => record._id}
           loading={loading}
           pagination={{ pageSize: 8 }}
           size="middle"
@@ -631,10 +552,9 @@ function DashboardComponent() {
           setEditingInvoice(null);
           fetchInvoices();
         }}
-        editData={editingInvoice}
+        editData={editingInvoice || undefined}
       />
 
-      {/* 👁️ PREVIEW MODAL SPECIFICATION */}
       <Modal
         open={viewOpen}
         footer={[
@@ -685,7 +605,8 @@ function DashboardComponent() {
           </Button>,
         ]}
         onCancel={() => setViewOpen(false)}
-        width={850}
+        width="95vw"
+        style={{ top: 20, maxWidth: 980 }}
         centered
         title={null}
         closable
@@ -697,518 +618,10 @@ function DashboardComponent() {
               backgroundColor: "#ffffff",
               padding: "10px 15px",
               borderRadius: "4px",
-              position: "relative",
               overflow: "hidden",
             }}
           >
-            <div
-              style={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%) rotate(-45deg)",
-                fontSize: "44px",
-                fontWeight: 900,
-                color: "rgba(226, 232, 240, 0.45)",
-                letterSpacing: "4px",
-                whiteSpace: "nowrap",
-                zIndex: 0,
-                pointerEvents: "none",
-                userSelect: "none",
-                textAlign: "center",
-              }}
-            >
-              EXTREME LOGISTICS
-            </div>
-
-            <div style={{ position: "relative", zIndex: 10 }}>
-              <Row
-                justify="space-between"
-                align="middle"
-                style={{ marginBottom: "20px" }}
-              >
-                <Col xs={24} sm={12}>
-                  <h1
-                    style={{
-                      fontSize: "24px",
-                      fontWeight: 800,
-                      color: "#1e3a8a",
-                      margin: 0,
-                    }}
-                  >
-                    {selected.trips && selected.trips.length > 1
-                      ? "INVOICE - T"
-                      : "INVOICE - 1"}
-                  </h1>
-                  <span style={{ fontSize: "12px", color: "#64748b" }}>
-                    Num: <b>#{selected.invoiceNumber}</b>
-                  </span>
-                </Col>
-                <Col xs={24} sm={12} style={{ textAlign: "right" }}>
-                  <Tag
-                    color={
-                      selected.invoiceStatus?.toLowerCase() === "paid"
-                        ? "success"
-                        : selected.invoiceStatus?.toLowerCase() === "sent"
-                          ? "processing"
-                          : "warning"
-                    }
-                    style={{
-                      textTransform: "uppercase",
-                      fontWeight: 700,
-                      padding: "2px 6px",
-                      fontSize: "11px",
-                      borderRadius: "4px",
-                    }}
-                  >
-                    {selected.invoiceStatus || "DRAFT"}
-                  </Tag>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#64748b",
-                      marginTop: "4px",
-                    }}
-                  >
-                    Date:{" "}
-                    {selected.createdAt
-                      ? new Date(selected.createdAt).toLocaleDateString(
-                          "en-CA",
-                          { year: "numeric", month: "short", day: "numeric" },
-                        )
-                      : "N/A"}
-                  </div>
-                </Col>
-              </Row>
-
-              <hr
-                style={{
-                  border: 0,
-                  borderTop: "2px solid #f1f5f9",
-                  marginBottom: "20px",
-                }}
-              />
-
-              <Row gutter={[24, 24]} style={{ marginBottom: "20px" }}>
-                <Col xs={24} md={12}>
-                  <h3
-                    style={{
-                      fontSize: "11px",
-                      textTransform: "uppercase",
-                      color: "#475569",
-                      margin: "0 0 6px 0",
-                      letterSpacing: "0.5px",
-                      fontWeight: 700,
-                    }}
-                  >
-                    Extreme Logistic Invoice From:
-                  </h3>
-                  <div
-                    style={{
-                      fontWeight: 700,
-                      fontSize: "13px",
-                      color: "#dc2626",
-                    }}
-                  >
-                    {selected.payee?.companyName || "N/A"}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#475569",
-                      marginTop: "4px",
-                      lineHeight: "1.4",
-                    }}
-                  >
-                    {(selected.payee as any)?.address1 ||
-                      selected.payee?.address ||
-                      "N/A"}
-                    <br />
-                    <b>Driver Name:</b>{" "}
-                    {selected.payee?.contactPerson ||
-                      selected.payee?.driverName ||
-                      "N/A"}
-                    <br />
-                    <b>Phone:</b> {selected.payee?.phone || "N/A"} <br />
-                    <b>Email:</b> {selected.payee?.email || "N/A"} <br />
-                    <b>GST/HST:</b> {selected.payee?.gstNumber || "N/A"}
-                  </div>
-                </Col>
-                <Col
-                  xs={24}
-                  md={12}
-                  style={{
-                    borderLeft: "1px solid #e2e8f0",
-                    paddingLeft: "20px",
-                  }}
-                >
-                  <h3
-                    style={{
-                      fontSize: "11px",
-                      textTransform: "uppercase",
-                      color: "#475569",
-                      margin: "0 0 6px 0",
-                      letterSpacing: "0.5px",
-                      fontWeight: 700,
-                    }}
-                  >
-                    Invoice To:
-                  </h3>
-                  <div
-                    style={{
-                      fontWeight: 700,
-                      fontSize: "13px",
-                      color: "#2563eb",
-                    }}
-                  >
-                    {selected.customer?.companyName || "N/A"}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#475569",
-                      marginTop: "4px",
-                      lineHeight: "1.4",
-                    }}
-                  >
-                    {(selected.customer as any)?.address1 ||
-                      selected.customer?.address ||
-                      "N/A"}
-                    <br />
-                    <b>Attention:</b>{" "}
-                    {selected.customer?.contactPerson || "N/A"}
-                    <br />
-                    <b>Phone:</b> {selected.customer?.phone || "N/A"} <br />
-                    <b>Email:</b> {selected.customer?.email || "N/A"} <br />
-                    <b>GST/HST:</b> {selected.customer?.gstNumber || "N/A"}
-                  </div>
-                </Col>
-              </Row>
-
-              {selected.invoicePeriod?.startDate && (
-                <div
-                  style={{
-                    backgroundColor: "#f8fafc",
-                    border: "1px solid #e2e8f0",
-                    padding: "8px 10px",
-                    borderRadius: "4px",
-                    fontSize: "11px",
-                    marginBottom: "20px",
-                    color: "#334155",
-                  }}
-                >
-                  📅 <b>Billing Period:</b>{" "}
-                  {new Date(
-                    selected.invoicePeriod.startDate,
-                  ).toLocaleDateString("en-CA", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })}{" "}
-                  —{" "}
-                  {new Date(selected.invoicePeriod.endDate).toLocaleDateString(
-                    "en-CA",
-                    { year: "numeric", month: "short", day: "numeric" },
-                  )}
-                </div>
-              )}
-
-              <table
-                style={{
-                  width: "100%",
-                  borderCollapse: "collapse",
-                  textAlign: "left",
-                  marginBottom: "20px",
-                }}
-              >
-                <thead>
-                  <tr
-                    style={{
-                      backgroundColor: "#1e3a8a",
-                      color: "#ffffff",
-                      fontSize: "11px",
-                    }}
-                  >
-                    <th
-                      style={{
-                        padding: "8px 4px",
-                        textAlign: "center",
-                        width: "4%",
-                      }}
-                    >
-                      #
-                    </th>
-                    <th style={{ padding: "8px 6px" }}>Date</th>
-                    <th style={{ padding: "8px 6px" }}>VRID</th>
-                    <th style={{ padding: "8px 6px" }}>Route</th>
-                    <th style={{ padding: "8px 6px" }}>Description</th>
-                    <th style={{ padding: "8px 6px", textAlign: "right" }}>
-                      Charges
-                    </th>
-                    <th style={{ padding: "8px 4px", textAlign: "center" }}>
-                      Dispatch%
-                    </th>
-                    <th style={{ padding: "8px 6px", textAlign: "right" }}>
-                      Total Amount
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selected.trips && selected.trips.length > 0 ? (
-                    selected.trips.map((trip: any, index: number) => (
-                      <tr
-                        key={index}
-                        style={{
-                          borderBottom: "1px solid #e2e8f0",
-                          fontSize: "11px",
-                          color: "#334155",
-                        }}
-                      >
-                        <td style={{ padding: "8px 4px", textAlign: "center" }}>
-                          {index + 1}
-                        </td>
-                        <td
-                          style={{ padding: "8px 6px", whiteSpace: "nowrap" }}
-                        >
-                          {trip.tripDate
-                            ? new Date(trip.tripDate).toLocaleDateString(
-                                "en-CA",
-                                {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                },
-                              )
-                            : "-"}
-                        </td>
-                        <td
-                          style={{
-                            padding: "8px 6px",
-                            fontWeight: "bold",
-                            color: "#1e293b",
-                          }}
-                        >
-                          {trip.vrid || "N/A"}
-                        </td>
-                        <td style={{ padding: "8px 6px" }}>
-                          {trip.route || "N/A"}
-                        </td>
-                        <td
-                          style={{ padding: "8px 6px" }}
-                        >{`${trip.pickup || "N/A"} to ${trip.drop || "N/A"}`}</td>
-                        <td style={{ padding: "8px 6px", textAlign: "right" }}>
-                          $
-                          {trip.totalCharges?.toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                          })}
-                        </td>
-                        <td
-                          style={{
-                            padding: "8px 4px",
-                            textAlign: "center",
-                            color: "#475569",
-                          }}
-                        >
-                          {trip.dispatchPercent || 0}%
-                        </td>
-                        <td
-                          style={{
-                            padding: "8px 6px",
-                            textAlign: "right",
-                            fontWeight: 600,
-                            color: "#b91c1c",
-                          }}
-                        >
-                          $
-                          {(trip.dispatchAmount || 0).toLocaleString(
-                            undefined,
-                            { minimumFractionDigits: 2 },
-                          )}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan={8}
-                        style={{
-                          padding: "20px",
-                          textAlign: "center",
-                          color: "#94a3b8",
-                        }}
-                      >
-                        No active trips found in system database
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-
-              {/* 💰 Totals Realignment */}
-              <Row justify="end" style={{ marginBottom: "20px" }}>
-                <Col span={8}>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      padding: "4px 6px",
-                      fontSize: "11px",
-                      color: "#475569",
-                    }}
-                  >
-                    <span>Subtotal:</span>
-                    <span style={{ fontWeight: 500, color: "#0f172a" }}>
-                      $
-                      {selected.subtotal?.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                      }) || "0.00"}
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      padding: "6px",
-                      borderTop: "1.5px solid #cbd5e1",
-                      marginTop: "4px",
-                      alignItems: "center",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontWeight: "bold",
-                        fontSize: "12px",
-                        color: "#1e3a8a",
-                      }}
-                    >
-                      Grand Total:
-                    </span>
-                    <span
-                      style={{
-                        fontWeight: "bold",
-                        fontSize: "13px",
-                        color: "#1e3a8a",
-                      }}
-                    >
-                      {selected.currency || "CAD"} $
-                      {selected.grandTotal?.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                      })}
-                    </span>
-                  </div>
-                </Col>
-              </Row>
-
-              {/* 💳 Payment Details Footer (Direct Deposit & E-Transfer Side-By-Side) */}
-              {(selected.accountNumber ||
-                selected.eTransfer ||
-                selected.payee?.eTransfer ||
-                selected.payee?.eTransferAddress) && (
-                <div
-                  style={{
-                    borderTop: "1px dashed #cbd5e1",
-                    paddingTop: "12px",
-                    marginTop: "20px",
-                  }}
-                >
-                  <Row gutter={16}>
-                    {/* Direct Deposit Section */}
-                    {selected.accountNumber && (
-                      <Col
-                        span={
-                          selected.eTransfer ||
-                          selected.payee?.eTransfer ||
-                          selected.payee?.eTransferAddress
-                            ? 12
-                            : 24
-                        }
-                      >
-                        <h4
-                          style={{
-                            fontSize: "10px",
-                            textTransform: "uppercase",
-                            color: "#64748b",
-                            margin: "0 0 4px 0",
-                            letterSpacing: "0.5px",
-                            fontWeight: 700,
-                          }}
-                        >
-                          Direct Deposit Details
-                        </h4>
-                        <p
-                          style={{
-                            fontSize: "10px",
-                            color: "#475569",
-                            margin: 0,
-                            lineHeight: "1.4",
-                          }}
-                        >
-                          <b>Institution:</b>{" "}
-                          {selected.institutionNumber || "N/A"} |
-                          <b> Transit:</b> {selected.transitNumber || "N/A"} |
-                          <b> Account:</b> {selected.accountNumber}
-                        </p>
-                      </Col>
-                    )}
-
-                    {/* E-Transfer Address Section */}
-                    {(selected.eTransfer ||
-                      selected.payee?.eTransfer ||
-                      selected.payee?.eTransferAddress) && (
-                      <Col
-                        span={selected.accountNumber ? 12 : 24}
-                        style={{
-                          borderLeft: selected.accountNumber
-                            ? "1px dashed #cbd5e1"
-                            : "none",
-                          paddingLeft: selected.accountNumber ? "16px" : "0",
-                        }}
-                      >
-                        <h4
-                          style={{
-                            fontSize: "10px",
-                            textTransform: "uppercase",
-                            color: "#2563eb",
-                            margin: "0 0 4px 0",
-                            letterSpacing: "0.5px",
-                            fontWeight: 700,
-                          }}
-                        >
-                          💥 E-Transfer Details
-                        </h4>
-                        <p
-                          style={{
-                            fontSize: "10px",
-                            color: "#1e293b",
-                            margin: 0,
-                            lineHeight: "1.4",
-                            fontWeight: 600,
-                          }}
-                        >
-                          <b>E-Transfer Email:</b>{" "}
-                          {selected.eTransfer ||
-                            selected.payee?.eTransfer ||
-                            selected.payee?.eTransferAddress}
-                        </p>
-                      </Col>
-                    )}
-                  </Row>
-                </div>
-              )}
-
-              {selected.notes && (
-                <div
-                  style={{
-                    marginTop: "12px",
-                    fontSize: "10px",
-                    color: "#64748b",
-                    fontStyle: "italic",
-                  }}
-                >
-                  <b>Notes:</b> {selected.notes}
-                </div>
-              )}
-            </div>
+            <InvoicePreview invoice={selected} />
           </div>
         )}
       </Modal>

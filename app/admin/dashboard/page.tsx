@@ -103,10 +103,10 @@ export default function AdminDashboardPage() {
   }, []);
 
   // 📊 Chart 1: Donut Chart Config (Audit Discretion Spread)
-  const donutChartOptions: any = {
+  const donutChartOptions = {
     labels: ["Pending Invoices", "Approved Invoices"],
     colors: ["#f59e0b", "#10b981"],
-    legend: { position: "bottom" },
+    legend: { position: "bottom" as const },
     plotOptions: {
       pie: {
         donut: {
@@ -126,8 +126,7 @@ export default function AdminDashboardPage() {
 
   const donutChartSeries = [stats.pendingInvoices, stats.approvedInvoices];
 
-  // 📈 Chart 2: Bar Chart Config (Invoice Volume Scaling)
-  const barChartOptions: any = {
+  const barChartOptions = {
     chart: { id: "revenue-bar", toolbar: { show: false } },
     colors: ["#2563eb"],
     xaxis: {
@@ -139,7 +138,7 @@ export default function AdminDashboardPage() {
     },
     dataLabels: { enabled: false },
     tooltip: {
-      theme: "light",
+      theme: "light" as const,
       y: {
         formatter: function (val: number) {
           return `$${val.toFixed(2)} CAD`; // Real Value with format on hover
@@ -155,7 +154,6 @@ export default function AdminDashboardPage() {
     },
   ];
 
-  // 🗂️ Table Columns Mapping
   const invoiceColumns: ColumnsType<Invoice> = [
     {
       title: "Invoice #",
@@ -218,228 +216,265 @@ export default function AdminDashboardPage() {
       style={{
         minHeight: "100vh",
         backgroundColor: "#f8fafc",
-        padding: "32px",
       }}
     >
-      {/* Upper Dashboard Heading Title */}
-      <div style={{ marginBottom: 32 }}>
-        <Title
-          level={2}
-          style={{ color: "#0f172a", margin: 0, fontWeight: 700 }}
-        >
-          Dashboard Overview
-        </Title>
-        <Text style={{ color: "#64748b", fontSize: "14px" }}>
-          Real-time core parameters analytics and data metric feed
-        </Text>
+      {/* Header Section */}
+      <div
+        style={{
+          background: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)",
+          padding: "32px 24px",
+          marginBottom: 24,
+          boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+        }}
+      >
+        <div style={{ maxWidth: 1400, margin: "0 auto" }}>
+          <Title
+            level={2}
+            style={{ color: "#fff", margin: 0, fontWeight: 700, fontSize: 28 }}
+          >
+            Dashboard Overview
+          </Title>
+          <Text
+            style={{
+              color: "rgba(255,255,255,0.85)",
+              fontSize: 14,
+              marginTop: 8,
+              display: "block",
+            }}
+          >
+            Real-time core parameters analytics and data metric feed
+          </Text>
+        </div>
       </div>
 
-      <Spin spinning={loading}>
-        {/* 🎴 SECTION 1: COUNTER CARDS */}
-        <Row gutter={[20, 20]} style={{ marginBottom: 32 }}>
-          <Col xs={24} sm={12} lg={6}>
-            <Card
-              style={{
-                borderRadius: 12,
-                border: "1px solid #e2e8f0",
-                boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
-              }}
-            >
-              <Statistic
-                title={
-                  <Text
-                    type="secondary"
-                    style={{ fontSize: 13, fontWeight: 500 }}
-                  >
-                    Total System Invoices
-                  </Text>
-                }
-                value={stats.totalInvoices}
-                prefix={
-                  <FileTextOutlined
-                    style={{ color: "#2563eb", marginRight: 8 }}
-                  />
-                }
-                valueStyle={{ color: "#0f172a", fontWeight: 800, fontSize: 26 }}
-              />
-            </Card>
-          </Col>
-
-          <Col xs={24} sm={12} lg={6}>
-            <Card
-              style={{
-                borderRadius: 12,
-                border: "1px solid #e2e8f0",
-                boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
-              }}
-            >
-              <Statistic
-                title={
-                  <Text
-                    type="secondary"
-                    style={{ fontSize: 13, fontWeight: 500 }}
-                  >
-                    Pending Verification
-                  </Text>
-                }
-                value={stats.pendingInvoices}
-                prefix={
-                  <ClockCircleOutlined
-                    style={{ color: "#f59e0b", marginRight: 8 }}
-                  />
-                }
-                valueStyle={{ color: "#f59e0b", fontWeight: 800, fontSize: 26 }}
-              />
-            </Card>
-          </Col>
-
-          <Col xs={24} sm={12} lg={6}>
-            <Card
-              style={{
-                borderRadius: 12,
-                border: "1px solid #e2e8f0",
-                boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
-              }}
-            >
-              <Statistic
-                title={
-                  <Text
-                    type="secondary"
-                    style={{ fontSize: 13, fontWeight: 500 }}
-                  >
-                    Approved Pipelines
-                  </Text>
-                }
-                value={stats.approvedInvoices}
-                prefix={
-                  <CheckCircleOutlined
-                    style={{ color: "#10b981", marginRight: 8 }}
-                  />
-                }
-                valueStyle={{ color: "#10b981", fontWeight: 800, fontSize: 26 }}
-              />
-            </Card>
-          </Col>
-
-          <Col xs={24} sm={12} lg={6}>
-            <Card
-              style={{
-                borderRadius: 12,
-                border: "1px solid #e2e8f0",
-                boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
-              }}
-            >
-              <Statistic
-                title={
-                  <Text
-                    type="secondary"
-                    style={{ fontSize: 13, fontWeight: 500 }}
-                  >
-                    Gross Volume Settlement
-                  </Text>
-                }
-                value={stats.totalRevenue}
-                prefix={
-                  <DollarCircleOutlined
-                    style={{ color: "#0f172a", marginRight: 8 }}
-                  />
-                }
-                suffix={
-                  <ArrowUpOutlined style={{ color: "#10b981", fontSize: 14 }} />
-                }
-                precision={2}
-                valueStyle={{ color: "#0f172a", fontWeight: 800, fontSize: 26 }}
-              />
-            </Card>
-          </Col>
-        </Row>
-
-        {/* 📊 SECTION 2: GRAPHICAL INTELLIGENCE PLOTS */}
-        <Row gutter={[20, 20]} style={{ marginBottom: 32 }}>
-          <Col xs={24} lg={14}>
-            <Card
-              title={
-                <span style={{ fontWeight: 600 }}>
-                  Invoice Volume Scaling (CAD)
-                </span>
-              }
-              style={{ borderRadius: 12, border: "1px solid #e2e8f0" }}
-            >
-              {recentInvoices.length > 0 ? (
-                <Chart
-                  options={barChartOptions}
-                  series={barChartSeries}
-                  type="bar"
-                  height={260}
-                />
-              ) : (
-                <div
-                  style={{
-                    height: 260,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
+      {/* Content Container */}
+      <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0 24px 24px" }}>
+        <Spin spinning={loading}>
+          {/* 🎴 SECTION 1: COUNTER CARDS */}
+          <Row gutter={[20, 20]} style={{ marginBottom: 32 }}>
+            <Col xs={24} sm={12} lg={6}>
+              <Card
+                style={{
+                  borderRadius: 12,
+                  border: "1px solid #e2e8f0",
+                  boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
+                }}
+              >
+                <Statistic
+                  title={
+                    <Text
+                      type="secondary"
+                      style={{ fontSize: 13, fontWeight: 500 }}
+                    >
+                      Total System Invoices
+                    </Text>
+                  }
+                  value={stats.totalInvoices}
+                  prefix={
+                    <FileTextOutlined
+                      style={{ color: "#2563eb", marginRight: 8 }}
+                    />
+                  }
+                  valueStyle={{
+                    color: "#0f172a",
+                    fontWeight: 800,
+                    fontSize: 26,
                   }}
-                >
-                  No Dynamic Log Recorded
-                </div>
-              )}
-            </Card>
-          </Col>
-          <Col xs={24} lg={10}>
-            <Card
-              title={
-                <span style={{ fontWeight: 600 }}>
-                  Audit Status Distribution
-                </span>
-              }
-              style={{ borderRadius: 12, border: "1px solid #e2e8f0" }}
-            >
-              {stats.totalInvoices > 0 ? (
-                <Chart
-                  options={donutChartOptions}
-                  series={donutChartSeries}
-                  type="donut"
-                  height={260}
                 />
-              ) : (
-                <div
-                  style={{
-                    height: 260,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  No Active Flow Spread
-                </div>
-              )}
-            </Card>
-          </Col>
-        </Row>
+              </Card>
+            </Col>
 
-        {/* 📄 SECTION 3: RECENT INVOICES LEDGER STREAM */}
-        <Card
-          title={
-            <span style={{ fontSize: 16, fontWeight: 700, color: "#0f172a" }}>
-              Recent Processing Invoices Stream
-            </span>
-          }
-          style={{
-            borderRadius: 12,
-            border: "1px solid #e2e8f0",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.01)",
-          }}
-        >
-          <Table
-            columns={invoiceColumns}
-            dataSource={recentInvoices}
-            rowKey="_id"
-            pagination={false}
-            scroll={{ x: 800 }}
-          />
-        </Card>
-      </Spin>
+            <Col xs={24} sm={12} lg={6}>
+              <Card
+                style={{
+                  borderRadius: 12,
+                  border: "1px solid #e2e8f0",
+                  boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
+                }}
+              >
+                <Statistic
+                  title={
+                    <Text
+                      type="secondary"
+                      style={{ fontSize: 13, fontWeight: 500 }}
+                    >
+                      Pending Verification
+                    </Text>
+                  }
+                  value={stats.pendingInvoices}
+                  prefix={
+                    <ClockCircleOutlined
+                      style={{ color: "#f59e0b", marginRight: 8 }}
+                    />
+                  }
+                  valueStyle={{
+                    color: "#f59e0b",
+                    fontWeight: 800,
+                    fontSize: 26,
+                  }}
+                />
+              </Card>
+            </Col>
+
+            <Col xs={24} sm={12} lg={6}>
+              <Card
+                style={{
+                  borderRadius: 12,
+                  border: "1px solid #e2e8f0",
+                  boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
+                }}
+              >
+                <Statistic
+                  title={
+                    <Text
+                      type="secondary"
+                      style={{ fontSize: 13, fontWeight: 500 }}
+                    >
+                      Approved Pipelines
+                    </Text>
+                  }
+                  value={stats.approvedInvoices}
+                  prefix={
+                    <CheckCircleOutlined
+                      style={{ color: "#10b981", marginRight: 8 }}
+                    />
+                  }
+                  valueStyle={{
+                    color: "#10b981",
+                    fontWeight: 800,
+                    fontSize: 26,
+                  }}
+                />
+              </Card>
+            </Col>
+
+            <Col xs={24} sm={12} lg={6}>
+              <Card
+                style={{
+                  borderRadius: 12,
+                  border: "1px solid #e2e8f0",
+                  boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
+                }}
+              >
+                <Statistic
+                  title={
+                    <Text
+                      type="secondary"
+                      style={{ fontSize: 13, fontWeight: 500 }}
+                    >
+                      Gross Volume Settlement
+                    </Text>
+                  }
+                  value={stats.totalRevenue}
+                  prefix={
+                    <DollarCircleOutlined
+                      style={{ color: "#0f172a", marginRight: 8 }}
+                    />
+                  }
+                  suffix={
+                    <ArrowUpOutlined
+                      style={{ color: "#10b981", fontSize: 14 }}
+                    />
+                  }
+                  precision={2}
+                  valueStyle={{
+                    color: "#0f172a",
+                    fontWeight: 800,
+                    fontSize: 26,
+                  }}
+                />
+              </Card>
+            </Col>
+          </Row>
+
+          {/* 📊 SECTION 2: GRAPHICAL INTELLIGENCE PLOTS */}
+          <Row gutter={[20, 20]} style={{ marginBottom: 32 }}>
+            <Col xs={24} lg={14}>
+              <Card
+                title={
+                  <span style={{ fontWeight: 600 }}>
+                    Invoice Volume Scaling (CAD)
+                  </span>
+                }
+                style={{ borderRadius: 12, border: "1px solid #e2e8f0" }}
+              >
+                {recentInvoices.length > 0 ? (
+                  <Chart
+                    options={barChartOptions}
+                    series={barChartSeries}
+                    type="bar"
+                    height={260}
+                    width="100%"
+                  />
+                ) : (
+                  <div
+                    style={{
+                      height: 260,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    No Dynamic Log Recorded
+                  </div>
+                )}
+              </Card>
+            </Col>
+            <Col xs={24} lg={10}>
+              <Card
+                title={
+                  <span style={{ fontWeight: 600 }}>
+                    Audit Status Distribution
+                  </span>
+                }
+                style={{ borderRadius: 12, border: "1px solid #e2e8f0" }}
+              >
+                {stats.totalInvoices > 0 ? (
+                  <Chart
+                    options={donutChartOptions}
+                    series={donutChartSeries}
+                    type="donut"
+                    height={260}
+                    width="100%"
+                  />
+                ) : (
+                  <div
+                    style={{
+                      height: 260,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    No Active Flow Spread
+                  </div>
+                )}
+              </Card>
+            </Col>
+          </Row>
+
+          <Card
+            title={
+              <span style={{ fontSize: 16, fontWeight: 700, color: "#0f172a" }}>
+                Recent Processing Invoices Stream
+              </span>
+            }
+            style={{
+              borderRadius: 12,
+              border: "1px solid #e2e8f0",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.01)",
+            }}
+          >
+            <Table
+              columns={invoiceColumns}
+              dataSource={recentInvoices}
+              rowKey="_id"
+              pagination={false}
+              scroll={{ x: 800 }}
+            />
+          </Card>
+        </Spin>
+      </div>
     </div>
   );
 }

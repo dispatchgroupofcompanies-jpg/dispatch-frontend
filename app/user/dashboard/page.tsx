@@ -2,28 +2,28 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Card, Row, Col, Typography, Table, Tag, Spin, message } from "antd";
-import { 
-  DollarOutlined, 
-  FileTextOutlined, 
+import {
+  DollarOutlined,
+  FileTextOutlined,
   ShoppingCartOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
-  CloseCircleOutlined
+  CloseCircleOutlined,
 } from "@ant-design/icons";
 import { getDashboardStats } from "../../../modules/invoice/route";
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   BarChart,
   Bar,
   PieChart,
   Pie,
-  Cell
+  Cell,
 } from "recharts";
 
 const { Title, Text } = Typography;
@@ -77,7 +77,7 @@ export default function DashboardPage() {
     statusBreakdown: [],
     topCompanies: [],
     recentInvoices: [],
-    monthlyStats: []
+    monthlyStats: [],
   });
 
   const fetchDashboardStats = useCallback(async () => {
@@ -87,11 +87,16 @@ export default function DashboardPage() {
       if (response.data?.success) {
         setData(response.data.data);
       } else {
-        message.error(response.data?.message || "Failed to load dashboard data");
+        message.error(
+          response.data?.message || "Failed to load dashboard data",
+        );
       }
     } catch (error) {
       console.error("Failed to fetch dashboard stats:", error);
-      const axiosError = error as { response?: { status?: number; data?: { message?: string } }; message?: string };
+      const axiosError = error as {
+        response?: { status?: number; data?: { message?: string } };
+        message?: string;
+      };
       if (axiosError.response?.status === 401) {
         message.error("Please login to view dashboard");
       } else if (axiosError.response?.data?.message) {
@@ -187,25 +192,29 @@ export default function DashboardPage() {
     },
   ];
 
-  const monthlyChartData = data?.monthlyStats.map((stat) => ({
-    month: `${stat._id.month}/${stat._id.year}`,
-    earnings: stat.earnings,
-    count: stat.count,
-  })) || [];
+  const monthlyChartData =
+    data?.monthlyStats.map((stat) => ({
+      month: `${stat._id.month}/${stat._id.year}`,
+      earnings: stat.earnings,
+      count: stat.count,
+    })) || [];
 
-  const statusChartData = data?.statusBreakdown.map((stat) => ({
-    name: stat._id.toUpperCase(),
-    value: stat.count,
-  })) || [];
+  const statusChartData =
+    data?.statusBreakdown.map((stat) => ({
+      name: stat._id.toUpperCase(),
+      value: stat.count,
+    })) || [];
 
   if (loading) {
     return (
-      <div style={{ 
-        display: "flex", 
-        justifyContent: "center", 
-        alignItems: "center", 
-        minHeight: "400px" 
-      }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "400px",
+        }}
+      >
         <Spin size="large" />
       </div>
     );
@@ -224,82 +233,124 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Cards */}
-<Row 
-  gutter={[12, 12]} 
-  style={{ 
-    marginBottom: 24, 
-    display: "flex", 
-    flexWrap: "wrap", 
-    width: "100%" 
-  }}
->
-  {[
-    { title: "Total Invoices", value: data?.totalInvoices || 0, icon: <FileTextOutlined />, bg: "#6366f1" },
-    { title: "Total Earnings", value: formatCurrency(data?.totalEarnings || 0), icon: <DollarOutlined />, bg: "#ec4899" },
-    { title: "Subtotal", value: formatCurrency(data?.totalSubtotal || 0), icon: <ShoppingCartOutlined />, bg: "#3b82f6" },
-    { title: "Total Dispatch", value: formatCurrency(data?.totalTax || 0), icon: <DollarOutlined />, bg: "#f59e0b" },
-    { title: "Cancelled", value: data?.cancelledInvoices || 0, icon: <CloseCircleOutlined />, bg: "#ef4444" }
-  ].map((item, index) => (
-    <Col 
-      key={index} 
-      xs={24} 
-      sm={12} 
-      md={8} 
-      style={{ 
-        flex: "1 0 18%", 
-        minWidth: "140px" 
-      }}
-    >
-      <Card 
-        bordered={false}
-        style={{ 
-          background: item.bg,
-          borderRadius: "8px",
-          boxShadow: "0 2px 6px rgba(0, 0, 0, 0.08)",
-          height: "100%"
+      <Row
+        gutter={[12, 12]}
+        style={{
+          marginBottom: 24,
+          display: "flex",
+          flexWrap: "wrap",
+          width: "100%",
         }}
-        bodyStyle={{ padding: "12px 8px" }} // Padding kam kar di taaki box zyada bada na lage
       >
-        <div style={{ textAlign: "center" }}>
-          <div style={{ color: "#ffffff", fontSize: "24px", marginBottom: "4px", opacity: 0.95 }}>
-            {item.icon}
-          </div>
-          <div style={{ 
-            color: "rgba(255, 255, 255, 0.85)", 
-            fontSize: "11px", 
-            fontWeight: 600, 
-            textTransform: "uppercase", 
-            letterSpacing: "0.3px", 
-            marginBottom: "2px" 
-          }}>
-            {item.title}
-          </div>
-          <div style={{ fontSize: "18px", fontWeight: 700, color: "#ffffff", lineHeight: 1.2 }}>
-            {item.value}
-          </div>
-        </div>
-      </Card>
-    </Col>
-  ))}
-</Row>
+        {[
+          {
+            title: "Total Invoices",
+            value: data?.totalInvoices || 0,
+            icon: <FileTextOutlined />,
+            bg: "#6366f1",
+          },
+          {
+            title: "Total Earnings",
+            value: formatCurrency(data?.totalEarnings || 0),
+            icon: <DollarOutlined />,
+            bg: "#ec4899",
+          },
+          {
+            title: "Subtotal",
+            value: formatCurrency(data?.totalSubtotal || 0),
+            icon: <ShoppingCartOutlined />,
+            bg: "#3b82f6",
+          },
+          {
+            title: "Total Dispatch",
+            value: formatCurrency(data?.totalTax || 0),
+            icon: <DollarOutlined />,
+            bg: "#f59e0b",
+          },
+          {
+            title: "Cancelled",
+            value: data?.cancelledInvoices || 0,
+            icon: <CloseCircleOutlined />,
+            bg: "#ef4444",
+          },
+        ].map((item, index) => (
+          <Col
+            key={index}
+            xs={24}
+            sm={12}
+            md={8}
+            style={{
+              flex: "1 0 18%",
+              minWidth: "140px",
+            }}
+          >
+            <Card
+              style={{
+                background: item.bg,
+                borderRadius: "8px",
+                boxShadow: "0 2px 6px rgba(0, 0, 0, 0.08)",
+                height: "100%",
+              }}
+              styles={{ body: { padding: "12px 8px" } }} // Padding kam kar di taaki box zyada bada na lage
+            >
+              <div style={{ textAlign: "center" }}>
+                <div
+                  style={{
+                    color: "#ffffff",
+                    fontSize: "24px",
+                    marginBottom: "4px",
+                    opacity: 0.95,
+                  }}
+                >
+                  {item.icon}
+                </div>
+                <div
+                  style={{
+                    color: "rgba(255, 255, 255, 0.85)",
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.3px",
+                    marginBottom: "2px",
+                  }}
+                >
+                  {item.title}
+                </div>
+                <div
+                  style={{
+                    fontSize: "18px",
+                    fontWeight: 700,
+                    color: "#ffffff",
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {item.value}
+                </div>
+              </div>
+            </Card>
+          </Col>
+        ))}
+      </Row>
 
       {/* Charts Row */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} lg={16}>
-          <Card 
-            style={{ 
+          <Card
+            style={{
               borderRadius: "12px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.08)"
+              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
             }}
             title={
-              <div style={{ 
-                display: "flex", 
-                alignItems: "center", 
-                gap: 8,
-                fontSize: 16,
-                fontWeight: 600,
-                color: "#1e3a8a"
-              }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  fontSize: 16,
+                  fontWeight: 600,
+                  color: "#1e3a8a",
+                }}
+              >
                 📈 Earnings Overview (Last 6 Months)
               </div>
             }
@@ -307,29 +358,29 @@ export default function DashboardPage() {
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={monthlyChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis 
-                  dataKey="month" 
+                <XAxis
+                  dataKey="month"
                   tick={{ fill: "#666", fontSize: 12 }}
                   axisLine={{ stroke: "#e0e0e0" }}
                 />
-                <YAxis 
+                <YAxis
                   tick={{ fill: "#666", fontSize: 12 }}
                   axisLine={{ stroke: "#e0e0e0" }}
                 />
-                <Tooltip 
+                <Tooltip
                   formatter={(value) => formatCurrency(value as number)}
                   labelStyle={{ color: "#000", fontWeight: 600 }}
-                  contentStyle={{ 
-                    backgroundColor: "#fff", 
+                  contentStyle={{
+                    backgroundColor: "#fff",
                     border: "1px solid #e0e0e0",
                     borderRadius: "8px",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                   }}
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="earnings" 
-                  stroke="#667eea" 
+                <Line
+                  type="monotone"
+                  dataKey="earnings"
+                  stroke="#667eea"
                   strokeWidth={3}
                   name="Earnings"
                   dot={{ fill: "#667eea", r: 4 }}
@@ -340,20 +391,22 @@ export default function DashboardPage() {
           </Card>
         </Col>
         <Col xs={24} lg={8}>
-          <Card 
-            style={{ 
+          <Card
+            style={{
               borderRadius: "12px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.08)"
+              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
             }}
             title={
-              <div style={{ 
-                display: "flex", 
-                alignItems: "center", 
-                gap: 8,
-                fontSize: 16,
-                fontWeight: 600,
-                color: "#1e3a8a"
-              }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  fontSize: 16,
+                  fontWeight: 600,
+                  color: "#1e3a8a",
+                }}
+              >
                 📊 Invoice Status
               </div>
             }
@@ -365,21 +418,26 @@ export default function DashboardPage() {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
+                  label={({ name, percent }) =>
+                    `${name}: ${((percent || 0) * 100).toFixed(0)}%`
+                  }
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
                 >
                   {statusChartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
                   ))}
                 </Pie>
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: "#fff", 
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#fff",
                     border: "1px solid #e0e0e0",
                     borderRadius: "8px",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                   }}
                 />
               </PieChart>
@@ -391,20 +449,22 @@ export default function DashboardPage() {
       {/* Top Companies and Recent Invoices */}
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
-          <Card 
-            style={{ 
+          <Card
+            style={{
               borderRadius: "12px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.08)"
+              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
             }}
             title={
-              <div style={{ 
-                display: "flex", 
-                alignItems: "center", 
-                gap: 8,
-                fontSize: 16,
-                fontWeight: 600,
-                color: "#1e3a8a"
-              }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  fontSize: 16,
+                  fontWeight: 600,
+                  color: "#1e3a8a",
+                }}
+              >
                 🏆 Top Companies by Revenue
               </div>
             }
@@ -412,8 +472,8 @@ export default function DashboardPage() {
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={data?.topCompanies || []}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis 
-                  dataKey="_id" 
+                <XAxis
+                  dataKey="_id"
                   angle={-45}
                   textAnchor="end"
                   height={100}
@@ -421,40 +481,47 @@ export default function DashboardPage() {
                   tick={{ fill: "#666", fontSize: 11 }}
                   axisLine={{ stroke: "#e0e0e0" }}
                 />
-                <YAxis 
+                <YAxis
                   tick={{ fill: "#666", fontSize: 12 }}
                   axisLine={{ stroke: "#e0e0e0" }}
                 />
-                <Tooltip 
+                <Tooltip
                   formatter={(value) => formatCurrency(value as number)}
                   labelStyle={{ color: "#000", fontWeight: 600 }}
-                  contentStyle={{ 
-                    backgroundColor: "#fff", 
+                  contentStyle={{
+                    backgroundColor: "#fff",
                     border: "1px solid #e0e0e0",
                     borderRadius: "8px",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                   }}
                 />
-                <Bar dataKey="totalAmount" fill="#667eea" name="Revenue" radius={[8, 8, 0, 0]} />
+                <Bar
+                  dataKey="totalAmount"
+                  fill="#667eea"
+                  name="Revenue"
+                  radius={[8, 8, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           </Card>
         </Col>
         <Col xs={24} lg={12}>
-          <Card 
-            style={{ 
+          <Card
+            style={{
               borderRadius: "12px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.08)"
+              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
             }}
             title={
-              <div style={{ 
-                display: "flex", 
-                alignItems: "center", 
-                gap: 8,
-                fontSize: 16,
-                fontWeight: 600,
-                color: "#1e3a8a"
-              }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  fontSize: 16,
+                  fontWeight: 600,
+                  color: "#1e3a8a",
+                }}
+              >
                 📋 Recent Invoices
               </div>
             }
@@ -462,15 +529,15 @@ export default function DashboardPage() {
             <Table
               dataSource={data?.recentInvoices || []}
               columns={recentInvoiceColumns}
-              pagination={{ 
+              pagination={{
                 pageSize: 5,
-                style: { marginTop: 12 }
+                style: { marginTop: 12 },
               }}
               size="small"
               scroll={{ x: 600 }}
-              style={{ 
+              style={{
                 borderRadius: "8px",
-                overflow: "hidden"
+                overflow: "hidden",
               }}
             />
           </Card>
