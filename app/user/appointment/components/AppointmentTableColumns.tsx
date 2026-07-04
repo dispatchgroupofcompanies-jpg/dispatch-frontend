@@ -1,25 +1,29 @@
 "use client";
 
 import React from "react";
-import { Button, Space, Tag, Popconfirm } from "antd";
+import { Button, Space, Tag, Popconfirm, Select, message } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
-import type { Appointment } from "../lib/appointmentApi";
+import {
+  updateAppointmentStatus,
+  type Appointment,
+} from "../lib/appointmentApi";
 
 interface AppointmentTableColumnsProps {
   onEdit: (record: Appointment) => void;
   onDelete: (id: string) => void;
+  onStatusChange: () => void;
 }
 
-// Safely handles displaying text or providing a clean placeholder dash
 const renderText = (text?: string | number) => text || "—";
 
 export const createColumns = ({
   onEdit,
   onDelete,
+  onStatusChange,
 }: AppointmentTableColumnsProps) => [
   {
     title: "Carrier Name",
-    dataIndex: "carrierName", // Updated to match your flat backend object schema
+    dataIndex: "carrierName",
     key: "carrierName",
     render: (name: string) => (
       <strong style={{ color: "#1e293b" }}>{renderText(name)}</strong>
@@ -65,28 +69,55 @@ export const createColumns = ({
     title: "Status",
     dataIndex: "status",
     key: "status",
-    width: 140,
-    render: (status: string) => {
+    width: 180,
+    render: (status: string, record: Appointment) => {
       const normalizedStatus = status?.toLowerCase() || "pending";
-      const colorMap: Record<string, string> = {
-        draft: "default",
-        pending: "warning",
-        confirmed: "processing",
-        completed: "success",
-        cancelled: "error",
-      };
+
+      // Lock Logic: Agar status confirmed hai toh select dropdown block ho jayega
+      const isConfirmed = normalizedStatus === "confirmed";
 
       return (
-        <Tag
-          color={colorMap[normalizedStatus]}
-          style={{
-            borderRadius: "4px",
-            fontWeight: 600,
-            padding: "2px 8px",
+        <Select
+          value={normalizedStatus}
+          style={{ width: "100%" }}
+          disabled={isConfirmed}
+          onChange={async (value) => {
+            try {
+              await updateAppointmentStatus(record._id, value);
+              message.success(
+                `Status updated to ${value.toUpperCase()} successfully`,
+              );
+              onStatusChange();
+            } catch (error) {
+              console.error("Status sync failed:", error);
+              message.error("Failed to update status");
+            }
           }}
-        >
-          {normalizedStatus.toUpperCase()}
-        </Tag>
+          options={[
+            {
+              value: "pending",
+              label: (
+                <Tag
+                  color="warning"
+                  style={{ margin: 0, borderRadius: "4px", fontWeight: 600 }}
+                >
+                  PENDING
+                </Tag>
+              ),
+            },
+            {
+              value: "confirmed",
+              label: (
+                <Tag
+                  color="processing"
+                  style={{ margin: 0, borderRadius: "4px", fontWeight: 600 }}
+                >
+                  CONFIRMED
+                </Tag>
+              ),
+            },
+          ]}
+        />
       );
     },
   },
@@ -95,37 +126,48 @@ export const createColumns = ({
     key: "action",
     width: 130,
     align: "center" as const,
-    render: (_: unknown, record: Appointment) => (
-      <Space size="middle">
-        <Button
-          type="primary"
-          size="middle"
-          icon={<EditOutlined />}
-          onClick={() => onEdit(record)}
-          style={{
-            background: "#2563eb",
-            borderColor: "#2563eb",
-            borderRadius: "6px",
-          }}
-        />
-        <Popconfirm
-          title="Delete Appointment"
-          description="Are you sure you want to delete this appointment?"
-          onConfirm={() => onDelete(record._id)}
-          okText="Delete"
-          cancelText="Cancel"
-          okButtonProps={{ danger: true, style: { borderRadius: "4px" } }}
-          cancelButtonProps={{ style: { borderRadius: "4px" } }}
-        >
+    render: (_: unknown, record: Appointment) => {
+      const normalizedStatus = record.status?.toLowerCase() || "pending";
+      const isConfirmed = normalizedStatus === "confirmed";
+
+      return (
+        <Space size="middle">
+          {/* EDIT BUTTON */}
           <Button
-            danger
-            type="text"
+            type="primary"
             size="middle"
-            icon={<DeleteOutlined />}
-            style={{ borderRadius: "6px" }}
+            icon={<EditOutlined />}
+            onClick={() => onEdit(record)}
+            disabled={isConfirmed}
+            style={{
+              background: isConfirmed ? undefined : "#2563eb",
+              borderColor: isConfirmed ? undefined : "#2563eb",
+              borderRadius: "6px",
+            }}
           />
-        </Popconfirm>
-      </Space>
-    ),
+
+          {/* DELETE BUTTON */}
+          <Popconfirm
+            title="Delete Appointment"
+            description="Are you sure you want to delete this appointment?"
+            onConfirm={() => onDelete(record._id)}
+            okText="Delete"
+            cancelText="Cancel"
+            disabled={isConfirmed}
+            okButtonProps={{ danger: true, style: { borderRadius: "4px" } }}
+            cancelButtonProps={{ style: { borderRadius: "4px" } }}
+          >
+            <Button
+              danger
+              type="text"
+              size="middle"
+              icon={<DeleteOutlined />}
+              disabled={isConfirmed}
+              style={{ borderRadius: "6px" }}
+            />
+          </Popconfirm>
+        </Space>
+      );
+    },
   },
 ];

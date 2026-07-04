@@ -1,7 +1,13 @@
 "use client";
 import React from "react";
-import { Table, Tag, Button, Typography, Spin } from "antd";
-import { EyeOutlined } from "@ant-design/icons";
+import { Table, Tag, Button, Typography, Spin, Space, Tooltip } from "antd";
+import {
+  EyeOutlined,
+  DownloadOutlined,
+  ShareAltOutlined,
+  EditOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import type { Invoice } from "../types/invoice";
 
@@ -20,12 +26,30 @@ export default function InvoiceTable({ invoices, loading, onView }: Props) {
       dataIndex: "invoiceNumber",
       key: "invoiceNumber",
       width: 140,
-      render: (text) => <Text strong>{text}</Text>,
+      render: (text) => (
+        <Text
+          strong
+          style={{
+            color: "#ffffff",
+            background: "#10b981",
+            padding: "4px 10px",
+            borderRadius: "6px",
+            display: "inline-block",
+          }}
+        >
+          #{text}
+        </Text>
+      ),
     },
     {
       title: "Payee (Vendor)",
       dataIndex: ["payee", "companyName"],
       key: "payeeCompany",
+      render: (text) => (
+        <Text style={{ fontWeight: 500, color: "#334155" }}>
+          {text || "N/A"}
+        </Text>
+      ),
     },
     {
       title: "Amount",
@@ -33,8 +57,12 @@ export default function InvoiceTable({ invoices, loading, onView }: Props) {
       key: "grandTotal",
       width: 160,
       render: (amount, record) => (
-        <Text strong>
-          {amount?.toFixed(2)} {record.currency || "CAD"}
+        <Text strong style={{ color: "#0f172a" }}>
+          {record.currency || "CAD"} $
+          {amount?.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
         </Text>
       ),
     },
@@ -61,15 +89,17 @@ export default function InvoiceTable({ invoices, loading, onView }: Props) {
     {
       title: "Actions",
       key: "action",
-      width: 160,
+      width: 260,
       render: (_, record) => (
-        <Button
-          icon={<EyeOutlined />}
-          type="primary"
-          onClick={() => onView(record)}
-        >
-          View Invoice
-        </Button>
+        <Space size="small">
+          <Button
+            type="primary"
+            icon={<EyeOutlined />}
+            onClick={() => onView(record)}
+          >
+            View
+          </Button>
+        </Space>
       ),
     },
   ];

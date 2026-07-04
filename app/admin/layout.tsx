@@ -2,7 +2,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Drawer, Button } from "antd";
-import { MenuOutlined, CloseOutlined } from "@ant-design/icons";
+import {
+  MenuOutlined,
+  CloseOutlined,
+  CalendarOutlined,
+} from "@ant-design/icons";
 import { useRouter, usePathname } from "next/navigation";
 import { message } from "antd";
 import {
@@ -162,7 +166,8 @@ export default function AdminLayout({
           </div>
 
           {/* Navigation Links */}
-          <div style={{ padding: "16px 12px", flex: 1 }}>
+          <div style={{ padding: "16px 12px", flex: 1, overflowY: "auto" }}>
+            {/* Dashboard Link */}
             <div
               onClick={() => router.push("/admin/dashboard")}
               style={{
@@ -201,6 +206,46 @@ export default function AdminLayout({
               )}
             </div>
 
+            {/* Appointment Records Link (FIXED: Added to Desktop View) */}
+            <div
+              onClick={() => router.push("/admin/apointments")}
+              style={{
+                padding: "14px 16px",
+                cursor: "pointer",
+                backgroundColor: isActive("/admin/apointments")
+                  ? "rgba(255,255,255,0.15)"
+                  : "transparent",
+                display: "flex",
+                alignItems: "center",
+                gap: 14,
+                borderRadius: 8,
+                marginBottom: 6,
+                transition: "all 0.2s",
+                borderLeft: isActive("/admin/apointments")
+                  ? "3px solid #60a5fa"
+                  : "3px solid transparent",
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive("/admin/apointments")) {
+                  e.currentTarget.style.backgroundColor =
+                    "rgba(255,255,255,0.08)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive("/admin/apointments")) {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                }
+              }}
+            >
+              <CalendarOutlined style={{ fontSize: 18, color: "#fff" }} />
+              {!sidebarCollapsed && (
+                <span style={{ fontSize: 14, fontWeight: 500, color: "#fff" }}>
+                  Appointment Records
+                </span>
+              )}
+            </div>
+
+            {/* Invoice Approval Link */}
             <div
               onClick={() => router.push("/admin/invoices")}
               style={{
@@ -321,6 +366,7 @@ export default function AdminLayout({
       >
         {children}
       </div>
+
       {/* Mobile Drawer */}
       <Drawer
         placement="left"
@@ -421,6 +467,34 @@ export default function AdminLayout({
             >
               <DashboardOutlined style={{ fontSize: 18 }} />
               <span style={{ fontSize: 14, fontWeight: 500 }}>Dashboard</span>
+            </div>
+
+            <div
+              onClick={() => {
+                setDrawerOpen(false);
+                router.push("/admin/apointments");
+              }}
+              style={{
+                padding: "14px 16px",
+                cursor: "pointer",
+                backgroundColor: isActive("/admin/apointments")
+                  ? "rgba(255,255,255,0.15)"
+                  : "transparent",
+                display: "flex",
+                alignItems: "center",
+                gap: 14,
+                borderRadius: 8,
+                marginBottom: 6,
+                transition: "all 0.2s",
+                borderLeft: isActive("/admin/apointments")
+                  ? "3px solid #60a5fa"
+                  : "3px solid transparent",
+              }}
+            >
+              <CalendarOutlined style={{ fontSize: 18 }} />
+              <span style={{ fontSize: 14, fontWeight: 500 }}>
+                Appointment Records
+              </span>
             </div>
 
             <div

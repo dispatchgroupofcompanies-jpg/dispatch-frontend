@@ -196,7 +196,15 @@ export default function CreateInvoiceModal({
         initialValues={{
           invoiceType: "single",
           currency: "CAD",
-          trips: [{ dispatchPercent: 10, totalCharges: 0 }],
+          trips: [
+            {
+              dispatchPercent: 10,
+              totalCharges: 0,
+              loadId1: "",
+              loadId2: "",
+              driverName: "",
+            },
+          ],
         }}
       >
         {/* Top Metadata */}

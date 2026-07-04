@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Divider, Tag, Typography, Row, Col } from "antd";
+import { Divider, Typography, Row, Col } from "antd";
 import type { Invoice } from "../types/invoice";
 
 const { Text, Title } = Typography;
@@ -14,6 +14,13 @@ const formatDate = (value?: string | null) =>
         day: "numeric",
       })
     : "N/A";
+
+// Mask GST/HST number to show only last 6 digits
+const maskGstNumber = (gstNumber?: string) => {
+  if (!gstNumber || gstNumber.length <= 6) return gstNumber || "N/A";
+  const lastSix = gstNumber.slice(-6);
+  return `******${lastSix}`;
+};
 
 const getStatusTagStyle = (status?: string) => {
   switch (status?.toLowerCase()) {
@@ -59,22 +66,23 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
       style={{
         position: "relative",
         backgroundColor: "#ffffff",
-        padding: 28,
+        padding: "20px 24px",
         color: "#1e293b",
         overflow: "hidden",
-        borderRadius: 16,
+        borderRadius: 12,
       }}
     >
+      {/* Background Watermark */}
       <div
         style={{
           position: "absolute",
           top: "50%",
           left: "50%",
           transform: "translate(-50%, -50%) rotate(-45deg)",
-          fontSize: 48,
+          fontSize: 54,
           fontWeight: 900,
-          color: "rgba(226, 232, 240, 0.25)",
-          letterSpacing: 4,
+          color: "rgba(226, 232, 240, 0.22)",
+          letterSpacing: 6,
           whiteSpace: "nowrap",
           zIndex: 0,
           pointerEvents: "none",
@@ -86,14 +94,14 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
       </div>
 
       <div style={{ position: "relative", zIndex: 1 }}>
+        {/* Header Section */}
         <div
           style={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "flex-start",
-            flexWrap: "wrap",
             gap: 16,
-            marginBottom: 14,
+            marginBottom: 10,
           }}
         >
           <div>
@@ -103,8 +111,9 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
                 margin: 0,
                 textTransform: "uppercase",
                 color: "#102a63",
-                letterSpacing: 1,
-                lineHeight: 1,
+                letterSpacing: 0.5,
+                lineHeight: 1.1,
+                fontSize: 24,
               }}
             >
               {title}
@@ -114,20 +123,20 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
                 fontSize: 12,
                 color: "#64748b",
                 display: "block",
-                marginTop: 6,
+                marginTop: 4,
               }}
             >
               Num: <strong>#{invoice.invoiceNumber}</strong>
             </Text>
           </div>
 
-          <div style={{ textAlign: "right", minWidth: 180 }}>
+          <div style={{ textAlign: "right" }}>
             <div
               style={{
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
-                padding: "10px 16px",
+                padding: "6px 14px",
                 borderRadius: 999,
                 border: `1px solid ${getStatusTagStyle(invoice.invoiceStatus).borderColor}`,
                 backgroundColor: getStatusTagStyle(invoice.invoiceStatus)
@@ -136,26 +145,26 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
                 fontWeight: 700,
                 textTransform: "uppercase",
                 fontSize: 11,
-                letterSpacing: 0.75,
-                minWidth: 96,
+                letterSpacing: 0.5,
               }}
             >
               {invoice.invoiceStatus?.toUpperCase() || "DRAFT"}
             </div>
-            <div style={{ marginTop: 10, color: "#64748b", fontSize: 12 }}>
+            <div style={{ marginTop: 6, color: "#64748b", fontSize: 12 }}>
               Date: {formatDate(invoice.createdAt)}
             </div>
           </div>
         </div>
 
-        <Divider style={{ margin: "0 0 24px 0" }} />
+        <Divider style={{ margin: "12px 0" }} />
 
+        {/* Addresses Section */}
         <div
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 1fr",
-            gap: 24,
-            marginBottom: 24,
+            gap: 32,
+            marginBottom: 16,
           }}
         >
           <div>
@@ -164,33 +173,36 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
                 textTransform: "uppercase",
                 fontWeight: 700,
                 fontSize: 10,
-                color: "#475569",
-                letterSpacing: 0.6,
+                color: "#64748b",
+                letterSpacing: 0.5,
               }}
             >
               EXTREME LOGISTIC INVOICE FROM:
             </Text>
-            <div style={{ marginTop: 10 }}>
+            <div style={{ marginTop: 4 }}>
               <Text
                 strong
-                style={{ fontSize: 14, color: "#dc2626", display: "block" }}
+                style={{ fontSize: 13, color: "#dc2626", display: "block" }}
               >
                 {invoice.payee?.companyName || "N/A"}
               </Text>
-              <div style={{ color: "#475569", fontSize: 12, lineHeight: 1.6 }}>
+              <div style={{ color: "#475569", fontSize: 12, lineHeight: 1.4 }}>
                 {invoice.payee?.address1 || invoice.payee?.address || "N/A"}
               </div>
-              <div style={{ marginTop: 8, color: "#334155", fontSize: 12 }}>
-                <strong>Driver Name:</strong>{" "}
-                {invoice.payee?.contactPerson ||
-                  invoice.payee?.driverName ||
-                  "N/A"}
-                <br />
+              <div
+                style={{
+                  marginTop: 4,
+                  color: "#475569",
+                  fontSize: 12,
+                  lineHeight: 1.4,
+                }}
+              >
                 <strong>Phone:</strong> {invoice.payee?.phone || "N/A"}
                 <br />
                 <strong>Email:</strong> {invoice.payee?.email || "N/A"}
                 <br />
-                <strong>GST/HST:</strong> {invoice.payee?.gstNumber || "N/A"}
+                <strong>GST/HST:</strong>{" "}
+                {maskGstNumber(invoice.payee?.gstNumber)}
               </div>
             </div>
           </div>
@@ -201,35 +213,40 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
                 textTransform: "uppercase",
                 fontWeight: 700,
                 fontSize: 10,
-                color: "#475569",
-                letterSpacing: 0.6,
+                color: "#64748b",
+                letterSpacing: 0.5,
               }}
             >
               INVOICE TO:
             </Text>
-            <div style={{ marginTop: 10 }}>
+            <div style={{ marginTop: 4 }}>
               <Text
                 strong
-                style={{ fontSize: 14, color: "#2563eb", display: "block" }}
+                style={{ fontSize: 13, color: "#2563eb", display: "block" }}
               >
                 {invoice.customer?.companyName ||
                   invoice.customer?.customerName ||
                   "N/A"}
               </Text>
-              <div style={{ color: "#475569", fontSize: 12, lineHeight: 1.6 }}>
+              <div style={{ color: "#475569", fontSize: 12, lineHeight: 1.4 }}>
                 {invoice.customer?.address1 ||
                   invoice.customer?.address ||
                   "N/A"}
               </div>
-              <div style={{ marginTop: 8, color: "#334155", fontSize: 12 }}>
-                <strong>Attention:</strong>{" "}
-                {invoice.customer?.contactPerson || "N/A"}
-                <br />
+              <div
+                style={{
+                  marginTop: 4,
+                  color: "#475569",
+                  fontSize: 12,
+                  lineHeight: 1.4,
+                }}
+              >
                 <strong>Phone:</strong> {invoice.customer?.phone || "N/A"}
                 <br />
                 <strong>Email:</strong> {invoice.customer?.email || "N/A"}
                 <br />
-                <strong>GST/HST:</strong> {invoice.customer?.gstNumber || "N/A"}
+                <strong>GST/HST:</strong>{" "}
+                {maskGstNumber(invoice.customer?.gstNumber)}
               </div>
             </div>
           </div>
@@ -240,9 +257,9 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
             style={{
               backgroundColor: "#f8fafc",
               border: "1px solid #e2e8f0",
-              padding: 12,
+              padding: "8px 12px",
               borderRadius: 6,
-              marginBottom: 24,
+              marginBottom: 16,
               color: "#334155",
               fontSize: 12,
             }}
@@ -253,44 +270,26 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
           </div>
         )}
 
-        <div style={{ overflowX: "auto", marginBottom: 20 }}>
+        {/* Responsive Fluid Table Layout */}
+        <div style={{ marginBottom: 16, width: "100%" }}>
           <table
             style={{
               width: "100%",
               borderCollapse: "collapse",
               textAlign: "left",
               tableLayout: "fixed",
-              minWidth: 860,
             }}
           >
             <thead>
               <tr style={{ backgroundColor: "#102a63", color: "#ffffff" }}>
-                <th style={{ ...tableHeaderStyle, width: "4%" }}>#</th>
+                <th style={{ ...tableHeaderStyle, width: "5%" }}>#</th>
                 <th style={{ ...tableHeaderStyle, width: "12%" }}>Date</th>
-                <th
-                  style={{
-                    ...tableHeaderStyle,
-                    width: "16%",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  VRID
+                <th style={{ ...tableHeaderStyle, width: "12%" }}>VRID</th>
+                <th style={{ ...tableHeaderStyle, width: "14%" }}>
+                  Driver Name
                 </th>
-                <th
-                  style={{
-                    ...tableHeaderStyle,
-                    width: "12%",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Route
-                </th>
-                <th
-                  style={{
-                    ...tableHeaderStyle,
-                    width: "34%",
-                  }}
-                >
+                <th style={{ ...tableHeaderStyle, width: "10%" }}>Route</th>
+                <th style={{ ...tableHeaderStyle, width: "17%" }}>
                   Description
                 </th>
                 <th
@@ -298,7 +297,6 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
                     ...tableHeaderStyle,
                     textAlign: "right",
                     width: "10%",
-                    whiteSpace: "nowrap",
                   }}
                 >
                   Charges
@@ -307,8 +305,7 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
                   style={{
                     ...tableHeaderStyle,
                     textAlign: "center",
-                    width: "8%",
-                    whiteSpace: "nowrap",
+                    width: "10%",
                   }}
                 >
                   Dispatch%
@@ -317,12 +314,10 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
                   style={{
                     ...tableHeaderStyle,
                     textAlign: "right",
-                    width: "12%",
-                    paddingRight: 16,
-                    whiteSpace: "nowrap",
+                    width: "10%",
                   }}
                 >
-                  Total Amount
+                  Total
                 </th>
               </tr>
             </thead>
@@ -339,7 +334,6 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
                         ...tableCellStyle,
                         fontWeight: 700,
                         color: "#1e293b",
-                        whiteSpace: "nowrap",
                       }}
                     >
                       {trip.vrid || "N/A"}
@@ -347,29 +341,25 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
                     <td
                       style={{
                         ...tableCellStyle,
-                        whiteSpace: "nowrap",
+                        fontWeight: 600,
+                        color: "#2563eb",
                       }}
                     >
-                      {trip.route || "N/A"}
+                      {trip.driverName || "N/A"}
                     </td>
+                    <td style={tableCellStyle}>{trip.route || "N/A"}</td>
                     <td
                       style={{
                         ...tableCellStyle,
-                        whiteSpace: "nowrap",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
                       }}
                     >
                       {`${trip.pickup || "N/A"} to ${trip.drop || "N/A"}`}
                     </td>
-                    <td
-                      style={{
-                        ...tableCellStyle,
-                        textAlign: "right",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      ${trip.totalCharges?.toFixed(2) ?? "0.00"}
+                    <td style={{ ...tableCellStyle, textAlign: "right" }}>
+                      ${(trip.totalCharges ?? 0).toFixed(2)}
                     </td>
                     <td
                       style={{
@@ -395,11 +385,12 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
               ) : (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={9}
                     style={{
-                      padding: 20,
+                      padding: 16,
                       textAlign: "center",
                       color: "#94a3b8",
+                      fontSize: 12,
                     }}
                   >
                     No active trips found in system database
@@ -410,31 +401,38 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
           </table>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "flex-end" }}>
-          <div style={{ width: 320 }}>
+        {/* Summary Block */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            marginBottom: 16,
+          }}
+        >
+          <div style={{ width: 260 }}>
             <div style={summaryRowStyle}>
               <Text type="secondary">Subtotal:</Text>
-              <Text>${(invoice.subtotal ?? 0).toFixed(2)}</Text>
+              <Text strong>${(invoice.subtotal ?? 0).toFixed(2)}</Text>
             </div>
             {invoice.tax ? (
               <div style={summaryRowStyleWithBorder}>
                 <Text type="secondary">Tax / VAT:</Text>
-                <Text>${(invoice.tax ?? 0).toFixed(2)}</Text>
+                <Text strong>${(invoice.tax ?? 0).toFixed(2)}</Text>
               </div>
             ) : null}
             <div
               style={{
                 ...summaryRowStyle,
-                marginTop: 16,
+                marginTop: 8,
                 alignItems: "center",
                 borderTop: "1px solid #e2e8f0",
-                paddingTop: 16,
+                paddingTop: 8,
               }}
             >
-              <Text strong style={{ fontSize: 15, color: "#1e293b" }}>
+              <Text strong style={{ fontSize: 13, color: "#1e293b" }}>
                 Grand Total:
               </Text>
-              <Text strong style={{ fontSize: 18, color: "#2563eb" }}>
+              <Text strong style={{ fontSize: 16, color: "#2563eb" }}>
                 {invoice.currency || "CAD"} $
                 {(invoice.grandTotal ?? 0).toFixed(2)}
               </Text>
@@ -445,67 +443,52 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
         {(invoice.accountNumber ||
           invoice.institutionNumber ||
           invoice.transitNumber ||
-          invoice.eTransfer ||
-          invoice.payee?.eTransfer ||
+          invoice.customer?.eTransfer ||
           invoice.payee?.eTransferAddress) && (
           <div
             style={{
-              marginTop: 28,
-              padding: 20,
+              padding: "12px 16px",
               backgroundColor: "#f8fafc",
               borderRadius: 8,
             }}
           >
-            <Row gutter={[16, 16]}>
+            <Row gutter={[16, 8]}>
               {invoice.accountNumber && (
-                <Col
-                  xs={24}
-                  md={
-                    invoice.eTransfer ||
-                    invoice.payee?.eTransfer ||
-                    invoice.payee?.eTransferAddress
-                      ? 12
-                      : 24
-                  }
-                >
+                <Col xs={24} sm={14}>
                   <Text
                     strong
                     style={{
                       display: "block",
-                      marginBottom: 6,
+                      marginBottom: 2,
                       fontSize: 10,
                       textTransform: "uppercase",
                       letterSpacing: 0.5,
+                      color: "#64748b",
                     }}
                   >
                     Direct Deposit Details
                   </Text>
                   <Text
-                    style={{
-                      fontSize: 12,
-                      color: "#475569",
-                      display: "block",
-                      whiteSpace: "nowrap",
-                    }}
+                    style={{ fontSize: 12, color: "#475569", display: "block" }}
                   >
-                    Institution Number: {invoice.institutionNumber || "N/A"} |
-                    Transit Number: {invoice.transitNumber || "N/A"} | Account
-                    Number: {invoice.accountNumber}
+                    Institution: {invoice.institutionNumber || "N/A"} | Transit:{" "}
+                    {invoice.transitNumber || "N/A"} | Account:{" "}
+                    {invoice.accountNumber}
                   </Text>
                 </Col>
               )}
-              {(invoice.eTransfer ||
-                invoice.payee?.eTransfer ||
+              {(invoice.customer?.eTransfer ||
                 invoice.payee?.eTransferAddress) && (
-                <Col xs={24} md={invoice.accountNumber ? 12 : 24}>
+                <Col xs={24} sm={10}>
                   <Text
                     strong
                     style={{
                       display: "block",
-                      marginBottom: 6,
+                      marginBottom: 2,
                       fontSize: 10,
                       textTransform: "uppercase",
                       letterSpacing: 0.5,
+                      color: "#64748b",
                     }}
                   >
                     💥 E-Transfer Details
@@ -513,8 +496,7 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
                   <Text
                     style={{ fontSize: 12, color: "#1e293b", fontWeight: 600 }}
                   >
-                    {invoice.eTransfer ||
-                      invoice.payee?.eTransfer ||
+                    {invoice.customer?.eTransfer ||
                       invoice.payee?.eTransferAddress}
                   </Text>
                 </Col>
@@ -524,7 +506,7 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
         )}
 
         {invoice.notes && (
-          <div style={{ marginTop: 20, fontSize: 12, color: "#64748b" }}>
+          <div style={{ marginTop: 12, fontSize: 11, color: "#64748b" }}>
             <Text strong>Notes:</Text> {invoice.notes}
           </div>
         )}
@@ -534,32 +516,27 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
 }
 
 const tableHeaderStyle: React.CSSProperties = {
-  padding: "10px 10px",
-  fontSize: 12,
+  padding: "8px 8px",
+  fontSize: 11,
   fontWeight: 700,
   color: "#ffffff",
   lineHeight: 1.2,
-  whiteSpace: "nowrap",
-  overflow: "hidden",
-  textOverflow: "ellipsis",
 };
 
 const tableCellStyle: React.CSSProperties = {
-  padding: "6px 10px",
-  fontSize: 12,
+  padding: "6px 8px",
+  fontSize: 11,
   color: "#475569",
   verticalAlign: "middle",
-  lineHeight: 1.35,
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-  overflowWrap: "anywhere",
+  lineHeight: 1.3,
 };
 
 const summaryRowStyle: React.CSSProperties = {
   display: "flex",
   justifyContent: "space-between",
-  padding: "8px 0",
+  padding: "4px 0",
   color: "#475569",
+  fontSize: 12,
 };
 
 const summaryRowStyleWithBorder: React.CSSProperties = {

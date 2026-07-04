@@ -7,6 +7,9 @@ export interface Trip {
   vrid?: string;
   dispatchPercent?: number;
   dispatchAmount?: number;
+  loadId1?: string;
+  loadId2?: string;
+  driverName?: string;
 }
 
 export interface Party {
@@ -52,4 +55,47 @@ export interface ApiResponse<T> {
   success: boolean;
   data: T;
   message?: string;
+}
+
+export interface Appointment {
+  _id: string;
+  tripNumber: string;
+  loadConfirmationNumber: string;
+  shipmentNumber: string;
+  carrierName: string;
+  carrierAddress: string;
+  carrierPhone: string;
+  carrierEmail: string;
+  equipmentType: string;
+  pickupDate: string;
+  pickupTimeStart: string;
+  pickupTimeEnd: string;
+  deliveryDate: string;
+  deliveryTime: string;
+  pickupNumber: string;
+  dropOffNumber: string;
+  commodityDescription: string;
+  weight: number;
+  shipperName: string;
+  shipperAddress: string;
+  shipperCity: string;
+  shipperProvince: string;
+  shipperPostalCode: string;
+  consigneeName: string;
+  consigneeAddress: string;
+  consigneeCity: string;
+  consigneeProvince: string;
+  consigneePostalCode: string;
+  chargeDescription: string;
+  rateAmount: number;
+  totalAmount: number;
+  currency: string;
+  signature: string;
+  signatureDate: string;
+  carrierProNumber: string;
+  driverCellNumber: string;
+  notesTerms: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
 }

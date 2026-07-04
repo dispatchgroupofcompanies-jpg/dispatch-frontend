@@ -85,7 +85,7 @@ export default function InvoiceModal({
               disabled={rejectLoading}
               style={{ background: "#10b981", borderRadius: 6 }}
             >
-              Approve Bill
+              Approve Invoice
             </Button>
             <Button
               type="primary"
@@ -96,7 +96,7 @@ export default function InvoiceModal({
               disabled={approveLoading}
               style={{ borderRadius: 6 }}
             >
-              Reject Bill
+              Reject Invoice
             </Button>
           </Space>
         )}

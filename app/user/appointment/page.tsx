@@ -72,7 +72,7 @@ function AppointmentPage() {
     }
   };
 
-  const fetchAppointments = async () => {
+  const fetchAppointments = useCallback(async () => {
     try {
       setLoading(true);
       const data = await apiFetchAppointments();
@@ -83,7 +83,7 @@ function AppointmentPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -288,8 +288,9 @@ function AppointmentPage() {
       createColumns({
         onEdit: openEdit,
         onDelete: handleDelete,
+        onStatusChange: fetchAppointments,
       }),
-    [openEdit, handleDelete],
+    [openEdit, handleDelete, fetchAppointments],
   );
 
   const expandedRowRender = (record: Appointment) => {

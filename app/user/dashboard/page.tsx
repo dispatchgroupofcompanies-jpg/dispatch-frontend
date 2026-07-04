@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Card, Row, Col, Typography, Table, Tag, Spin, message } from "antd";
+import { Card, Row, Col, Typography, Tag, Spin, message } from "antd";
+import ResponsiveTable from "../../../modules/common/ResponsiveTable";
 import {
   DollarOutlined,
   FileTextOutlined,
@@ -79,6 +80,7 @@ export default function DashboardPage() {
     recentInvoices: [],
     monthlyStats: [],
   });
+  const [paddingValue, setPaddingValue] = useState("24px");
 
   const fetchDashboardStats = useCallback(async () => {
     try {
@@ -205,6 +207,25 @@ export default function DashboardPage() {
       value: stat.count,
     })) || [];
 
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setPaddingValue("12px");
+      } else if (window.innerWidth < 1024) {
+        setPaddingValue("20px");
+      } else {
+        setPaddingValue("24px");
+      }
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   if (loading) {
     return (
       <div
@@ -221,9 +242,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <div style={{ padding: "0 0 24px 0" }}>
+    <div style={{ padding: `${paddingValue} 0 24px 0` }}>
       {/* Page Title */}
-      <div style={{ marginBottom: 24 }}>
+      <div style={{ marginBottom: 24, padding: `0 ${paddingValue}` }}>
         <Title level={3} style={{ margin: 0, color: "#0f172a" }}>
           Dashboard Overview
         </Title>
@@ -240,6 +261,7 @@ export default function DashboardPage() {
           display: "flex",
           flexWrap: "wrap",
           width: "100%",
+          padding: `0 ${paddingValue}`,
         }}
       >
         {[
@@ -333,7 +355,10 @@ export default function DashboardPage() {
       </Row>
 
       {/* Charts Row */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+      <Row
+        gutter={[16, 16]}
+        style={{ marginBottom: 24, padding: `0 ${paddingValue}` }}
+      >
         <Col xs={24} lg={16}>
           <Card
             style={{
@@ -447,7 +472,7 @@ export default function DashboardPage() {
       </Row>
 
       {/* Top Companies and Recent Invoices */}
-      <Row gutter={[16, 16]}>
+      <Row gutter={[16, 16]} style={{ padding: `0 ${paddingValue}` }}>
         <Col xs={24} lg={12}>
           <Card
             style={{
@@ -506,12 +531,8 @@ export default function DashboardPage() {
           </Card>
         </Col>
         <Col xs={24} lg={12}>
-          <Card
-            style={{
-              borderRadius: "12px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-            }}
-            title={
+          <ResponsiveTable
+            cardTitle={
               <div
                 style={{
                   display: "flex",
@@ -525,22 +546,21 @@ export default function DashboardPage() {
                 📋 Recent Invoices
               </div>
             }
-          >
-            <Table
-              dataSource={data?.recentInvoices || []}
-              columns={recentInvoiceColumns}
-              pagination={{
-                pageSize: 5,
-                style: { marginTop: 12 },
-              }}
-              size="small"
-              scroll={{ x: 600 }}
-              style={{
-                borderRadius: "8px",
-                overflow: "hidden",
-              }}
-            />
-          </Card>
+            cardProps={{
+              borderRadius: "12px",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+            }}
+            minScrollWidth={600}
+            dataSource={data?.recentInvoices || []}
+            columns={recentInvoiceColumns}
+            rowKey="_id"
+            pagination={{
+              pageSize: 5,
+              style: { marginTop: 12 },
+            }}
+            size="small"
+            scroll={{ x: 600 }}
+          />
         </Col>
       </Row>
     </div>

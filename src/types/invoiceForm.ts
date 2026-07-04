@@ -6,6 +6,9 @@ export interface TripForm {
   drop?: string;
   totalCharges?: number;
   dispatchPercent?: number;
+  loadId1?: string;
+  loadId2?: string;
+  driverName?: string;
 }
 
 export interface InvoiceFormValues {

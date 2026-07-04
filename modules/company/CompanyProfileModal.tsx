@@ -35,7 +35,12 @@ export default function CompanyProfileModal({
   const handleSubmit = async (values: CompanyProfile) => {
     try {
       setSubmitting(true);
-      const result = await saveCompanyProfile(values);
+      // Include _id when editing to ensure update instead of create
+      const submitData = initialData?._id
+        ? { ...values, _id: initialData._id }
+        : values;
+
+      const result = await saveCompanyProfile(submitData);
 
       if (result.success) {
         message.success("Company Profile Saved Successfully");
@@ -53,6 +58,14 @@ export default function CompanyProfileModal({
     } finally {
       setSubmitting(false);
     }
+  };
+
+  // Ant Design standard responsive breakpoints mapping for 3 items per row layout
+  const gridResponsiveProps = {
+    xs: 24, // Mobile (Single column layout)
+    sm: 24, // Large mobile screen
+    md: 12, // Tablets (Two columns layout)
+    lg: 8, // Desktop viewports (Exactly 3 columns layout: 24 / 8 = 3)
   };
 
   return (
@@ -75,7 +88,7 @@ export default function CompanyProfileModal({
         onClose();
       }}
       footer={null}
-      width={800}
+      width={900} // Expanded from 800 to 900 to comfortably fit 3 inputs side-by-side
       centered
       destroyOnHidden={true}
       forceRender={true}
@@ -88,10 +101,10 @@ export default function CompanyProfileModal({
         onFinish={handleSubmit}
         requiredMark={false}
         style={{
-          maxHeight: "70vh",
+          maxHeight: "75vh",
           overflowY: "auto",
           overflowX: "hidden",
-          paddingRight: "4px",
+          paddingRight: "6px",
         }}
       >
         {/* ================= SECTION 1: COMPANY INFORMATION ================= */}
@@ -110,9 +123,8 @@ export default function CompanyProfileModal({
             Company Information
           </div>
 
-          <Row gutter={[4, 0]}>
-            {/* ROW 1: 2 COLUMNS */}
-            <Col xs={24} sm={12}>
+          <Row gutter={[16, 0]}>
+            <Col {...gridResponsiveProps}>
               <Form.Item
                 name="companyName"
                 label={
@@ -128,7 +140,8 @@ export default function CompanyProfileModal({
                 />
               </Form.Item>
             </Col>
-            <Col xs={24} sm={12}>
+
+            <Col {...gridResponsiveProps}>
               <Form.Item
                 name="carrierIdentifier"
                 label={
@@ -145,8 +158,7 @@ export default function CompanyProfileModal({
               </Form.Item>
             </Col>
 
-            {/* ROW 2: 2 COLUMNS */}
-            <Col xs={24} sm={12}>
+            <Col {...gridResponsiveProps}>
               <Form.Item
                 name="email"
                 label={
@@ -168,7 +180,8 @@ export default function CompanyProfileModal({
                 />
               </Form.Item>
             </Col>
-            <Col xs={24} sm={12}>
+
+            <Col {...gridResponsiveProps}>
               <span
                 style={{
                   display: "block",
@@ -205,8 +218,7 @@ export default function CompanyProfileModal({
               </Row>
             </Col>
 
-            {/* ROW 3: 3 COLUMNS */}
-            <Col xs={24} sm={8}>
+            <Col {...gridResponsiveProps}>
               <Form.Item
                 name="province"
                 label={
@@ -222,7 +234,8 @@ export default function CompanyProfileModal({
                 />
               </Form.Item>
             </Col>
-            <Col xs={24} sm={8}>
+
+            <Col {...gridResponsiveProps}>
               <Form.Item
                 name="nsc"
                 label={
@@ -238,25 +251,8 @@ export default function CompanyProfileModal({
                 />
               </Form.Item>
             </Col>
-            <Col xs={24} sm={8}>
-              <Form.Item
-                name="ifta"
-                label={
-                  <span style={{ fontWeight: 600, color: "#475569" }}>
-                    IFTA
-                  </span>
-                }
-                rules={[{ required: true, message: "Required" }]}
-              >
-                <Input
-                  placeholder="Enter IFTA number"
-                  style={{ borderRadius: "6px" }}
-                />
-              </Form.Item>
-            </Col>
 
-            {/* ROW 4: 3 COLUMNS */}
-            <Col xs={24} sm={8}>
+            <Col {...gridResponsiveProps}>
               <Form.Item
                 name="gstHst"
                 label={
@@ -268,43 +264,6 @@ export default function CompanyProfileModal({
               >
                 <Input
                   placeholder="Enter GST/HST number"
-                  style={{ borderRadius: "6px" }}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Form.Item
-                name="qst"
-                label={
-                  <span style={{ fontWeight: 600, color: "#475569" }}>
-                    QST (Optional)
-                  </span>
-                }
-              >
-                <Input
-                  placeholder="Enter QST number"
-                  style={{ borderRadius: "6px" }}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Form.Item
-                name="eTransfer"
-                label={
-                  <span style={{ fontWeight: 600, color: "#475569" }}>
-                    E-Transfer Email
-                  </span>
-                }
-                rules={[
-                  {
-                    required: true,
-                    type: "email",
-                    message: "Valid email required",
-                  },
-                ]}
-              >
-                <Input
-                  placeholder="Enter E-Transfer Email"
                   style={{ borderRadius: "6px" }}
                 />
               </Form.Item>
@@ -328,8 +287,8 @@ export default function CompanyProfileModal({
             Address Information
           </div>
 
-          <Row gutter={[4, 0]}>
-            <Col xs={24} sm={12}>
+          <Row gutter={[16, 0]}>
+            <Col {...gridResponsiveProps}>
               <Form.Item
                 name="addressLine1"
                 label={
@@ -345,7 +304,8 @@ export default function CompanyProfileModal({
                 />
               </Form.Item>
             </Col>
-            <Col xs={24} sm={12}>
+
+            <Col {...gridResponsiveProps}>
               <Form.Item
                 name="addressLine2"
                 label={
@@ -360,7 +320,8 @@ export default function CompanyProfileModal({
                 />
               </Form.Item>
             </Col>
-            <Col xs={24} sm={12}>
+
+            <Col {...gridResponsiveProps}>
               <Form.Item
                 name="city"
                 label={
@@ -376,7 +337,8 @@ export default function CompanyProfileModal({
                 />
               </Form.Item>
             </Col>
-            <Col xs={24} sm={12}>
+
+            <Col {...gridResponsiveProps}>
               <Form.Item
                 name="state"
                 label={
@@ -392,7 +354,8 @@ export default function CompanyProfileModal({
                 />
               </Form.Item>
             </Col>
-            <Col xs={24} sm={12}>
+
+            <Col {...gridResponsiveProps}>
               <Form.Item
                 name="postCode"
                 label={
@@ -408,7 +371,8 @@ export default function CompanyProfileModal({
                 />
               </Form.Item>
             </Col>
-            <Col xs={24} sm={12}>
+
+            <Col {...gridResponsiveProps}>
               <Form.Item
                 name="country"
                 label={
@@ -430,6 +394,7 @@ export default function CompanyProfileModal({
           </Row>
         </div>
 
+        {/* Form CTA Buttons */}
         <div
           style={{
             display: "flex",

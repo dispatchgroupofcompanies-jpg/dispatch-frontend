@@ -14,6 +14,7 @@ import {
   Tooltip,
   message,
 } from "antd";
+import ResponsiveTable from "../../../modules/common/ResponsiveTable";
 import {
   EyeOutlined,
   FileAddOutlined,
@@ -254,7 +255,15 @@ function DashboardComponent() {
       width: 140,
       render: (text: string) => (
         <span
-          style={{ fontWeight: 700, color: "#1e3a8a", letterSpacing: "0.5px" }}
+          style={{
+            fontWeight: 700,
+            color: "#ffffff",
+            letterSpacing: "0.5px",
+            background: "#10b981",
+            padding: "4px 10px",
+            borderRadius: "6px",
+            display: "inline-block",
+          }}
         >
           #{text}
         </span>
@@ -486,62 +495,72 @@ function DashboardComponent() {
             "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
           borderRadius: "16px",
         }}
-        title={
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              width: "100%",
-              padding: "8px 0",
-              gap: "12px",
-            }}
-          >
-            <div>
-              <h2
-                style={{
-                  margin: 0,
-                  fontSize: "24px",
-                  fontWeight: 700,
-                  color: "#0f172a",
-                }}
-              >
-                Invoice Management Ledger
-              </h2>
-              <p
-                style={{
-                  margin: "4px 0 0 0",
-                  fontSize: "13px",
-                  fontWeight: 400,
-                  color: "#64748b",
-                }}
-              >
-                Create, tracking logs, view, and instantly download or share
-                invoice links.
-              </p>
-            </div>
-            <Button
-              type="primary"
-              size="large"
-              icon={<FileAddOutlined />}
-              style={{ borderRadius: "8px", fontWeight: 600 }}
-              onClick={() => {
-                setEditingInvoice(null);
-                setOpen(true);
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            width: "100%",
+            padding: "8px 0",
+            gap: "12px",
+            marginBottom: "16px",
+          }}
+        >
+          <div>
+            <h2
+              style={{
+                margin: 0,
+                fontSize: "24px",
+                fontWeight: 700,
+                color: "#0f172a",
               }}
             >
-              Create Statement
-            </Button>
+              Invoice Management Ledger
+            </h2>
+            <p
+              style={{
+                margin: "4px 0 0 0",
+                fontSize: "13px",
+                fontWeight: 400,
+                color: "#64748b",
+              }}
+            >
+              Create, tracking logs, view, and instantly download or share
+              invoice links.
+            </p>
           </div>
-        }
-      >
-        <Table
-          dataSource={invoices}
+          <Button
+            type="primary"
+            size="large"
+            icon={<FileAddOutlined />}
+            style={{ borderRadius: "8px", fontWeight: 600 }}
+            onClick={() => {
+              setEditingInvoice(null);
+              setOpen(true);
+            }}
+          >
+            Create Statement
+          </Button>
+        </div>
+
+        <ResponsiveTable
+          cardProps={{
+            borderRadius: "12px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+          }}
+          dataSource={invoices as unknown as Record<string, unknown>[]}
           columns={columns}
-          rowKey={(record: InvoiceType) => record._id}
+          rowKey={(record) => (record as unknown as InvoiceType)._id}
           loading={loading}
-          pagination={{ pageSize: 8 }}
+          pagination={{
+            pageSize: 8,
+            style: { marginTop: 12 },
+          }}
           size="middle"
+          scroll={{ x: 900 }}
+          minScrollWidth={900}
         />
       </Card>
 

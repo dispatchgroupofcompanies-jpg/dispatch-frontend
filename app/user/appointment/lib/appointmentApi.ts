@@ -186,3 +186,17 @@ export const fetchCompanyProfile = async (): Promise<Company[]> => {
     return [];
   }
 };
+
+// Update appointment status
+export const updateAppointmentStatus = async (
+  id: string,
+  status: string,
+): Promise<Appointment> => {
+  try {
+    const res = await API.patch(`/appointments/${id}/status`, { status });
+    return res.data?.data;
+  } catch (error) {
+    console.error("Error updating appointment status:", error);
+    throw error;
+  }
+};
