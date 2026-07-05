@@ -22,3 +22,26 @@ export const getAllAppointments = async (): Promise<
   const res = await API.get("/admin/all-appointments");
   return res.data as ApiResponse<Appointment[]>;
 };
+
+export const getInvoiceById = async (
+  invoiceId: string,
+): Promise<ApiResponse<Invoice>> => {
+  const res = await API.get(`/invoices/${invoiceId}`);
+  return res.data as ApiResponse<Invoice>;
+};
+
+export const downloadInvoice = async (invoiceId: string): Promise<Blob> => {
+  const res = await API.get(`/invoices/${invoiceId}/download`, {
+    responseType: "blob",
+  });
+  return res.data;
+};
+
+export const downloadAppointmentPDF = async (
+  appointmentId: string,
+): Promise<Blob> => {
+  const res = await API.get(`/appointments/${appointmentId}/download`, {
+    responseType: "blob",
+  });
+  return res.data;
+};

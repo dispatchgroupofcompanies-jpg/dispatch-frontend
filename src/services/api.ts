@@ -8,6 +8,7 @@ const API = axios.create({
 API.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("token");
+    console.log("Token from localStorage:", token); // Debugging line
     if (token && config.headers) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore

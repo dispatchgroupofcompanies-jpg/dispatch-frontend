@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Card,
   Statistic,
@@ -73,8 +73,7 @@ export default function AdminDashboardPage() {
   });
   const [recentInvoices, setRecentInvoices] = useState<Invoice[]>([]);
 
-  // 🔄 Fetch Real Data From Backend Stats Route
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       const response = await API.get("/admin/stats");
@@ -96,13 +95,12 @@ export default function AdminDashboardPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [fetchDashboardData]);
 
-  // 📊 Chart 1: Donut Chart Config (Audit Discretion Spread)
   const donutChartOptions = {
     labels: ["Pending Invoices", "Approved Invoices"],
     colors: ["#f59e0b", "#10b981"],
@@ -167,7 +165,7 @@ export default function AdminDashboardPage() {
     },
     {
       title: "Payee (Vendor)",
-      dataIndex: ["payee", "companyName"], // Sahi nesting map kar di hai taaki company blank na aaye
+      dataIndex: ["payee", "companyName"],
       key: "payeeCompany",
     },
     {
@@ -222,23 +220,23 @@ export default function AdminDashboardPage() {
       <div
         style={{
           background: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)",
-          padding: "32px 24px",
-          marginBottom: 24,
+          padding: "24px 20px",
+          marginBottom: 20,
           boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
         }}
       >
         <div style={{ maxWidth: 1400, margin: "0 auto" }}>
           <Title
             level={2}
-            style={{ color: "#fff", margin: 0, fontWeight: 700, fontSize: 28 }}
+            style={{ color: "#fff", margin: 0, fontWeight: 700, fontSize: 24 }}
           >
             Dashboard Overview
           </Title>
           <Text
             style={{
               color: "rgba(255,255,255,0.85)",
-              fontSize: 14,
-              marginTop: 8,
+              fontSize: 13,
+              marginTop: 6,
               display: "block",
             }}
           >
@@ -248,7 +246,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Content Container */}
-      <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0 24px 24px" }}>
+      <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0 20px 20px" }}>
         <Spin spinning={loading}>
           {/* 🎴 SECTION 1: COUNTER CARDS */}
           <Row gutter={[20, 20]} style={{ marginBottom: 32 }}>

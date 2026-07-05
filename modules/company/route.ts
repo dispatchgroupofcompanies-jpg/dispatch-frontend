@@ -6,6 +6,18 @@ const API = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+// Add auth token to requests
+API.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
+  return config;
+});
+
 export const getCompanyProfile = async () => {
   const response = await API.get(`/company/company-profile`);
   return response.data;

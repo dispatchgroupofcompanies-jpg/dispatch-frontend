@@ -33,3 +33,42 @@ body {
 .ant-card {
   box-sizing: border-box;
 }
+
+/* Appointment Table Styling */
+.appointment-table .ant-table-thead > tr > th {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2) !important;
+  padding: 12px 8px !important;
+  font-size: 13px !important;
+}
+
+.appointment-table .ant-table-thead > tr > th::before {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.appointment-table .ant-table-tbody > tr:hover > td {
+  background-color: #f8fafc !important;
+}
+
+.appointment-table .ant-table-tbody > tr > td {
+  padding: 10px 8px !important;
+  font-size: 13px !important;
+}
+
+.appointment-table .ant-table-cell {
+  vertical-align: middle !important;
+}
+
+/* Responsive table adjustments */
+@media (max-width: 768px) {
+  .appointment-table .ant-table-thead > tr > th {
+    padding: 8px 4px !important;
+    font-size: 11px !important;
+  }
+
+  .appointment-table .ant-table-tbody > tr > td {
+    padding: 8px 4px !important;
+    font-size: 12px !important;
+  }
+}

@@ -36,7 +36,7 @@ export default function CarrierInfoSection() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
+          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
           gap: "12px",
         }}
       >
@@ -85,6 +85,7 @@ export default function CarrierInfoSection() {
             size="large"
             placeholder="Select equipment type"
             options={equipmentTypeOptions}
+            style={{ width: "100%" }}
           />
         </Form.Item>
       </div>

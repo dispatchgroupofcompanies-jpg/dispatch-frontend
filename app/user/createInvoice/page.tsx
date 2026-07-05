@@ -409,14 +409,7 @@ function DashboardComponent() {
   ];
 
   return (
-    <div
-      style={{
-        padding: 0,
-        minHeight: "100vh",
-        backgroundColor: "#f8fafc",
-        overflow: "auto",
-      }}
-    >
+    <div>
       <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
         <Col xs={24} sm={12} md={8}>
           <Card

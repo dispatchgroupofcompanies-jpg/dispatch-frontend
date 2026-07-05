@@ -1,7 +1,6 @@
 "use client";
 
 import { Form, Input, Button, message, Spin, Checkbox, Typography } from "antd";
-import Link from "next/link";
 import { useState } from "react";
 import { signin } from "../route";
 import { EyeInvisibleOutlined, EyeTwoTone, LockOutlined, MailOutlined } from "@ant-design/icons";
@@ -202,14 +201,7 @@ export default function LoginForm() {
                 {/* Footer */}
                 <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
                   <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-                    Don't have an account?{" "}
-                    <Link
-                      href="/signup"
-                      prefetch={false}
-                      className="text-blue-600 dark:text-blue-400 font-semibold hover:text-blue-700"
-                    >
-                      Create account
-                    </Link>
+                    Contact your administrator for account access
                   </p>
                 </div>
               </div>

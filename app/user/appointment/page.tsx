@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 // Helper function to safely format dates
 const formatDate = (dateString?: string) => {
@@ -16,7 +16,7 @@ const formatDate = (dateString?: string) => {
   }
 };
 
-import { Button, Table, Card, Modal, Form, message, Tag } from "antd";
+import { Button, Table, Card, Modal, Form, message, Tag, Skeleton } from "antd";
 import { PlusOutlined, DownloadOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import TripInfoSection from "./components/TripInfoSection";
@@ -44,7 +44,6 @@ function AppointmentPage() {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [viewOpen, setViewOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] =
     useState<Appointment | null>(null);
@@ -54,7 +53,6 @@ function AppointmentPage() {
 
   const [form] = Form.useForm();
   const [editForm] = Form.useForm();
-  const mountedRef = useRef(true);
 
   useEffect(() => {
     const checkScreenSize = () => setIsMobile(window.innerWidth < 768);
@@ -66,7 +64,7 @@ function AppointmentPage() {
   const fetchCompanies = async () => {
     try {
       const data = await fetchCompanyProfile();
-      if (mountedRef.current) setCompanies(data);
+      setCompanies(data);
     } catch (err) {
       console.error("Error fetching companies:", err);
     }
@@ -76,7 +74,7 @@ function AppointmentPage() {
     try {
       setLoading(true);
       const data = await apiFetchAppointments();
-      if (mountedRef.current) setAppointments(data);
+      setAppointments(data);
     } catch (err) {
       console.error(err);
       message.error("Failed to fetch appointments");
@@ -86,16 +84,12 @@ function AppointmentPage() {
   }, []);
 
   useEffect(() => {
-    mountedRef.current = true;
     const loadData = async () => {
       await fetchAppointments();
       await fetchCompanies();
     };
     loadData();
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
+  }, [fetchAppointments]);
 
   const handleSubmit = async (values: Record<string, unknown>) => {
     try {
@@ -122,7 +116,6 @@ function AppointmentPage() {
           formattedValues.deliveryDate.format("YYYY-MM-DD");
       }
 
-      // Convert signatureDate if present
       if (
         formattedValues.signatureDate &&
         dayjs.isDayjs(formattedValues.signatureDate)
@@ -280,38 +273,71 @@ function AppointmentPage() {
     [editingId, editForm],
   );
 
-  const [expandedRow, setExpandedRow] = useState<string | null>(null);
+  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
+  const [invoiceUrl, setInvoiceUrl] = useState<string | null>(null);
+  const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const columns = useMemo(
-    () =>
-      createColumns({
-        onEdit: openEdit,
-        onDelete: handleDelete,
-        onStatusChange: fetchAppointments,
-      }),
-    [openEdit, handleDelete, fetchAppointments],
+  const handleViewInvoice = useCallback(
+    async (record: Appointment) => {
+      try {
+        // Show loading message
+        message.loading({
+          content: "Loading invoice preview...",
+          key: "invoice-loading",
+        });
+
+        const blob = await downloadAppointmentPDF(record._id);
+        const url = window.URL.createObjectURL(blob);
+        setInvoiceUrl(url);
+        setSelectedAppointment(record);
+        setInvoiceModalOpen(true);
+
+        // Hide loading message
+        message.destroy("invoice-loading");
+      } catch (err) {
+        console.error(err);
+        message.destroy("invoice-loading");
+        message.error("Failed to load invoice");
+      }
+    },
+    [downloadAppointmentPDF],
   );
 
+  const handleViewDetails = useCallback((record: Appointment) => {
+    // This callback is required by the table columns interface
+    // Currently not implemented - can be used to show appointment details
+    console.log("View details for appointment:", record._id);
+  }, []);
+
+  // mountedRef is only accessed inside callbacks, not during render
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const columns = createColumns({
+    onEdit: openEdit,
+    onDelete: handleDelete,
+    onStatusChange: fetchAppointments,
+    onViewDetails: handleViewDetails,
+    onViewInvoice: handleViewInvoice,
+  });
+
   const expandedRowRender = (record: Appointment) => {
-    const isExpanded = expandedRow === record._id;
+    const isExpanded = expandedRowKeys.includes(record._id);
     return (
       <ExpandedRowContent
         record={record}
         isExpanded={isExpanded}
-        onToggle={() => setExpandedRow(isExpanded ? null : record._id)}
+        onToggle={() => {
+          setExpandedRowKeys(
+            isExpanded
+              ? expandedRowKeys.filter((key) => key !== record._id)
+              : [...expandedRowKeys, record._id],
+          );
+        }}
       />
     );
   };
 
   return (
-    <div
-      style={{
-        padding: isMobile ? "12px" : "24px",
-        minHeight: "100vh",
-        backgroundColor: "#f8fafc",
-      }}
-    >
+    <div>
       <Card
         styles={{
           header: {
@@ -376,7 +402,62 @@ function AppointmentPage() {
           </div>
         }
       >
-        <div style={{ width: "100%", overflowX: "auto" }}>
+        {loading ? (
+          <div style={{ padding: "40px 0" }}>
+            <Skeleton active paragraph={{ rows: 8 }} />
+          </div>
+        ) : appointments.length === 0 ? (
+          <div
+            style={{
+              padding: "80px 24px",
+              textAlign: "center",
+              background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
+              border: "2px dashed #cbd5e1",
+              borderRadius: "16px",
+            }}
+          >
+            <div style={{ fontSize: "56px", marginBottom: "16px" }}>📋</div>
+            <h3
+              style={{
+                fontSize: "18px",
+                fontWeight: 700,
+                color: "#1e293b",
+                margin: "0 0 8px 0",
+              }}
+            >
+              No Appointments Yet
+            </h3>
+            <p
+              style={{
+                fontSize: "14px",
+                color: "#64748b",
+                margin: "0 auto 24px",
+                maxWidth: "480px",
+                lineHeight: "1.6",
+              }}
+            >
+              Start managing your dispatch operations by creating your first
+              appointment. Book loads, track shipments, and generate invoices.
+            </p>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => setOpen(true)}
+              size="large"
+              style={{
+                height: 44,
+                padding: "0 28px",
+                fontSize: 14,
+                fontWeight: 600,
+                borderRadius: 8,
+                backgroundColor: "#2563eb",
+                borderColor: "#2563eb",
+              }}
+            >
+              Create Your First Appointment
+            </Button>
+          </div>
+        ) : (
           <Table
             dataSource={appointments}
             columns={columns}
@@ -385,25 +466,25 @@ function AppointmentPage() {
             pagination={{
               pageSize: 10,
               placement: ["bottomCenter"],
-              size: isMobile ? "small" : "middle",
+              size: "small",
             }}
-            size={isMobile ? "small" : "middle"}
-            scroll={{ x: isMobile ? 1000 : "100%" }}
+            size="small"
             tableLayout="fixed"
             bordered={false}
             expandable={{
               expandedRowRender,
               onExpandedRowsChange: (expandedRows) => {
-                if (expandedRows.length > 0) {
-                  setExpandedRow(expandedRows[0] as string);
-                } else {
-                  setExpandedRow(null);
-                }
+                setExpandedRowKeys(expandedRows as string[]);
               },
-              expandedRowKeys: expandedRow ? [expandedRow] : [],
+              expandedRowKeys,
+            }}
+            className="appointment-table"
+            style={{
+              borderRadius: "8px",
+              overflow: "hidden",
             }}
           />
-        </div>
+        )}
       </Card>
 
       <Modal
@@ -418,7 +499,7 @@ function AppointmentPage() {
           setOpen(false);
         }}
         footer={null}
-        width={1100}
+        width={isMobile ? "95vw" : 1100}
         centered
         style={{ maxWidth: "100%", padding: isMobile ? "8px" : "24px" }}
       >
@@ -475,62 +556,43 @@ function AppointmentPage() {
         </Form>
       </Modal>
 
+      {/* Invoice Viewer Modal */}
       <Modal
         title={
           <div style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>
-            Appointment Details
+            📄 Invoice Preview
           </div>
         }
-        open={viewOpen}
-        onCancel={() => setViewOpen(false)}
+        open={invoiceModalOpen}
+        onCancel={() => {
+          setInvoiceModalOpen(false);
+          if (invoiceUrl) {
+            URL.revokeObjectURL(invoiceUrl);
+            setInvoiceUrl(null);
+          }
+        }}
         footer={
-          <Button
-            size="large"
-            onClick={() => setViewOpen(false)}
-            style={{ borderRadius: "6px", width: isMobile ? "100%" : "auto" }}
+          <div
+            style={{
+              display: "flex",
+              gap: "8px",
+              justifyContent: "flex-end",
+            }}
           >
-            Close
-          </Button>
-        }
-        width={600}
-        centered
-      >
-        {selectedAppointment && (
-          <div style={{ padding: "20px 0" }}>
-            {selectedAppointment.companyLogo && (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  marginBottom: "20px",
-                }}
-              >
-                <div
-                  style={{
-                    width: "120px",
-                    height: "120px",
-                    borderRadius: "50%",
-                    border: "3px solid #1e3a8a",
-                    overflow: "hidden",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    backgroundColor: "#f8fafc",
-                  }}
-                >
-                  <img
-                    src={selectedAppointment.companyLogo}
-                    alt="Company Logo"
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
-                  />
-                </div>
-              </div>
-            )}
-            <div style={{ marginBottom: "20px", textAlign: "center" }}>
+            <Button
+              size="large"
+              onClick={() => {
+                setInvoiceModalOpen(false);
+                if (invoiceUrl) {
+                  URL.revokeObjectURL(invoiceUrl);
+                  setInvoiceUrl(null);
+                }
+              }}
+              style={{ borderRadius: "6px" }}
+            >
+              Close
+            </Button>
+            {selectedAppointment && (
               <Button
                 type="primary"
                 icon={<DownloadOutlined />}
@@ -540,165 +602,44 @@ function AppointmentPage() {
                   background: "#2563eb",
                   borderRadius: "6px",
                   fontWeight: 600,
-                  width: isMobile ? "100%" : "auto",
                 }}
               >
-                Download Appointment PDF
+                Download PDF
               </Button>
-            </div>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
-                gap: "16px",
-              }}
-            >
-              <div>
-                <div
-                  style={{
-                    fontSize: "12px",
-                    color: "#64748b",
-                    marginBottom: "4px",
-                  }}
-                >
-                  Company Name
-                </div>
-                <div
-                  style={{
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    color: "#1e3a8a",
-                  }}
-                >
-                  {selectedAppointment.companyName}
-                </div>
-              </div>
-              <div>
-                <div
-                  style={{
-                    fontSize: "12px",
-                    color: "#64748b",
-                    marginBottom: "4px",
-                  }}
-                >
-                  Email
-                </div>
-                <div
-                  style={{
-                    fontSize: "14px",
-                    color: "#334155",
-                    wordBreak: "break-word",
-                  }}
-                >
-                  {selectedAppointment.email}
-                </div>
-              </div>
-              <div>
-                <div
-                  style={{
-                    fontSize: "12px",
-                    color: "#64748b",
-                    marginBottom: "4px",
-                  }}
-                >
-                  Phone
-                </div>
-                <div style={{ fontSize: "14px", color: "#334155" }}>
-                  {selectedAppointment.phone}
-                </div>
-              </div>
-              <div>
-                <div
-                  style={{
-                    fontSize: "12px",
-                    color: "#64748b",
-                    marginBottom: "4px",
-                  }}
-                >
-                  Service Type
-                </div>
-                <Tag color="blue">{selectedAppointment.serviceType}</Tag>
-              </div>
-              <div>
-                <div
-                  style={{
-                    fontSize: "12px",
-                    color: "#64748b",
-                    marginBottom: "4px",
-                  }}
-                >
-                  Appointment Date
-                </div>
-                <div style={{ fontSize: "14px", color: "#334155" }}>
-                  {formatDate(selectedAppointment.appointmentDate)}
-                </div>
-              </div>
-              <div>
-                <div
-                  style={{
-                    fontSize: "12px",
-                    color: "#64748b",
-                    marginBottom: "4px",
-                  }}
-                >
-                  Time
-                </div>
-                <div style={{ fontSize: "14px", color: "#334155" }}>
-                  {selectedAppointment.appointmentTime}
-                </div>
-              </div>
-              <div style={{ gridColumn: "1 / -1" }}>
-                <div
-                  style={{
-                    fontSize: "12px",
-                    color: "#64748b",
-                    marginBottom: "4px",
-                  }}
-                >
-                  Status
-                </div>
-                <Tag
-                  color={
-                    selectedAppointment.status === "confirmed"
-                      ? "success"
-                      : selectedAppointment.status === "cancelled"
-                        ? "error"
-                        : selectedAppointment.status === "completed"
-                          ? "success"
-                          : "warning"
-                  }
-                >
-                  {selectedAppointment.status.toUpperCase()}
-                </Tag>
-              </div>
-              {selectedAppointment.notes && (
-                <div style={{ gridColumn: "1 / -1" }}>
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      color: "#64748b",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Notes
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "14px",
-                      color: "#334155",
-                      padding: "8px",
-                      backgroundColor: "#f8fafc",
-                      borderRadius: "4px",
-                      wordBreak: "break-word",
-                    }}
-                  >
-                    {selectedAppointment.notes}
-                  </div>
-                </div>
-              )}
-            </div>
+            )}
           </div>
-        )}
+        }
+        width={900}
+        centered
+        style={{ maxWidth: "95vw" }}
+      >
+        <div
+          style={{
+            height: "70vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "#f8fafc",
+            borderRadius: "8px",
+          }}
+        >
+          {invoiceUrl ? (
+            <iframe
+              src={invoiceUrl}
+              style={{
+                width: "100%",
+                height: "100%",
+                border: "none",
+                borderRadius: "8px",
+              }}
+              title="Invoice PDF"
+            />
+          ) : (
+            <div style={{ textAlign: "center", color: "#64748b" }}>
+              <p>Loading invoice...</p>
+            </div>
+          )}
+        </div>
       </Modal>
 
       <Modal
@@ -714,7 +655,7 @@ function AppointmentPage() {
           editForm.resetFields();
         }}
         footer={null}
-        width={1100}
+        width={isMobile ? "95vw" : 1100}
         centered
         style={{ maxWidth: "100%", padding: isMobile ? "8px" : "24px" }}
       >

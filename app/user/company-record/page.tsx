@@ -11,6 +11,7 @@ import {
   message,
   Tag,
   Collapse,
+  Skeleton,
 } from "antd";
 import {
   EditOutlined,
@@ -27,13 +28,21 @@ import {
 
 const { Title, Text } = Typography;
 
+interface CompanyProfile {
+  _id: string;
+  companyName: string;
+  carrierIdentifier: string;
+  [key: string]: string | number | boolean | undefined | null;
+}
+
 export default function CompanyRecordPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  // FIX: Array array fallback initialize kiya h
-  const [profileData, setProfileData] = useState<any[]>([]);
+  const [profileData, setProfileData] = useState<CompanyProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
-  const [selectedProfile, setSelectedProfile] = useState<any>(null); // Track specific edit profile
+  const [selectedProfile, setSelectedProfile] = useState<CompanyProfile | null>(
+    null,
+  );
   const [paddingValue, setPaddingValue] = useState("24px");
   const [flexDirection, setFlexDirection] = useState<"row" | "column">("row");
   const [isMobile, setIsMobile] = useState(false);
@@ -56,11 +65,13 @@ export default function CompanyRecordPage() {
       ) {
         setProfileData(result.data);
       } else {
+        // No data is not an error - just show empty state
         setProfileData([]);
       }
     } catch (error) {
       console.error(error);
-      message.error("Failed to load company config metadata.");
+      // Only show error for actual failures, not for empty data
+      message.error("Failed to load company profiles. Please try again.");
       setProfileData([]);
     } finally {
       setLoading(false);
@@ -69,7 +80,12 @@ export default function CompanyRecordPage() {
 
   useEffect(() => {
     isMounted.current = true;
-    loadProfileData(true);
+
+    const loadData = async () => {
+      await loadProfileData(true);
+    };
+
+    loadData();
 
     const handleResize = () => {
       if (window.innerWidth < 768) {
@@ -115,7 +131,7 @@ export default function CompanyRecordPage() {
   };
 
   // FIX: Edit click par individual profile ko store kar rahe hain
-  const handleEditClick = (e: React.MouseEvent, profile: any) => {
+  const handleEditClick = (e: React.MouseEvent, profile: CompanyProfile) => {
     e.stopPropagation();
     setModalMode("edit");
     setSelectedProfile(profile);
@@ -132,7 +148,7 @@ export default function CompanyRecordPage() {
   };
 
   // FIX: Individual profile pass karke data render karenge
-  const renderExpandedContent = (profile: any) => (
+  const renderExpandedContent = (profile: CompanyProfile) => (
     <div style={{ padding: "8px 4px" }}>
       <div style={{ marginBottom: "20px" }}>
         <div
@@ -460,14 +476,7 @@ export default function CompanyRecordPage() {
   );
 
   return (
-    <div
-      style={{
-        padding: paddingValue,
-        minHeight: "100vh",
-        backgroundColor: "#f8fafc",
-        overflow: "auto",
-      }}
-    >
+    <div>
       <Card
         style={{
           boxShadow:
@@ -662,36 +671,63 @@ export default function CompanyRecordPage() {
         ) : (
           <div
             style={{
-              padding: "48px 24px",
+              padding: "60px 24px",
               textAlign: "center",
-              backgroundColor: "#ffffff",
-              border: "2px dashed #e2e8f0",
-              borderRadius: "12px",
-              color: "#94a3b8",
+              background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
+              border: "2px dashed #cbd5e1",
+              borderRadius: "16px",
             }}
           >
-            <div style={{ fontSize: "36px", marginBottom: "12px" }}>🏢</div>
-            <h3
+            <div
               style={{
-                fontSize: "15px",
-                fontWeight: 600,
-                color: "#475569",
-                margin: "0 0 4px 0",
+                fontSize: "56px",
+                marginBottom: "16px",
+                filter: "grayscale(20%)",
+              }}
+            >
+              🏢
+            </div>
+            <Title
+              level={4}
+              style={{
+                margin: "0 0 8px 0",
+                color: "#1e293b",
+                fontWeight: 700,
               }}
             >
               No Company Profile Registered
-            </h3>
-            <p
+            </Title>
+            <Text
               style={{
-                fontSize: "13px",
+                fontSize: "14px",
                 color: "#64748b",
-                margin: "0 auto",
-                maxWidth: "420px",
+                margin: "0 auto 24px",
+                maxWidth: "480px",
+                display: "block",
+                lineHeight: "1.6",
               }}
             >
-              Initialize database variables by clicking the Add Company Profile
-              button at the top right corner.
-            </p>
+              Get started by creating your first company profile. This will help
+              you manage your dispatch operations efficiently.
+            </Text>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleAddClick}
+              size="large"
+              style={{
+                height: 44,
+                padding: "0 28px",
+                fontSize: 14,
+                fontWeight: 600,
+                borderRadius: 8,
+                backgroundColor: "#1e3a8a",
+                borderColor: "#1e3a8a",
+                boxShadow: "0 4px 6px rgba(30, 58, 138, 0.2)",
+              }}
+            >
+              Create Your First Profile
+            </Button>
           </div>
         )}
       </Card>

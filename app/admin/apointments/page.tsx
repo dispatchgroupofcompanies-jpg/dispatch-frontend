@@ -1,7 +1,17 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Table, Spin, Alert, Tag } from "antd";
+import React, { useEffect, useState, useCallback } from "react";
+import {
+  Table,
+  Spin,
+  Alert,
+  Tag,
+  Modal,
+  message,
+  Button,
+  Space,
+  Tooltip,
+} from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
   TruckOutlined,
@@ -11,8 +21,15 @@ import {
   MailOutlined,
   DollarOutlined,
   FileTextOutlined,
+  EyeOutlined,
+  DownloadOutlined,
 } from "@ant-design/icons";
-import { getAllAppointments } from "../../../src/services/adminService";
+import {
+  getAllAppointments,
+  getInvoiceById,
+  downloadInvoice,
+  downloadAppointmentPDF,
+} from "../../../src/services/adminService";
 import type { Appointment } from "../../../src/types/invoice";
 
 type AppointmentRecord = Appointment;
@@ -159,6 +176,10 @@ const AppointmentRecords = () => {
   const [appointments, setAppointments] = useState<AppointmentRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [invoiceUrl, setInvoiceUrl] = useState<string | null>(null);
+  const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] =
+    useState<AppointmentRecord | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -211,6 +232,51 @@ const AppointmentRecords = () => {
     },
   ];
 
+  const handleViewInvoice = useCallback(
+    async (record: AppointmentRecord) => {
+      try {
+        message.loading({
+          content: "Loading invoice preview...",
+          key: "invoice-loading",
+        });
+
+        const blob = await downloadAppointmentPDF(record._id);
+        const url = window.URL.createObjectURL(blob);
+        setInvoiceUrl(url);
+        setInvoiceModalOpen(true);
+        setSelectedAppointment(record);
+
+        message.destroy("invoice-loading");
+      } catch (err) {
+        console.error(err);
+        message.destroy("invoice-loading");
+        message.error("Failed to load invoice");
+      }
+    },
+    [downloadAppointmentPDF],
+  );
+
+  const handleDownloadPDF = useCallback(
+    async (id: string) => {
+      try {
+        const blob = await downloadAppointmentPDF(id);
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `appointment-${id}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode?.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        message.success("PDF downloaded successfully!");
+      } catch (err) {
+        console.error(err);
+        message.error("Failed to download PDF");
+      }
+    },
+    [downloadAppointmentPDF],
+  );
+
   const columns: ColumnsType<AppointmentRecord> = [
     {
       title: "Trip / shipment",
@@ -253,17 +319,17 @@ const AppointmentRecords = () => {
       ),
     },
     {
-      title: "Timeline (pickup / delivery)",
+      title: "Timeline",
       key: "timeline",
       responsive: ["sm"],
       render: (_, record) => (
-        <div style={{ fontSize: 13, color: "#334155" }}>
+        <div style={{ fontSize: 12, color: "#334155" }}>
           <div>
-            <span style={{ color: "#94a3b8" }}>Pick:</span>{" "}
+            <span style={{ color: "#94a3b8" }}>↑</span>{" "}
             {formatDate(record.pickupDate)}
           </div>
           <div>
-            <span style={{ color: "#94a3b8" }}>Del:</span>{" "}
+            <span style={{ color: "#94a3b8" }}>↓</span>{" "}
             {formatDate(record.deliveryDate)}
           </div>
         </div>
@@ -274,6 +340,30 @@ const AppointmentRecords = () => {
       dataIndex: "status",
       key: "status",
       render: (status: string) => <StatusPill status={status} />,
+    },
+    {
+      title: "Actions",
+      key: "action",
+      width: 120,
+      align: "center" as const,
+      render: (_: unknown, record: AppointmentRecord) => (
+        <Space size="small">
+          <Tooltip title="View Invoice" placement="top">
+            <Button
+              type="default"
+              size="small"
+              icon={<FileTextOutlined />}
+              onClick={() => handleViewInvoice(record)}
+              style={{
+                borderRadius: "6px",
+                borderColor: "#10b981",
+                color: "#10b981",
+                height: "28px",
+              }}
+            />
+          </Tooltip>
+        </Space>
+      ),
     },
   ];
 
@@ -391,13 +481,24 @@ const AppointmentRecords = () => {
   );
 
   return (
-    <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+    <div
+      style={{
+        maxWidth: 1200,
+        margin: "0 auto",
+        padding: "0 16px",
+        height: "calc(100vh - 80px)",
+        overflowY: "auto",
+        overflowX: "hidden",
+        scrollbarWidth: "thin",
+        scrollbarColor: "#cbd5e1 #f1f5f9",
+      }}
+    >
       <div
         style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          marginBottom: 20,
+          marginBottom: 16,
           flexWrap: "wrap",
           gap: 12,
         }}
@@ -406,36 +507,42 @@ const AppointmentRecords = () => {
           <h2
             style={{
               margin: 0,
-              fontSize: 22,
+              fontSize: 20,
               fontWeight: 700,
               color: "#0f172a",
             }}
           >
             Appointment records
           </h2>
-          <p style={{ margin: "4px 0 0", fontSize: 13, color: "#94a3b8" }}>
+          <p
+            style={{
+              margin: "4px 0 0",
+              fontSize: 13,
+              color: "#94a3b8",
+            }}
+          >
             All booked trips and shipments
           </p>
         </div>
       </div>
 
       <div
-        style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}
+        style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}
       >
         {stats.map((s) => (
           <div
             key={s.label}
             style={{
               background: s.color,
-              borderRadius: 14,
-              padding: "16px 20px",
-              flex: "1 1 160px",
-              minWidth: 150,
+              borderRadius: 12,
+              padding: "14px 16px",
+              flex: "1 1 100%",
+              minWidth: 140,
             }}
           >
             <div
               style={{
-                fontSize: 12,
+                fontSize: 11,
                 color: s.accent,
                 fontWeight: 600,
                 marginBottom: 4,
@@ -443,7 +550,13 @@ const AppointmentRecords = () => {
             >
               {s.label}
             </div>
-            <div style={{ fontSize: 24, fontWeight: 700, color: "#0f172a" }}>
+            <div
+              style={{
+                fontSize: 20,
+                fontWeight: 700,
+                color: "#0f172a",
+              }}
+            >
               {s.value}
             </div>
           </div>
@@ -461,13 +574,13 @@ const AppointmentRecords = () => {
       <div
         style={{
           background: "#fff",
-          borderRadius: 16,
+          borderRadius: 12,
           border: "1px solid #eef0f3",
           overflow: "hidden",
         }}
       >
         {loading ? (
-          <div style={{ textAlign: "center", padding: 60 }}>
+          <div style={{ textAlign: "center", padding: 40 }}>
             <Spin size="large" />
           </div>
         ) : (
@@ -475,13 +588,98 @@ const AppointmentRecords = () => {
             columns={columns}
             dataSource={appointments}
             rowKey={(record) => record._id}
-            pagination={{ pageSize: 10 }}
-            scroll={{ x: true }}
+            pagination={{ pageSize: 10, size: "small" }}
+            size="small"
             expandable={{ expandedRowRender, expandRowByClick: true }}
-            style={{ borderRadius: 16 }}
           />
         )}
       </div>
+
+      {/* Invoice Viewer Modal */}
+      <Modal
+        title={
+          <div style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>
+            📄 Invoice Preview
+          </div>
+        }
+        open={invoiceModalOpen}
+        onCancel={() => {
+          setInvoiceModalOpen(false);
+          if (invoiceUrl) {
+            URL.revokeObjectURL(invoiceUrl);
+            setInvoiceUrl(null);
+          }
+        }}
+        footer={
+          <div
+            style={{
+              display: "flex",
+              gap: "8px",
+              justifyContent: "flex-end",
+            }}
+          >
+            <Button
+              size="large"
+              onClick={() => {
+                setInvoiceModalOpen(false);
+                if (invoiceUrl) {
+                  URL.revokeObjectURL(invoiceUrl);
+                  setInvoiceUrl(null);
+                }
+              }}
+              style={{ borderRadius: "6px" }}
+            >
+              Close
+            </Button>
+            {selectedAppointment && (
+              <Button
+                type="primary"
+                icon={<DownloadOutlined />}
+                size="large"
+                onClick={() => handleDownloadPDF(selectedAppointment._id)}
+                style={{
+                  background: "#2563eb",
+                  borderRadius: "6px",
+                  fontWeight: 600,
+                }}
+              >
+                Download PDF
+              </Button>
+            )}
+          </div>
+        }
+        width={900}
+        centered
+        style={{ maxWidth: "95vw" }}
+      >
+        <div
+          style={{
+            height: "70vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "#f8fafc",
+            borderRadius: "8px",
+          }}
+        >
+          {invoiceUrl ? (
+            <iframe
+              src={invoiceUrl}
+              style={{
+                width: "100%",
+                height: "100%",
+                border: "none",
+                borderRadius: "8px",
+              }}
+              title="Invoice PDF"
+            />
+          ) : (
+            <div style={{ textAlign: "center", color: "#64748b" }}>
+              <p>Loading invoice...</p>
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 };

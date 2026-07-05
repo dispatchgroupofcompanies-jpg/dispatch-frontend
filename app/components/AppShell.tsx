@@ -4,12 +4,12 @@ import { useEffect, useState } from "react";
 import Sidebar, { SIDEBAR_WIDTH } from "./Sidebar";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [mounted, setMounted] = useState(() => typeof window !== "undefined");
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 992 : false,
+  );
 
   useEffect(() => {
-    setMounted(true);
-
     const check = () => setIsMobile(window.innerWidth < 992);
     check();
     window.addEventListener("resize", check);
@@ -31,7 +31,15 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           transition: "margin-left 0.2s ease",
         }}
       >
-        {children}
+        <div
+          style={{
+            padding: isMobile ? "12px" : "24px",
+            maxWidth: "1600px",
+            margin: "0 auto",
+          }}
+        >
+          {children}
+        </div>
       </main>
     </div>
   );

@@ -1,20 +1,18 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Drawer, Button } from "antd";
+import { Drawer, Button, message } from "antd";
+import { useRouter, usePathname } from "next/navigation";
 import {
   MenuOutlined,
   CloseOutlined,
   CalendarOutlined,
-} from "@ant-design/icons";
-import { useRouter, usePathname } from "next/navigation";
-import { message } from "antd";
-import {
   DashboardOutlined,
   FileTextOutlined,
   LogoutOutlined,
   MenuUnfoldOutlined,
   MenuFoldOutlined,
+  UserOutlined, // Added for the Add Users menu option
 } from "@ant-design/icons";
 
 export default function AdminLayout({
@@ -101,12 +99,11 @@ export default function AdminLayout({
           {/* Logo Section */}
           <div
             style={{
-              padding: "24px 20px",
+              padding: "16px 20px",
               borderBottom: "1px solid rgba(255,255,255,0.1)",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              minHeight: 80,
             }}
           >
             {!sidebarCollapsed && (
@@ -166,7 +163,7 @@ export default function AdminLayout({
           </div>
 
           {/* Navigation Links */}
-          <div style={{ padding: "16px 12px", flex: 1, overflowY: "auto" }}>
+          <div style={{ padding: "16px 12px", flex: 1, overflowY: "hidden" }}>
             {/* Dashboard Link */}
             <div
               onClick={() => router.push("/admin/dashboard")}
@@ -206,7 +203,7 @@ export default function AdminLayout({
               )}
             </div>
 
-            {/* Appointment Records Link (FIXED: Added to Desktop View) */}
+            {/* Appointment Records Link */}
             <div
               onClick={() => router.push("/admin/apointments")}
               style={{
@@ -283,6 +280,45 @@ export default function AdminLayout({
                 </span>
               )}
             </div>
+
+            {/* Add Users Link (New Desktop Option) */}
+            <div
+              onClick={() => router.push("/admin/users")}
+              style={{
+                padding: "14px 16px",
+                cursor: "pointer",
+                backgroundColor: isActive("/admin/users")
+                  ? "rgba(255,255,255,0.15)"
+                  : "transparent",
+                display: "flex",
+                alignItems: "center",
+                gap: 14,
+                borderRadius: 8,
+                marginBottom: 6,
+                transition: "all 0.2s",
+                borderLeft: isActive("/admin/users")
+                  ? "3px solid #60a5fa"
+                  : "3px solid transparent",
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive("/admin/users")) {
+                  e.currentTarget.style.backgroundColor =
+                    "rgba(255,255,255,0.08)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive("/admin/users")) {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                }
+              }}
+            >
+              <UserOutlined style={{ fontSize: 18, color: "#fff" }} />
+              {!sidebarCollapsed && (
+                <span style={{ fontSize: 14, fontWeight: 500, color: "#fff" }}>
+                  Add Users
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Logout Button */}
@@ -331,18 +367,18 @@ export default function AdminLayout({
           style={{
             position: "fixed",
             left: 12,
-            top: 12,
+            top: 8,
             zIndex: 1500,
-            background: "#fff",
+            background: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)",
             borderRadius: 8,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
             width: 44,
             height: 44,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
           }}
-          icon={<MenuOutlined style={{ fontSize: 20, color: "#1e293b" }} />}
+          icon={<MenuOutlined style={{ fontSize: 20, color: "#ffffff" }} />}
         />
       )}
 
@@ -360,6 +396,7 @@ export default function AdminLayout({
           flex: 1,
           transition: "margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
           padding: getResponsivePadding(),
+          paddingTop: isMobile ? 68 : getResponsivePadding(),
           overflow: "auto",
           minHeight: "100vh",
         }}
@@ -393,7 +430,7 @@ export default function AdminLayout({
           {/* Drawer Header */}
           <div
             style={{
-              padding: 24,
+              padding: "16px 20px",
               borderBottom: "1px solid rgba(255,255,255,0.1)",
               display: "flex",
               alignItems: "center",
@@ -523,6 +560,32 @@ export default function AdminLayout({
               <span style={{ fontSize: 14, fontWeight: 500 }}>
                 Invoice Approval
               </span>
+            </div>
+
+            <div
+              onClick={() => {
+                setDrawerOpen(false);
+                router.push("/admin/users");
+              }}
+              style={{
+                padding: "14px 16px",
+                cursor: "pointer",
+                backgroundColor: isActive("/admin/users")
+                  ? "rgba(255,255,255,0.15)"
+                  : "transparent",
+                display: "flex",
+                alignItems: "center",
+                gap: 14,
+                borderRadius: 8,
+                marginBottom: 6,
+                transition: "all 0.2s",
+                borderLeft: isActive("/admin/users")
+                  ? "3px solid #60a5fa"
+                  : "3px solid transparent",
+              }}
+            >
+              <UserOutlined style={{ fontSize: 18 }} />
+              <span style={{ fontSize: 14, fontWeight: 500 }}>Add Users</span>
             </div>
           </div>
 

@@ -31,7 +31,7 @@ export default function ChargesSection() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
+          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
           gap: "12px",
         }}
       >
@@ -85,6 +85,7 @@ export default function ChargesSection() {
             size="large"
             placeholder="Select currency"
             options={currencyOptions}
+            style={{ width: "100%" }}
           />
         </Form.Item>
       </div>

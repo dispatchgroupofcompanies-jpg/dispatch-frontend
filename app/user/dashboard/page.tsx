@@ -242,9 +242,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <div style={{ padding: `${paddingValue} 0 24px 0` }}>
+    <div>
       {/* Page Title */}
-      <div style={{ marginBottom: 24, padding: `0 ${paddingValue}` }}>
+      <div style={{ marginBottom: 24 }}>
         <Title level={3} style={{ margin: 0, color: "#0f172a" }}>
           Dashboard Overview
         </Title>

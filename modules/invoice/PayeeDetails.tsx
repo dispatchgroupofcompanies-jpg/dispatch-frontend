@@ -75,7 +75,8 @@ export default function PayeeDetails({
             justifyContent: "space-between",
             alignItems: "center",
             width: "100%",
-            gap: "12px",
+            gap: "16px",
+            flexWrap: "wrap",
           }}
         >
           <span
@@ -84,15 +85,28 @@ export default function PayeeDetails({
               fontWeight: 700,
               color: "#1e3a8a",
               whiteSpace: "nowrap",
+              flex: "0 0 auto",
             }}
           >
             🏢 Payee Information (Issuer)
           </span>
 
-          <div style={{ width: "220px" }}>
+          <div
+            style={{
+              flex: "1 1 280px",
+              minWidth: "220px",
+              maxWidth: "400px",
+              position: "relative",
+            }}
+          >
             <Form.Item
               name={["payee", "payeeSelectKey"]}
-              style={{ marginBottom: 0 }}
+              style={{
+                marginBottom: 0,
+                width: "100%",
+                position: "relative",
+                zIndex: 1,
+              }}
             >
               <Select
                 placeholder="Select Profile..."
@@ -102,7 +116,9 @@ export default function PayeeDetails({
                 allowClear
                 showSearch
                 optionFilterProp="label"
-                style={{ width: "100%" }}
+                style={{ width: "100%", position: "relative", zIndex: 9999 }}
+                getPopupContainer={() => document.body}
+                popupClassName="payee-select-dropdown"
                 options={companiesList.map((company) => ({
                   value: company._id || company.companyName,
                   label: `🏢 ${company.companyName}`,
@@ -114,27 +130,30 @@ export default function PayeeDetails({
       }
       variant="borderless"
       styles={{
-        body: { padding: "16px 14px", flex: 1 },
+        body: { padding: "16px 14px", flex: 1, overflow: "visible" },
         header: {
           minHeight: 42,
           padding: "0 14px",
           borderBottom: "1px solid #e2e8f0",
           background: "#f8fafc",
+          overflow: "visible",
         },
       }}
       style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100%",
         border: "1px solid #e2e8f0",
         borderRadius: 6,
+        overflow: "visible",
+        position: "relative",
+        minHeight: "100px",
+        zIndex: 1,
+        isolation: "isolate",
       }}
     >
       {shouldShowFields && (
         <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-          {/* Row 1: 3 Columns (Company, Contact, Phone) */}
-          <Row gutter={12}>
-            <Col span={8}>
+          {/* Row 1: 3 Columns (Company, Contact, Phone) - Responsive */}
+          <Row gutter={[12, 12]}>
+            <Col xs={24} sm={24} md={8}>
               <span style={labelStyle}>Company Name</span>
               <Form.Item
                 name={["payee", "companyName"]}
@@ -148,7 +167,7 @@ export default function PayeeDetails({
                 />
               </Form.Item>
             </Col>
-            <Col span={8}>
+            <Col xs={24} sm={24} md={8}>
               <span style={labelStyle}>Contact Person / Carrier</span>
               <Form.Item
                 name={["payee", "contactPerson"]}
@@ -161,7 +180,7 @@ export default function PayeeDetails({
                 />
               </Form.Item>
             </Col>
-            <Col span={8}>
+            <Col xs={24} sm={24} md={8}>
               <span style={labelStyle}>Phone</span>
               <Form.Item name={["payee", "phone"]} style={{ marginBottom: 0 }}>
                 <Input
@@ -173,9 +192,9 @@ export default function PayeeDetails({
             </Col>
           </Row>
 
-          {/* Row 2: 2 Columns (Email, GST/HST) */}
-          <Row gutter={12}>
-            <Col span={12}>
+          {/* Row 2: 2 Columns (Email, GST/HST) - Responsive */}
+          <Row gutter={[12, 12]}>
+            <Col xs={24} sm={24} md={12}>
               <span style={labelStyle}>Email</span>
               <Form.Item name={["payee", "email"]} style={{ marginBottom: 0 }}>
                 <Input
@@ -185,7 +204,7 @@ export default function PayeeDetails({
                 />
               </Form.Item>
             </Col>
-            <Col span={12}>
+            <Col xs={24} sm={24} md={12}>
               <span style={labelStyle}>GST/HST</span>
               <Form.Item
                 name={["payee", "gstNumber"]}
@@ -200,7 +219,7 @@ export default function PayeeDetails({
             </Col>
           </Row>
 
-          {/* Row 3: 1 Full-Width Address Column (Matches Right Card Structure) */}
+          {/* Row 3: 1 Full-Width Address Column */}
           <Row>
             <Col span={24}>
               <span style={labelStyle}>Address</span>
