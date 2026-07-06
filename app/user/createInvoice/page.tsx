@@ -213,166 +213,169 @@ function DashboardComponent() {
   // -------------------------
   // TABLE MASTER COLUMNS (Memoized)
   // -------------------------
-  const columns = useMemo(() => [
-    {
-      title: "Invoice #",
-      dataIndex: "invoiceNumber",
-      key: "invoiceNumber",
-      width: 140,
-      render: (text: string) => (
-        <span
-          style={{
-            fontWeight: 700,
-            color: "#ffffff",
-            letterSpacing: "0.5px",
-            background: "#10b981",
-            padding: "4px 10px",
-            borderRadius: "6px",
-            display: "inline-block",
-          }}
-        >
-          #{text}
-        </span>
-      ),
-    },
-    {
-      title: "Vendor",
-      dataIndex: ["payee", "companyName"],
-      key: "payeeCompany",
-      render: (text: string) => (
-        <span style={{ fontWeight: 500, color: "#334155" }}>
-          {text || "N/A"}
-        </span>
-      ),
-    },
-    {
-      title: "Amount",
-      dataIndex: "grandTotal",
-      key: "grandTotal",
-      width: 160,
-      render: (val: number, record: InvoiceType) => (
-        <span style={{ fontWeight: 700, color: "#0f172a" }}>
-          {record.currency || "CAD"} $
-          {val?.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}
-        </span>
-      ),
-    },
-    {
-      title: "Status",
-      dataIndex: "invoiceStatus",
-      key: "invoiceStatus",
-      width: 140,
-      render: (status: string) => {
-        const cleanStatus = status?.toLowerCase() || "draft";
-        const colorMap: Record<string, string> = {
-          draft: "default",
-          pending: "warning",
-          approved: "success",
-          paid: "processing",
-          rejected: "error",
-        };
-        return (
-          <Tag color={colorMap[cleanStatus] || "default"}>
-            {status?.toUpperCase() || "DRAFT"}
-          </Tag>
-        );
+  const columns = useMemo(
+    () => [
+      {
+        title: "Invoice #",
+        dataIndex: "invoiceNumber",
+        key: "invoiceNumber",
+        width: 140,
+        render: (text: string) => (
+          <span
+            style={{
+              fontWeight: 700,
+              color: "#ffffff",
+              letterSpacing: "0.5px",
+              background: "#10b981",
+              padding: "4px 10px",
+              borderRadius: "6px",
+              display: "inline-block",
+            }}
+          >
+            #{text}
+          </span>
+        ),
       },
-    },
-    {
-      title: "Created",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      render: (val: string) => (
-        <span style={{ color: "#64748b", fontSize: "13px" }}>
-          {val
-            ? new Date(val).toLocaleDateString("en-CA", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })
-            : "-"}
-        </span>
-      ),
-    },
-    {
-      title: "Actions",
-      key: "action",
-      width: 260,
-      render: (_: unknown, record: InvoiceType) => {
-        const isDraft =
-          (record.invoiceStatus || "draft").toLowerCase() === "draft";
-        return (
-          <Space size="small">
-            <Button
-              type="primary"
-              icon={<EyeOutlined />}
-              onClick={() => openView(record)}
-            >
-              View
-            </Button>
-
-            <Tooltip title="Download Clean PDF">
-              <Button
-                type="default"
-                loading={downloading && selected?._id === record._id}
-                style={{
-                  color: "#10b981",
-                  borderColor: "#a7f3d0",
-                  backgroundColor: "#f0fdf4",
-                }}
-                icon={<DownloadOutlined />}
-                onClick={() => triggerDownloadPDF(record)}
-              />
-            </Tooltip>
-
-            <Tooltip title="Share Invoice Link">
-              <Button
-                type="default"
-                loading={sharing && selected?._id === record._id}
-                style={{
-                  color: "#2563eb",
-                  borderColor: "#bfdbfe",
-                  backgroundColor: "#eff6ff",
-                }}
-                icon={<ShareAltOutlined />}
-                onClick={() => triggerShareInvoice(record)}
-              />
-            </Tooltip>
-
-            <Tooltip
-              title={
-                isDraft
-                  ? "Modify Properties"
-                  : "Locked (Only editable in draft stage)"
-              }
-            >
-              <Button
-                type="default"
-                icon={<EditOutlined />}
-                disabled={!isDraft}
-                style={{ borderColor: isDraft ? "#cbd5e1" : "#f1f5f9" }}
-                onClick={() => openEditModal(record)}
-              />
-            </Tooltip>
-
-            <Popconfirm
-              title="Purge Invoice Record"
-              description="Are you  sure you want to delete this invoice statement permanently?"
-              onConfirm={() => handleDeleteInvoice(record._id)}
-              okText="Confirm Delete"
-              cancelText="Cancel"
-              okButtonProps={{ danger: true, type: "primary" }}
-            >
-              <Button danger type="text" icon={<DeleteOutlined />} />
-            </Popconfirm>
-          </Space>
-        );
+      {
+        title: "Vendor",
+        dataIndex: ["payee", "companyName"],
+        key: "payeeCompany",
+        render: (text: string) => (
+          <span style={{ fontWeight: 500, color: "#334155" }}>
+            {text || "N/A"}
+          </span>
+        ),
       },
-    },
-  ]);
+      {
+        title: "Amount",
+        dataIndex: "grandTotal",
+        key: "grandTotal",
+        width: 160,
+        render: (val: number, record: InvoiceType) => (
+          <span style={{ fontWeight: 700, color: "#0f172a" }}>
+            {record.currency || "CAD"} $
+            {val?.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </span>
+        ),
+      },
+      {
+        title: "Status",
+        dataIndex: "invoiceStatus",
+        key: "invoiceStatus",
+        width: 140,
+        render: (status: string) => {
+          const cleanStatus = status?.toLowerCase() || "draft";
+          const colorMap: Record<string, string> = {
+            draft: "default",
+            pending: "warning",
+            approved: "success",
+            paid: "processing",
+            rejected: "error",
+          };
+          return (
+            <Tag color={colorMap[cleanStatus] || "default"}>
+              {status?.toUpperCase() || "DRAFT"}
+            </Tag>
+          );
+        },
+      },
+      {
+        title: "Created",
+        dataIndex: "createdAt",
+        key: "createdAt",
+        render: (val: string) => (
+          <span style={{ color: "#64748b", fontSize: "13px" }}>
+            {val
+              ? new Date(val).toLocaleDateString("en-CA", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })
+              : "-"}
+          </span>
+        ),
+      },
+      {
+        title: "Actions",
+        key: "action",
+        width: 260,
+        render: (_: unknown, record: InvoiceType) => {
+          const isDraft =
+            (record.invoiceStatus || "draft").toLowerCase() === "draft";
+          return (
+            <Space size="small">
+              <Button
+                type="primary"
+                icon={<EyeOutlined />}
+                onClick={() => openView(record)}
+              >
+                View
+              </Button>
+
+              <Tooltip title="Download Clean PDF">
+                <Button
+                  type="default"
+                  loading={downloading && selected?._id === record._id}
+                  style={{
+                    color: "#10b981",
+                    borderColor: "#a7f3d0",
+                    backgroundColor: "#f0fdf4",
+                  }}
+                  icon={<DownloadOutlined />}
+                  onClick={() => triggerDownloadPDF(record)}
+                />
+              </Tooltip>
+
+              <Tooltip title="Share Invoice Link">
+                <Button
+                  type="default"
+                  loading={sharing && selected?._id === record._id}
+                  style={{
+                    color: "#2563eb",
+                    borderColor: "#bfdbfe",
+                    backgroundColor: "#eff6ff",
+                  }}
+                  icon={<ShareAltOutlined />}
+                  onClick={() => triggerShareInvoice(record)}
+                />
+              </Tooltip>
+
+              <Tooltip
+                title={
+                  isDraft
+                    ? "Modify Properties"
+                    : "Locked (Only editable in draft stage)"
+                }
+              >
+                <Button
+                  type="default"
+                  icon={<EditOutlined />}
+                  disabled={!isDraft}
+                  style={{ borderColor: isDraft ? "#cbd5e1" : "#f1f5f9" }}
+                  onClick={() => openEditModal(record)}
+                />
+              </Tooltip>
+
+              <Popconfirm
+                title="Purge Invoice Record"
+                description="Are you  sure you want to delete this invoice statement permanently?"
+                onConfirm={() => handleDeleteInvoice(record._id)}
+                okText="Confirm Delete"
+                cancelText="Cancel"
+                okButtonProps={{ danger: true, type: "primary" }}
+              >
+                <Button danger type="text" icon={<DeleteOutlined />} />
+              </Popconfirm>
+            </Space>
+          );
+        },
+      },
+    ],
+    [selected, downloading, sharing],
+  );
 
   const isMobile = window.innerWidth < 768;
   const headerPadding = isMobile ? "20px 16px" : "24px 20px";
