@@ -47,20 +47,6 @@ function DashboardComponent() {
   // -------------------------
   // FETCH DATA FROM SERVER
   // -------------------------
-  const fetchInvoices = async () => {
-    try {
-      setLoading(true);
-      const res = await getInvoices();
-      console.log("Fetched Invoices Complete Data:", res);
-      setInvoices(res.data?.data || []);
-    } catch (err) {
-      console.error(err);
-      message.error("Failed to fetch invoices");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     let active = true;
 
@@ -69,10 +55,8 @@ function DashboardComponent() {
         setLoading(true);
         const res = await getInvoices();
         if (!active) return;
-        console.log("Fetched Invoices Complete Data:", res);
         setInvoices(res.data?.data || []);
       } catch (err) {
-        console.error(err);
         if (active) message.error("Failed to fetch invoices");
       } finally {
         if (active) setLoading(false);
@@ -209,12 +193,6 @@ function DashboardComponent() {
   };
 
   const openView = (record: InvoiceType) => {
-    console.log("🔴 CURRENT SELECTED INVOICE OBJECT:", record);
-    console.log("🔴 E-TRANSFER DATA:", {
-      eTransfer: record.eTransfer,
-      payeeETransfer: record.payee?.eTransfer,
-      payeeETransferAddress: record.payee?.eTransferAddress,
-    });
     setSelected(record);
     setViewOpen(true);
   };
@@ -231,7 +209,6 @@ function DashboardComponent() {
       setInvoices((prev) => prev.filter((inv) => inv._id !== id));
       message.success("Invoice statement wiped permanently.");
     } catch (err) {
-      console.error(err);
       const error = err as {
         response?: { data?: { message?: string } };
         message?: string;
@@ -245,9 +222,9 @@ function DashboardComponent() {
   };
 
   // -------------------------
-  // TABLE MASTER COLUMNS
+  // TABLE MASTER COLUMNS (Memoized)
   // -------------------------
-  const columns = [
+  const columns = useMemo(() => [
     {
       title: "Invoice #",
       dataIndex: "invoiceNumber",
@@ -406,10 +383,83 @@ function DashboardComponent() {
         );
       },
     },
-  ];
+  ]);
+
+  const isMobile = window.innerWidth < 768;
+  const headerPadding = isMobile ? "20px 16px" : "24px 20px";
 
   return (
-    <div>
+    <div
+      style={{
+        minHeight: "100vh",
+        backgroundColor: "#f8fafc",
+        padding: isMobile ? "12px" : "20px",
+      }}
+    >
+      {/* Header Section */}
+      <div
+        style={{
+          background: "linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)",
+          padding: headerPadding,
+          marginBottom: isMobile ? 16 : 24,
+          borderRadius: isMobile ? 12 : 16,
+          boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: isMobile ? "column" : "row",
+            justifyContent: "space-between",
+            alignItems: isMobile ? "flex-start" : "center",
+            gap: isMobile ? "16px" : "0",
+          }}
+        >
+          <div>
+            <h2
+              style={{
+                margin: 0,
+                fontSize: isMobile ? 20 : 24,
+                fontWeight: 700,
+                color: "#fff",
+              }}
+            >
+              Invoice Management Ledger
+            </h2>
+            <p
+              style={{
+                margin: "4px 0 0 0",
+                fontSize: isMobile ? 12 : 14,
+                color: "rgba(255,255,255,0.85)",
+              }}
+            >
+              Create, tracking logs, view, and instantly download or share
+              invoice links.
+            </p>
+          </div>
+          <Button
+            type="primary"
+            size="large"
+            icon={<FileAddOutlined />}
+            onClick={() => {
+              setEditingInvoice(null);
+              setOpen(true);
+            }}
+            style={{
+              background: "#ffffff",
+              color: "#2563eb",
+              borderRadius: "8px",
+              fontWeight: 600,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+              width: isMobile ? "100%" : "auto",
+            }}
+          >
+            Create Statement
+          </Button>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
       <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
         <Col xs={24} sm={12} md={8}>
           <Card
@@ -489,55 +539,6 @@ function DashboardComponent() {
           borderRadius: "16px",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            width: "100%",
-            padding: "8px 0",
-            gap: "12px",
-            marginBottom: "16px",
-          }}
-        >
-          <div>
-            <h2
-              style={{
-                margin: 0,
-                fontSize: "24px",
-                fontWeight: 700,
-                color: "#0f172a",
-              }}
-            >
-              Invoice Management Ledger
-            </h2>
-            <p
-              style={{
-                margin: "4px 0 0 0",
-                fontSize: "13px",
-                fontWeight: 400,
-                color: "#64748b",
-              }}
-            >
-              Create, tracking logs, view, and instantly download or share
-              invoice links.
-            </p>
-          </div>
-          <Button
-            type="primary"
-            size="large"
-            icon={<FileAddOutlined />}
-            style={{ borderRadius: "8px", fontWeight: 600 }}
-            onClick={() => {
-              setEditingInvoice(null);
-              setOpen(true);
-            }}
-          >
-            Create Statement
-          </Button>
-        </div>
-
         <ResponsiveTable
           cardProps={{
             borderRadius: "12px",
@@ -562,7 +563,7 @@ function DashboardComponent() {
         onClose={() => {
           setOpen(false);
           setEditingInvoice(null);
-          fetchInvoices();
+          loadInvoices();
         }}
         editData={editingInvoice || undefined}
       />

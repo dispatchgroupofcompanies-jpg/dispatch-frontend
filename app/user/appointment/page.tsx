@@ -336,71 +336,84 @@ function AppointmentPage() {
     );
   };
 
+  const headerPadding = isMobile ? "20px 16px" : "24px 20px";
+
   return (
-    <div>
-      <Card
-        styles={{
-          header: {
-            padding: isMobile ? "16px" : "16px 24px",
-            borderBottom: "1px solid #f1f5f9",
-          },
-          body: { padding: isMobile ? "12px" : "24px" },
-        }}
+    <div
+      style={{
+        minHeight: "100vh",
+        backgroundColor: "#f8fafc",
+        padding: isMobile ? "12px" : "20px",
+      }}
+    >
+      {/* Header Section */}
+      <div
         style={{
-          boxShadow:
-            "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-          borderRadius: "16px",
-          background: "#ffffff",
-          overflow: "hidden",
+          background: "linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)",
+          padding: headerPadding,
+          marginBottom: isMobile ? 16 : 24,
+          borderRadius: isMobile ? 12 : 16,
+          boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
         }}
-        title={
-          <div
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: isMobile ? "column" : "row",
+            justifyContent: "space-between",
+            alignItems: isMobile ? "flex-start" : "center",
+            gap: isMobile ? "16px" : "0",
+          }}
+        >
+          <div>
+            <h2
+              style={{
+                margin: 0,
+                fontSize: isMobile ? 20 : 24,
+                fontWeight: 700,
+                color: "#fff",
+              }}
+            >
+              Appointment Management
+            </h2>
+            <p
+              style={{
+                margin: "4px 0 0 0",
+                fontSize: isMobile ? 12 : 14,
+                color: "rgba(255,255,255,0.85)",
+              }}
+            >
+              Book and manage customer appointments
+            </p>
+          </div>
+          <Button
+            type="primary"
+            size={isMobile ? "middle" : "large"}
+            icon={<PlusOutlined />}
+            onClick={() => setOpen(true)}
             style={{
-              display: "flex",
-              flexDirection: isMobile ? "column" : "row",
-              justifyContent: "space-between",
-              alignItems: isMobile ? "flex-start" : "center",
-              width: "100%",
-              gap: isMobile ? "16px" : "0",
+              background: "#ffffff",
+              color: "#2563eb",
+              borderRadius: "8px",
+              fontWeight: 600,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+              width: isMobile ? "100%" : "auto",
             }}
           >
-            <div>
-              <h2
-                style={{
-                  margin: 0,
-                  fontSize: isMobile ? "20px" : "24px",
-                  fontWeight: 700,
-                  color: "#0f172a",
-                  letterSpacing: "-0.02em",
-                }}
-              >
-                Appointment Management
-              </h2>
-              <p
-                style={{
-                  margin: "4px 0 0 0",
-                  fontSize: "13px",
-                  color: "#64748b",
-                }}
-              >
-                Book and manage customer appointments
-              </p>
-            </div>
-            <Button
-              type="primary"
-              size={isMobile ? "middle" : "large"}
-              icon={<PlusOutlined />}
-              style={{
-                borderRadius: "8px",
-                fontWeight: 600,
-                width: isMobile ? "100%" : "auto",
-              }}
-              onClick={() => setOpen(true)}
-            >
-              Book Appointment
-            </Button>
-          </div>
-        }
+            Book Appointment
+          </Button>
+        </div>
+      </div>
+
+      {/* Table Container */}
+      <div
+        style={{
+          background: "#fff",
+          borderRadius: isMobile ? 12 : 16,
+          padding: isMobile ? "12px" : "20px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+          border: "1px solid #e2e8f0",
+        }}
       >
         {loading ? (
           <div style={{ padding: "40px 0" }}>
@@ -464,11 +477,13 @@ function AppointmentPage() {
             rowKey={(record) => record._id}
             loading={loading}
             pagination={{
-              pageSize: 10,
-              placement: ["bottomCenter"],
+              pageSize: isMobile ? 5 : 10,
               size: "small",
+              showSizeChanger: !isMobile,
+              showTotal: (total) =>
+                isMobile ? `${total} items` : `Total ${total} items`,
             }}
-            size="small"
+            size={isMobile ? "middle" : "small"}
             tableLayout="fixed"
             bordered={false}
             expandable={{
@@ -479,13 +494,13 @@ function AppointmentPage() {
               expandedRowKeys,
             }}
             className="appointment-table"
+            scroll={isMobile ? { x: "max-content" } : { x: undefined }}
             style={{
-              borderRadius: "8px",
-              overflow: "hidden",
+              fontSize: isMobile ? 12 : 13,
             }}
           />
         )}
-      </Card>
+      </div>
 
       <Modal
         title={

@@ -49,6 +49,12 @@ export interface Invoice {
   payee?: Party;
   customer?: Party;
   trips?: Trip[];
+  carrierNeedToPay?: number;
+  carrierNeedsToReceive?: number;
+  createdByUser?: {
+    name: string;
+    email: string;
+  };
 }
 
 export interface ApiResponse<T> {
@@ -98,4 +104,8 @@ export interface Appointment {
   status: string;
   createdAt: string;
   updatedAt: string;
+  createdByUser?: {
+    name: string;
+    email: string;
+  };
 }

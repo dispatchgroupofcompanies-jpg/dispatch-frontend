@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Card,
   Statistic,
@@ -12,6 +12,7 @@ import {
   Spin,
   Typography,
 } from "antd";
+import type { ColumnsType } from "antd/es/table";
 import {
   FileTextOutlined,
   CheckCircleOutlined,
@@ -19,30 +20,12 @@ import {
   DollarCircleOutlined,
   ArrowUpOutlined,
 } from "@ant-design/icons";
-import axios from "axios";
-import type { ColumnsType } from "antd/es/table";
 import dynamic from "next/dynamic";
+import { getAdminDashboardStats } from "@/src/services/admin/dashboard";
 
 // Next.js hydration error fix karne ke liye ApexCharts ko dynamically client-side par load kiya hai
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 const { Title, Text } = Typography;
-
-// Axios Instance Config
-const API = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api",
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-// Automatic JWT Token Injection
-API.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
 
 interface Invoice {
   _id: string;
@@ -51,7 +34,7 @@ interface Invoice {
   invoiceStatus: string;
   createdAt: string;
   currency?: string;
-  payee: {
+  payee?: {
     companyName: string;
   };
 }
@@ -72,34 +55,71 @@ export default function AdminDashboardPage() {
     totalRevenue: 0,
   });
   const [recentInvoices, setRecentInvoices] = useState<Invoice[]>([]);
+  const mountedRef = useRef(false);
 
   const fetchDashboardData = useCallback(async () => {
+    if (!mountedRef.current) return;
+
     try {
       setLoading(true);
-      const response = await API.get("/admin/stats");
+      const response = await getAdminDashboardStats();
 
-      if (response.data?.success) {
+      if (response.success) {
         setStats(
-          response.data.data.stats || {
+          response.data.stats || {
             totalInvoices: 0,
             pendingInvoices: 0,
             approvedInvoices: 0,
             totalRevenue: 0,
           },
         );
-        setRecentInvoices(response.data.data.recentInvoices || []);
+        setRecentInvoices(response.data.recentInvoices || []);
       }
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
       message.error("Failed to load real-time dashboard data");
     } finally {
-      setLoading(false);
+      if (mountedRef.current) {
+        setLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
-    fetchDashboardData();
-  }, [fetchDashboardData]);
+    mountedRef.current = true;
+
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const response = await getAdminDashboardStats();
+
+        if (response.success) {
+          setStats(
+            response.data.stats || {
+              totalInvoices: 0,
+              pendingInvoices: 0,
+              approvedInvoices: 0,
+              totalRevenue: 0,
+            },
+          );
+          setRecentInvoices(response.data.recentInvoices || []);
+        }
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+        message.error("Failed to load real-time dashboard data");
+      } finally {
+        if (mountedRef.current) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadData();
+
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const donutChartOptions = {
     labels: ["Pending Invoices", "Approved Invoices"],
@@ -157,7 +177,7 @@ export default function AdminDashboardPage() {
       title: "Invoice #",
       dataIndex: "invoiceNumber",
       key: "invoiceNumber",
-      render: (text) => (
+      render: (text: string) => (
         <Text strong style={{ color: "#1e293b" }}>
           {text}
         </Text>
@@ -172,7 +192,7 @@ export default function AdminDashboardPage() {
       title: "Amount",
       dataIndex: "grandTotal",
       key: "grandTotal",
-      render: (amount, record) => (
+      render: (amount: number, record: Invoice) => (
         <Text strong style={{ color: "#0f172a" }}>
           ${amount?.toFixed(2)} {record.currency || "CAD"}
         </Text>
@@ -182,7 +202,7 @@ export default function AdminDashboardPage() {
       title: "Status",
       dataIndex: "invoiceStatus",
       key: "invoiceStatus",
-      render: (status) => {
+      render: (status: string) => {
         const colorMap: Record<string, string> = {
           draft: "default",
           pending: "warning",
@@ -204,10 +224,13 @@ export default function AdminDashboardPage() {
       title: "Generated At",
       dataIndex: "createdAt",
       key: "createdAt",
-      render: (date) =>
+      render: (date: string) =>
         date ? new Date(date).toLocaleDateString("en-CA") : "N/A",
     },
   ];
+
+  const isMobile = window.innerWidth < 768;
+  const headerPadding = isMobile ? "20px 16px" : "24px 20px";
 
   return (
     <div
@@ -219,23 +242,29 @@ export default function AdminDashboardPage() {
       {/* Header Section */}
       <div
         style={{
-          background: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)",
-          padding: "24px 20px",
-          marginBottom: 20,
+          background: "linear-gradient(135deg, #065f46 0%, #10b981 100%)",
+          padding: headerPadding,
+          marginBottom: isMobile ? 16 : 24,
+          borderRadius: isMobile ? 12 : 16,
           boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
         }}
       >
         <div style={{ maxWidth: 1400, margin: "0 auto" }}>
           <Title
             level={2}
-            style={{ color: "#fff", margin: 0, fontWeight: 700, fontSize: 24 }}
+            style={{
+              color: "#fff",
+              margin: 0,
+              fontWeight: 700,
+              fontSize: isMobile ? 20 : 24,
+            }}
           >
             Dashboard Overview
           </Title>
           <Text
             style={{
               color: "rgba(255,255,255,0.85)",
-              fontSize: 13,
+              fontSize: isMobile ? 12 : 13,
               marginTop: 6,
               display: "block",
             }}
@@ -246,7 +275,13 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Content Container */}
-      <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0 20px 20px" }}>
+      <div
+        style={{
+          maxWidth: 1400,
+          margin: "0 auto",
+          padding: `0 ${isMobile ? "12px" : "20px"} ${isMobile ? "12px" : "20px"}`,
+        }}
+      >
         <Spin spinning={loading}>
           {/* 🎴 SECTION 1: COUNTER CARDS */}
           <Row gutter={[20, 20]} style={{ marginBottom: 32 }}>

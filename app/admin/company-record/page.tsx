@@ -11,7 +11,6 @@ import {
   message,
   Tag,
   Collapse,
-  Skeleton,
 } from "antd";
 import {
   EditOutlined,
@@ -43,8 +42,6 @@ export default function CompanyRecordPage() {
   const [selectedProfile, setSelectedProfile] = useState<CompanyProfile | null>(
     null,
   );
-  const [paddingValue, setPaddingValue] = useState("24px");
-  const [flexDirection, setFlexDirection] = useState<"row" | "column">("row");
   const [isMobile, setIsMobile] = useState(false);
 
   const isMounted = useRef(false);
@@ -55,7 +52,6 @@ export default function CompanyRecordPage() {
         setLoading(true);
       }
       const result = await getCompanyProfile();
-      console.log("Company Profile Data:", result);
 
       if (
         result &&
@@ -65,12 +61,10 @@ export default function CompanyRecordPage() {
       ) {
         setProfileData(result.data);
       } else {
-        // No data is not an error - just show empty state
         setProfileData([]);
       }
     } catch (error) {
       console.error(error);
-      // Only show error for actual failures, not for empty data
       message.error("Failed to load company profiles. Please try again.");
       setProfileData([]);
     } finally {
@@ -88,15 +82,7 @@ export default function CompanyRecordPage() {
     loadData();
 
     const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setPaddingValue(window.innerWidth < 640 ? "12px" : "16px");
-        setFlexDirection("column");
-        setIsMobile(true);
-      } else {
-        setPaddingValue(window.innerWidth < 1024 ? "20px" : "24px");
-        setFlexDirection("row");
-        setIsMobile(false);
-      }
+      setIsMobile(window.innerWidth < 768);
     };
 
     handleResize();
@@ -130,7 +116,6 @@ export default function CompanyRecordPage() {
     setIsModalOpen(true);
   };
 
-  // FIX: Edit click par individual profile ko store kar rahe hain
   const handleEditClick = (e: React.MouseEvent, profile: CompanyProfile) => {
     e.stopPropagation();
     setModalMode("edit");
@@ -147,7 +132,6 @@ export default function CompanyRecordPage() {
     loadProfileData(true);
   };
 
-  // FIX: Individual profile pass karke data render karenge
   const renderExpandedContent = (profile: CompanyProfile) => (
     <div style={{ padding: "8px 4px" }}>
       <div style={{ marginBottom: "20px" }}>
@@ -475,78 +459,92 @@ export default function CompanyRecordPage() {
     </div>
   );
 
-  return (
-    <div>
-      <Card
-        style={{
-          boxShadow:
-            "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-          borderRadius: "16px",
-          border: "1px solid #e2e8f0",
-        }}
-        title={
-          <div
-            style={{
-              display: "flex",
-              flexDirection: flexDirection,
-              justifyContent: "space-between",
-              alignItems: flexDirection === "column" ? "flex-start" : "center",
-              width: "100%",
-              padding: "4px 0",
-              gap: "12px",
-            }}
-          >
-            <div>
-              <Title
-                level={3}
-                style={{
-                  margin: 0,
-                  fontSize: isMobile ? "18px" : "20px",
-                  fontWeight: 700,
-                  color: "#0f172a",
-                }}
-              >
-                Company Records
-              </Title>
-              <Text
-                style={{
-                  fontSize: "13px",
-                  color: "#64748b",
-                  marginTop: "2px",
-                  display: "inline-block",
-                }}
-              >
-                Manage baseline enterprise structural identities
-              </Text>
-            </div>
+  const headerPadding = isMobile ? "20px 16px" : "24px 20px";
 
-            <Button
-              type="primary"
-              size="middle"
-              icon={<PlusOutlined />}
-              onClick={handleAddClick}
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        backgroundColor: "#f8fafc",
+        padding: isMobile ? "12px" : "20px",
+      }}
+    >
+      {/* Header Section */}
+      <div
+        style={{
+          background: "linear-gradient(135deg, #065f46 0%, #10b981 100%)",
+          padding: headerPadding,
+          marginBottom: isMobile ? 16 : 24,
+          borderRadius: isMobile ? 12 : 16,
+          boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: isMobile ? "column" : "row",
+            justifyContent: "space-between",
+            alignItems: isMobile ? "flex-start" : "center",
+            gap: isMobile ? "16px" : "0",
+          }}
+        >
+          <div>
+            <Title
+              level={3}
               style={{
-                height: 38,
-                padding: "0 18px",
-                fontSize: 13,
-                fontWeight: 600,
-                borderRadius: 8,
-                backgroundColor: "#1e3a8a",
-                borderColor: "#1e3a8a",
-                boxShadow: "0 2px 4px rgba(30, 58, 138, 0.2)",
+                margin: 0,
+                fontSize: isMobile ? 20 : 24,
+                fontWeight: 700,
+                color: "#fff",
               }}
             >
-              Add Company Profile
-            </Button>
+              Company Records
+            </Title>
+            <Text
+              style={{
+                color: "rgba(255,255,255,0.85)",
+                fontSize: isMobile ? 12 : 14,
+                marginTop: 6,
+                display: "block",
+              }}
+            >
+              Manage baseline enterprise structural identities
+            </Text>
           </div>
-        }
+          <Button
+            type="primary"
+            size="middle"
+            icon={<PlusOutlined />}
+            onClick={handleAddClick}
+            style={{
+              background: "#ffffff",
+              color: "#065f46",
+              borderRadius: "8px",
+              fontWeight: 600,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+              width: isMobile ? "100%" : "auto",
+            }}
+          >
+            Add Company Profile
+          </Button>
+        </div>
+      </div>
+
+      {/* Content Container */}
+      <div
+        style={{
+          background: "#fff",
+          borderRadius: isMobile ? 12 : 16,
+          padding: isMobile ? "12px" : "20px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+          border: "1px solid #e2e8f0",
+        }}
       >
         {loading ? (
           <div style={{ textAlign: "center", padding: "50px 0" }}>
             <Spin size="large" tip="Loading configuration states..." />
           </div>
         ) : profileData && profileData.length > 0 ? (
-          // FIX: Space wrapper ke sath array par loop lagaya gaya hai
           <Space direction="vertical" style={{ width: "100%" }} size="middle">
             {profileData.map((profile, index) => (
               <Collapse
@@ -572,7 +570,7 @@ export default function CompanyRecordPage() {
                       <div
                         style={{
                           display: "flex",
-                          flexDirection: flexDirection,
+                          flexDirection: isMobile ? "column" : "row",
                           justifyContent: "space-between",
                           alignItems: "center",
                           width: "100%",
@@ -582,7 +580,7 @@ export default function CompanyRecordPage() {
                         <Space
                           size="middle"
                           style={{
-                            width: flexDirection === "column" ? "100%" : "auto",
+                            width: isMobile ? "100%" : "auto",
                             justifyContent: "flex-start",
                           }}
                         >
@@ -604,11 +602,10 @@ export default function CompanyRecordPage() {
                           size="small"
                           onClick={(e) => e.stopPropagation()}
                           style={{
-                            width: flexDirection === "column" ? "100%" : "auto",
-                            justifyContent:
-                              flexDirection === "column"
-                                ? "space-between"
-                                : "flex-end",
+                            width: isMobile ? "100%" : "auto",
+                            justifyContent: isMobile
+                              ? "space-between"
+                              : "flex-end",
                           }}
                         >
                           <Tag
@@ -730,7 +727,7 @@ export default function CompanyRecordPage() {
             </Button>
           </div>
         )}
-      </Card>
+      </div>
 
       <CompanyProfileModal
         open={isModalOpen}

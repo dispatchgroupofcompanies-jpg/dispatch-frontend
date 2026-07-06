@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
-import { Card, Typography } from "antd";
+import { Card, Typography, Grid } from "antd";
 import InvoiceTable from "../../../components/InvoiceTable";
 import InvoiceModal from "../../../components/InvoiceModal";
 import {
@@ -10,8 +10,12 @@ import {
 import type { Invoice } from "../../../types/invoice";
 
 const { Title, Text } = Typography;
+const { useBreakpoint } = Grid;
 
 export default function AdminInvoicesPage() {
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
+
   const [loading, setLoading] = useState(true);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [selected, setSelected] = useState<Invoice | null>(null);
@@ -38,7 +42,10 @@ export default function AdminInvoicesPage() {
 
   useEffect(() => {
     mountedRef.current = true;
-    fetch();
+    const loadData = async () => {
+      await fetch();
+    };
+    loadData();
     return () => {
       mountedRef.current = false;
     };
@@ -57,6 +64,9 @@ export default function AdminInvoicesPage() {
     }
   };
 
+  const containerPadding = isMobile ? "12px" : "20px";
+  const headerPadding = isMobile ? "20px 16px" : "24px 20px";
+
   return (
     <div
       style={{
@@ -67,23 +77,29 @@ export default function AdminInvoicesPage() {
       {/* Header Section */}
       <div
         style={{
-          background: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)",
-          padding: "24px 20px",
-          marginBottom: 20,
+          background: "linear-gradient(135deg, #065f46 0%, #10b981 100%)",
+          padding: headerPadding,
+          marginBottom: isMobile ? 12 : 20,
+          borderRadius: isMobile ? 12 : 16,
           boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
         }}
       >
         <div style={{ maxWidth: 1400, margin: "0 auto" }}>
           <Title
             level={2}
-            style={{ color: "#fff", margin: 0, fontWeight: 700, fontSize: 24 }}
+            style={{
+              color: "#fff",
+              margin: 0,
+              fontWeight: 700,
+              fontSize: isMobile ? 20 : 24,
+            }}
           >
             Invoice Management
           </Title>
           <Text
             style={{
               color: "rgba(255,255,255,0.85)",
-              fontSize: 13,
+              fontSize: isMobile ? 12 : 13,
               marginTop: 6,
               display: "block",
             }}
@@ -94,13 +110,21 @@ export default function AdminInvoicesPage() {
       </div>
 
       {/* Content Container */}
-      <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0 20px 20px" }}>
+      <div
+        style={{
+          maxWidth: 1400,
+          margin: "0 auto",
+          padding: `0 ${containerPadding} ${containerPadding}`,
+        }}
+      >
         <Card
           style={{
-            borderRadius: 12,
+            borderRadius: isMobile ? 10 : 12,
             border: "1px solid #e2e8f0",
             boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+            overflow: "hidden",
           }}
+          bodyStyle={{ padding: isMobile ? "8px" : "12px" }}
         >
           <InvoiceTable
             invoices={invoices}

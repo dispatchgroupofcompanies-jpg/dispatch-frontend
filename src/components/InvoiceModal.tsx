@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { Modal, Button, Space, Tag } from "antd";
+import { Modal, Button, Space, Tag, Grid } from "antd";
 import {
   FilePdfOutlined,
   CheckCircleOutlined,
@@ -8,6 +8,8 @@ import {
 } from "@ant-design/icons";
 import InvoicePreview from "./InvoicePreview";
 import type { Invoice } from "../types/invoice";
+
+const { useBreakpoint } = Grid;
 
 interface Props {
   invoice: Invoice | null;
@@ -29,6 +31,9 @@ export default function InvoiceModal({
   approveLoading,
   rejectLoading,
 }: Props) {
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
+
   if (!invoice) return null;
 
   return (
@@ -36,12 +41,12 @@ export default function InvoiceModal({
       title={null}
       open={open}
       onCancel={onClose}
-      width={980}
-      style={{ top: 20 }}
+      width={isMobile ? "95vw" : 980}
+      style={{ top: isMobile ? 10 : 20 }}
       footer={[
         <Button
           key="close"
-          size="large"
+          size={isMobile ? "middle" : "large"}
           onClick={onClose}
           style={{ borderRadius: 6 }}
         >
@@ -52,12 +57,13 @@ export default function InvoiceModal({
       <div
         style={{
           display: "flex",
-          gap: 12,
+          gap: isMobile ? 8 : 12,
           flexWrap: "wrap",
-          justifyContent: "space-between",
+          justifyContent: isMobile ? "center" : "space-between",
           backgroundColor: "#f8fafc",
-          padding: "16px 24px",
+          padding: isMobile ? "12px 16px" : "16px 24px",
           borderBottom: "1px solid #e2e8f0",
+          marginBottom: isMobile ? 8 : 0,
         }}
       >
         {invoice.pdfUrl ? (
@@ -66,9 +72,9 @@ export default function InvoiceModal({
             icon={<FilePdfOutlined />}
             href={`${process.env.NEXT_PUBLIC_API_URL?.replace("/api", "")}${invoice.pdfUrl}`}
             target="_blank"
-            style={{ borderRadius: 6 }}
+            style={{ borderRadius: 6, fontSize: isMobile ? 12 : 14 }}
           >
-            Download Original PDF
+            {isMobile ? "PDF" : "Download Original PDF"}
           </Button>
         ) : (
           <div />
@@ -76,7 +82,10 @@ export default function InvoiceModal({
 
         {(invoice.invoiceStatus === "pending" ||
           invoice.invoiceStatus === "draft") && (
-          <Space>
+          <Space
+            size={isMobile ? "small" : "middle"}
+            direction={isMobile ? "vertical" : "horizontal"}
+          >
             <Button
               type="primary"
               icon={<CheckCircleOutlined />}
@@ -85,7 +94,7 @@ export default function InvoiceModal({
               disabled={rejectLoading}
               style={{ background: "#10b981", borderRadius: 6 }}
             >
-              Approve Invoice
+              {isMobile ? "Approve" : "Approve Invoice"}
             </Button>
             <Button
               type="primary"
@@ -96,7 +105,7 @@ export default function InvoiceModal({
               disabled={approveLoading}
               style={{ borderRadius: 6 }}
             >
-              Reject Invoice
+              {isMobile ? "Reject" : "Reject Invoice"}
             </Button>
           </Space>
         )}

@@ -5,14 +5,14 @@ import { Drawer, Button, message } from "antd";
 import { useRouter, usePathname } from "next/navigation";
 import {
   MenuOutlined,
-  CloseOutlined,
   CalendarOutlined,
   DashboardOutlined,
   FileTextOutlined,
   LogoutOutlined,
   MenuUnfoldOutlined,
   MenuFoldOutlined,
-  UserOutlined, // Added for the Add Users menu option
+  UserOutlined,
+  GlobalOutlined,
 } from "@ant-design/icons";
 
 export default function AdminLayout({
@@ -78,8 +78,27 @@ export default function AdminLayout({
         display: "flex",
         minHeight: "100vh",
         backgroundColor: "#f8fafc",
+        overflow: "hidden",
       }}
     >
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+        .no-scrollbar::-webkit-scrollbar,
+        .ant-drawer-body::-webkit-scrollbar {
+          display: none !important;
+          width: 0 !important;
+          height: 0 !important;
+        }
+        .no-scrollbar,
+        .ant-drawer-body {
+          scrollbar-width: none !important;
+          -ms-overflow-style: none !important;
+        }
+      `,
+        }}
+      />
+
       {/* Desktop Sidebar */}
       {!isMobile && (
         <div
@@ -150,6 +169,7 @@ export default function AdminLayout({
                 alignItems: "center",
                 justifyContent: "center",
                 transition: "all 0.2s",
+                marginLeft: sidebarCollapsed ? "auto" : "0px",
               }}
               onMouseEnter={(e) =>
                 (e.currentTarget.style.background = "rgba(255,255,255,0.2)")
@@ -163,8 +183,10 @@ export default function AdminLayout({
           </div>
 
           {/* Navigation Links */}
-          <div style={{ padding: "16px 12px", flex: 1, overflowY: "hidden" }}>
-            {/* Dashboard Link */}
+          <div
+            className="no-scrollbar"
+            style={{ padding: "16px 12px", flex: 1, overflowY: "auto" }}
+          >
             <div
               onClick={() => router.push("/admin/dashboard")}
               style={{
@@ -203,7 +225,6 @@ export default function AdminLayout({
               )}
             </div>
 
-            {/* Appointment Records Link */}
             <div
               onClick={() => router.push("/admin/apointments")}
               style={{
@@ -242,7 +263,6 @@ export default function AdminLayout({
               )}
             </div>
 
-            {/* Invoice Approval Link */}
             <div
               onClick={() => router.push("/admin/invoices")}
               style={{
@@ -281,7 +301,6 @@ export default function AdminLayout({
               )}
             </div>
 
-            {/* Add Users Link (New Desktop Option) */}
             <div
               onClick={() => router.push("/admin/users")}
               style={{
@@ -316,6 +335,82 @@ export default function AdminLayout({
               {!sidebarCollapsed && (
                 <span style={{ fontSize: 14, fontWeight: 500, color: "#fff" }}>
                   Add Users
+                </span>
+              )}
+            </div>
+
+            <div
+              onClick={() => router.push("/admin/company-record")}
+              style={{
+                padding: "14px 16px",
+                cursor: "pointer",
+                backgroundColor: isActive("/admin/company-record")
+                  ? "rgba(255,255,255,0.15)"
+                  : "transparent",
+                display: "flex",
+                alignItems: "center",
+                gap: 14,
+                borderRadius: 8,
+                marginBottom: 6,
+                transition: "all 0.2s",
+                borderLeft: isActive("/admin/company-record")
+                  ? "3px solid #60a5fa"
+                  : "3px solid transparent",
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive("/admin/company-record")) {
+                  e.currentTarget.style.backgroundColor =
+                    "rgba(255,255,255,0.08)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive("/admin/company-record")) {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                }
+              }}
+            >
+              <GlobalOutlined style={{ fontSize: 18, color: "#fff" }} />
+              {!sidebarCollapsed && (
+                <span style={{ fontSize: 14, fontWeight: 500, color: "#fff" }}>
+                  Company Records
+                </span>
+              )}
+            </div>
+
+            <div
+              onClick={() => router.push("/admin/company-history")}
+              style={{
+                padding: "14px 16px",
+                cursor: "pointer",
+                backgroundColor: isActive("/admin/company-history")
+                  ? "rgba(255,255,255,0.15)"
+                  : "transparent",
+                display: "flex",
+                alignItems: "center",
+                gap: 14,
+                borderRadius: 8,
+                marginBottom: 6,
+                transition: "all 0.2s",
+                borderLeft: isActive("/admin/company-history")
+                  ? "3px solid #60a5fa"
+                  : "3px solid transparent",
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive("/admin/company-history")) {
+                  e.currentTarget.style.backgroundColor =
+                    "rgba(255,255,255,0.08)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive("/admin/company-history")) {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                }
+              }}
+            >
+              <FileTextOutlined style={{ fontSize: 18, color: "#fff" }} />
+              {!sidebarCollapsed && (
+                <span style={{ fontSize: 14, fontWeight: 500, color: "#fff" }}>
+                  Invoice History
                 </span>
               )}
             </div>
@@ -363,11 +458,11 @@ export default function AdminLayout({
       {isMobile && (
         <Button
           type="text"
-          onClick={() => setDrawerOpen(true)}
+          onClick={() => setDrawerOpen(!drawerOpen)}
           style={{
             position: "fixed",
             left: 12,
-            top: 8,
+            top: 10,
             zIndex: 1500,
             background: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)",
             borderRadius: 8,
@@ -397,8 +492,9 @@ export default function AdminLayout({
           transition: "margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
           padding: getResponsivePadding(),
           paddingTop: isMobile ? 68 : getResponsivePadding(),
-          overflow: "auto",
-          minHeight: "100vh",
+          overflowX: "hidden",
+          overflowY: "auto",
+          height: "100vh",
         }}
       >
         {children}
@@ -410,72 +506,48 @@ export default function AdminLayout({
         onClose={() => setDrawerOpen(false)}
         open={drawerOpen}
         styles={{
-          body: { padding: 0 },
+          body: {
+            padding: 0,
+            margin: 0,
+            background: "linear-gradient(180deg, #1e3a8a 0%, #2563eb 100%)",
+          },
           mask: { backgroundColor: "rgba(0,0,0,0.5)" },
         }}
-        size={280}
+        width={260}
+        closable={false}
         maskClosable
         style={{ zIndex: 1600 }}
       >
         <div
           style={{
-            width: 260,
-            background: "linear-gradient(180deg, #1e3a8a 0%, #2563eb 100%)",
+            width: "100%",
             height: "100vh",
             color: "white",
             display: "flex",
             flexDirection: "column",
           }}
         >
-          {/* Drawer Header */}
+          {/* NEW: Dedicated space for the floating hamburger button */}
           <div
             style={{
-              padding: "16px 20px",
-              borderBottom: "1px solid rgba(255,255,255,0.1)",
+              padding: "14px 20px",
+              height: "64px",
               display: "flex",
               alignItems: "center",
-              justifyContent: "space-between",
+              justifyContent: "flex-end", // Pushes text/branding away from the button zone
+              borderBottom: "1px solid rgba(255,255,255,0.1)",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div
-                style={{
-                  width: 36,
-                  height: 36,
-                  background: "rgba(255,255,255,0.2)",
-                  borderRadius: 8,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 20,
-                }}
-              >
-                ⚡
-              </div>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>
-                Admin Panel
-              </h2>
-            </div>
-            <button
-              aria-label="Close menu"
-              onClick={() => setDrawerOpen(false)}
+            <span
               style={{
-                background: "rgba(255,255,255,0.1)",
-                border: "none",
-                color: "#fff",
-                fontSize: 18,
-                cursor: "pointer",
-                padding: 6,
-                borderRadius: 6,
-                width: 32,
-                height: 32,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                fontSize: 16,
+                fontWeight: 700,
+                opacity: 0.9,
+                marginRight: "10px",
               }}
             >
-              <CloseOutlined />
-            </button>
+              Admin Panel
+            </span>
           </div>
 
           {/* Drawer Navigation */}
@@ -586,6 +658,62 @@ export default function AdminLayout({
             >
               <UserOutlined style={{ fontSize: 18 }} />
               <span style={{ fontSize: 14, fontWeight: 500 }}>Add Users</span>
+            </div>
+
+            <div
+              onClick={() => {
+                setDrawerOpen(false);
+                router.push("/admin/company-record");
+              }}
+              style={{
+                padding: "14px 16px",
+                cursor: "pointer",
+                backgroundColor: isActive("/admin/company-record")
+                  ? "rgba(255,255,255,0.15)"
+                  : "transparent",
+                display: "flex",
+                alignItems: "center",
+                gap: 14,
+                borderRadius: 8,
+                marginBottom: 6,
+                transition: "all 0.2s",
+                borderLeft: isActive("/admin/company-record")
+                  ? "3px solid #60a5fa"
+                  : "3px solid transparent",
+              }}
+            >
+              <GlobalOutlined style={{ fontSize: 18 }} />
+              <span style={{ fontSize: 14, fontWeight: 500 }}>
+                Company Records
+              </span>
+            </div>
+
+            <div
+              onClick={() => {
+                setDrawerOpen(false);
+                router.push("/admin/company-history");
+              }}
+              style={{
+                padding: "14px 16px",
+                cursor: "pointer",
+                backgroundColor: isActive("/admin/company-history")
+                  ? "rgba(255,255,255,0.15)"
+                  : "transparent",
+                display: "flex",
+                alignItems: "center",
+                gap: 14,
+                borderRadius: 8,
+                marginBottom: 6,
+                transition: "all 0.2s",
+                borderLeft: isActive("/admin/company-history")
+                  ? "3px solid #60a5fa"
+                  : "3px solid transparent",
+              }}
+            >
+              <FileTextOutlined style={{ fontSize: 18 }} />
+              <span style={{ fontSize: 14, fontWeight: 500 }}>
+                Invoice History
+              </span>
             </div>
           </div>
 

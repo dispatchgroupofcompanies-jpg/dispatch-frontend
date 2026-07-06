@@ -1,5 +1,14 @@
-import DashboardPage from "./dashboard/page";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
-  return <DashboardPage />;
+  const router = useRouter();
+
+  useEffect(() => {
+    router.push("/user/createInvoice");
+  }, [router]);
+
+  return null;
 }

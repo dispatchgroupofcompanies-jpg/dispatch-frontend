@@ -11,7 +11,12 @@ import {
   Button,
   Space,
   Tooltip,
+  Grid,
+  Typography,
 } from "antd";
+
+const { Text } = Typography;
+import type { Breakpoint } from "antd/es/_util/responsiveObserver";
 import type { ColumnsType } from "antd/es/table";
 import {
   TruckOutlined,
@@ -76,41 +81,51 @@ const InfoRow = ({
   icon,
   label,
   value,
+  isMobile,
 }: {
   icon: React.ReactNode;
   label: string;
   value: React.ReactNode;
+  isMobile: boolean;
 }) => (
   <div
     style={{
       display: "flex",
       alignItems: "flex-start",
       gap: 10,
-      padding: "6px 0",
+      padding: isMobile ? "6px 0" : "8px 0",
     }}
   >
     <div
-      style={{ color: "#94a3b8", fontSize: 15, marginTop: 2, flexShrink: 0 }}
+      style={{
+        color: "#94a3b8",
+        fontSize: isMobile ? 14 : 15,
+        marginTop: 2,
+        flexShrink: 0,
+      }}
     >
       {icon}
     </div>
     <div style={{ flex: 1, minWidth: 0 }}>
       <div
         style={{
-          fontSize: 11,
+          fontSize: isMobile ? 10 : 11,
           color: "#94a3b8",
           textTransform: "uppercase",
-          letterSpacing: 0.4,
+          letterSpacing: 0.5,
+          fontWeight: 600,
+          marginBottom: 2,
         }}
       >
         {label}
       </div>
       <div
         style={{
-          fontSize: 13,
+          fontSize: isMobile ? 12 : 13,
           color: "#1e293b",
           fontWeight: 500,
           wordBreak: "break-word",
+          lineHeight: 1.4,
         }}
       >
         {value || "-"}
@@ -124,55 +139,79 @@ const SectionCard = ({
   icon,
   color,
   children,
+  isMobile,
 }: {
   title: string;
   icon: React.ReactNode;
   color: string;
   children: React.ReactNode;
+  isMobile: boolean;
 }) => (
   <div
     style={{
       background: "#fff",
-      border: "1px solid #eef0f3",
-      borderRadius: 14,
-      padding: "16px 18px",
+      border: `1px solid ${color}20`,
+      borderRadius: 16,
+      padding: isMobile ? "14px 16px" : "18px 20px",
       flex: "1 1 260px",
       minWidth: 240,
+      boxShadow: `0 2px 8px ${color}10`,
+      transition: "all 0.3s ease",
     }}
   >
     <div
       style={{
         display: "flex",
         alignItems: "center",
-        gap: 8,
-        marginBottom: 10,
+        gap: 10,
+        marginBottom: 12,
+        paddingBottom: 12,
+        borderBottom: `1px solid ${color}15`,
       }}
     >
       <div
         style={{
-          width: 28,
-          height: 28,
-          borderRadius: 8,
-          background: color,
+          width: isMobile ? 32 : 36,
+          height: isMobile ? 32 : 36,
+          borderRadius: 10,
+          background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           color: "#fff",
-          fontSize: 14,
+          fontSize: isMobile ? 16 : 18,
           flexShrink: 0,
+          boxShadow: `0 2px 4px ${color}30`,
         }}
       >
         {icon}
       </div>
-      <span style={{ fontSize: 13, fontWeight: 600, color: "#1e293b" }}>
+      <span
+        style={{
+          fontSize: isMobile ? 13 : 14,
+          fontWeight: 700,
+          color: "#1e293b",
+          letterSpacing: "-0.2px",
+        }}
+      >
         {title}
       </span>
     </div>
-    {children}
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+      }}
+    >
+      {children}
+    </div>
   </div>
 );
 
 const AppointmentRecords = () => {
+  const { useBreakpoint } = Grid;
+  const screens = useBreakpoint();
   const [appointments, setAppointments] = useState<AppointmentRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -180,6 +219,19 @@ const AppointmentRecords = () => {
   const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] =
     useState<AppointmentRecord | null>(null);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  const toggleRowExpand = (recordId: string) => {
+    setExpandedRows((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(recordId)) {
+        newSet.delete(recordId);
+      } else {
+        newSet.add(recordId);
+      }
+      return newSet;
+    });
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -277,17 +329,30 @@ const AppointmentRecords = () => {
     [downloadAppointmentPDF],
   );
 
+  const isMobile = !screens.md;
+  const isTablet = screens.md && !screens.lg;
+
+  const containerPadding = isMobile ? "12px" : isTablet ? "16px" : "24px";
+  const headerPadding = isMobile ? "20px 16px" : "24px 20px";
+  const cardPadding = isMobile ? "12px 14px" : "16px 18px";
+
   const columns: ColumnsType<AppointmentRecord> = [
     {
       title: "Trip / shipment",
       key: "trip",
       render: (_, record) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: isMobile ? 8 : 10,
+          }}
+        >
           <div
             style={{
-              width: 34,
-              height: 34,
-              borderRadius: 9,
+              width: isMobile ? 30 : 34,
+              height: isMobile ? 30 : 34,
+              borderRadius: 8,
               background: "#eff6ff",
               display: "flex",
               alignItems: "center",
@@ -296,13 +361,24 @@ const AppointmentRecords = () => {
               flexShrink: 0,
             }}
           >
-            <TruckOutlined />
+            <TruckOutlined style={{ fontSize: isMobile ? 12 : 14 }} />
           </div>
           <div>
-            <div style={{ fontWeight: 600, fontSize: 13, color: "#0f172a" }}>
+            <div
+              style={{
+                fontWeight: 600,
+                fontSize: isMobile ? 12 : 13,
+                color: "#0f172a",
+              }}
+            >
               Trip {record.tripNumber}
             </div>
-            <div style={{ color: "#94a3b8", fontSize: 12 }}>
+            <div
+              style={{
+                color: "#94a3b8",
+                fontSize: isMobile ? 11 : 12,
+              }}
+            >
               Load {record.loadConfirmationNumber}
             </div>
           </div>
@@ -315,7 +391,14 @@ const AppointmentRecords = () => {
       key: "carrierName",
       responsive: ["md"],
       render: (val: string) => (
-        <span style={{ fontSize: 13, color: "#334155" }}>{val}</span>
+        <span
+          style={{
+            fontSize: isMobile ? 12 : 13,
+            color: "#334155",
+          }}
+        >
+          {val}
+        </span>
       ),
     },
     {
@@ -323,7 +406,12 @@ const AppointmentRecords = () => {
       key: "timeline",
       responsive: ["sm"],
       render: (_, record) => (
-        <div style={{ fontSize: 12, color: "#334155" }}>
+        <div
+          style={{
+            fontSize: isMobile ? 11 : 12,
+            color: "#334155",
+          }}
+        >
           <div>
             <span style={{ color: "#94a3b8" }}>↑</span>{" "}
             {formatDate(record.pickupDate)}
@@ -336,6 +424,41 @@ const AppointmentRecords = () => {
       ),
     },
     {
+      title: "Created By",
+      key: "createdByUser",
+      width: isMobile ? 150 : 200,
+      responsive: ["md"],
+      render: (_, record) => {
+        const user = record.createdByUser;
+        if (!user) {
+          return <Text type="secondary">N/A</Text>;
+        }
+        return (
+          <div>
+            <Text
+              style={{
+                fontWeight: 500,
+                color: "#334155",
+                fontSize: isMobile ? 12 : 13,
+                display: "block",
+              }}
+            >
+              {user.name}
+            </Text>
+            <Text
+              type="secondary"
+              style={{
+                fontSize: isMobile ? 10 : 11,
+                display: "block",
+              }}
+            >
+              {user.email}
+            </Text>
+          </div>
+        );
+      },
+    },
+    {
       title: "Status",
       dataIndex: "status",
       key: "status",
@@ -344,21 +467,51 @@ const AppointmentRecords = () => {
     {
       title: "Actions",
       key: "action",
-      width: 120,
+      width: isMobile ? 120 : 150,
       align: "center" as const,
       render: (_: unknown, record: AppointmentRecord) => (
-        <Space size="small">
+        <Space size={isMobile ? "small" : "middle"}>
+          <Tooltip
+            title={
+              expandedRows.has(record._id) ? "Hide Details" : "View Details"
+            }
+            placement="top"
+          >
+            <Button
+              type="default"
+              size={isMobile ? "small" : "middle"}
+              icon={
+                expandedRows.has(record._id) ? <EyeOutlined /> : <EyeOutlined />
+              }
+              onClick={() => toggleRowExpand(record._id)}
+              style={{
+                borderRadius: "6px",
+                borderColor: expandedRows.has(record._id)
+                  ? "#ef4444"
+                  : "#2563eb",
+                color: expandedRows.has(record._id) ? "#ef4444" : "#2563eb",
+                height: isMobile ? "26px" : "28px",
+                padding: isMobile ? "0 6px" : "0 8px",
+                background: expandedRows.has(record._id)
+                  ? "#fef2f2"
+                  : "#eff6ff",
+              }}
+            >
+              {expandedRows.has(record._id) ? "Hide" : "Details"}
+            </Button>
+          </Tooltip>
           <Tooltip title="View Invoice" placement="top">
             <Button
               type="default"
-              size="small"
+              size={isMobile ? "small" : "middle"}
               icon={<FileTextOutlined />}
               onClick={() => handleViewInvoice(record)}
               style={{
                 borderRadius: "6px",
                 borderColor: "#10b981",
                 color: "#10b981",
-                height: "28px",
+                height: isMobile ? "26px" : "28px",
+                padding: isMobile ? "0 6px" : "0 8px",
               }}
             />
           </Tooltip>
@@ -372,109 +525,147 @@ const AppointmentRecords = () => {
       style={{
         display: "flex",
         flexWrap: "wrap",
-        gap: 12,
-        padding: "12px 4px 4px",
+        gap: isMobile ? 10 : 12,
+        padding: isMobile ? "10px 4px 4px" : "12px 4px 4px",
       }}
     >
-      <SectionCard title="Carrier" icon={<TruckOutlined />} color="#2563eb">
+      <SectionCard
+        title="Carrier"
+        icon={<TruckOutlined />}
+        color="#2563eb"
+        isMobile={isMobile}
+      >
         <InfoRow
           icon={<FileTextOutlined />}
           label="Equipment / Pro #"
           value={`${record.equipmentType} · ${record.carrierProNumber}`}
+          isMobile={isMobile}
         />
         <InfoRow
           icon={<PhoneOutlined />}
           label="Phone"
           value={record.carrierPhone}
+          isMobile={isMobile}
         />
         <InfoRow
           icon={<MailOutlined />}
           label="Email"
           value={record.carrierEmail}
+          isMobile={isMobile}
         />
         <InfoRow
           icon={<EnvironmentOutlined />}
           label="Address"
           value={record.carrierAddress}
+          isMobile={isMobile}
         />
         <InfoRow
           icon={<PhoneOutlined />}
           label="Driver cell"
           value={record.driverCellNumber}
+          isMobile={isMobile}
         />
       </SectionCard>
 
-      <SectionCard title="Shipper" icon={<UserOutlined />} color="#16a34a">
+      <SectionCard
+        title="Shipper"
+        icon={<UserOutlined />}
+        color="#16a34a"
+        isMobile={isMobile}
+      >
         <InfoRow
           icon={<UserOutlined />}
           label="Name"
           value={record.shipperName}
+          isMobile={isMobile}
         />
         <InfoRow
           icon={<EnvironmentOutlined />}
           label="Address"
           value={`${record.shipperAddress}, ${record.shipperCity}, ${record.shipperProvince} ${record.shipperPostalCode}`}
+          isMobile={isMobile}
         />
         <InfoRow
           icon={<FileTextOutlined />}
           label="Pickup # / window"
           value={`${record.pickupNumber} · ${record.pickupTimeStart}-${record.pickupTimeEnd}`}
+          isMobile={isMobile}
         />
         <InfoRow
           icon={<FileTextOutlined />}
           label="Commodity"
           value={record.commodityDescription}
+          isMobile={isMobile}
         />
         <InfoRow
           icon={<FileTextOutlined />}
           label="Weight"
           value={`${record.weight?.toLocaleString()} lbs`}
+          isMobile={isMobile}
         />
       </SectionCard>
 
-      <SectionCard title="Consignee" icon={<UserOutlined />} color="#d97706">
+      <SectionCard
+        title="Consignee"
+        icon={<UserOutlined />}
+        color="#d97706"
+        isMobile={isMobile}
+      >
         <InfoRow
           icon={<UserOutlined />}
           label="Name"
           value={record.consigneeName}
+          isMobile={isMobile}
         />
         <InfoRow
           icon={<EnvironmentOutlined />}
           label="Address"
           value={`${record.consigneeAddress}, ${record.consigneeCity}, ${record.consigneeProvince} ${record.consigneePostalCode}`}
+          isMobile={isMobile}
         />
         <InfoRow
           icon={<FileTextOutlined />}
           label="Drop-off # / time"
           value={`${record.dropOffNumber} · ${record.deliveryTime}`}
+          isMobile={isMobile}
         />
       </SectionCard>
 
-      <SectionCard title="Charges" icon={<DollarOutlined />} color="#7c3aed">
+      <SectionCard
+        title="Charges"
+        icon={<DollarOutlined />}
+        color="#7c3aed"
+        isMobile={isMobile}
+      >
         <InfoRow
           icon={<FileTextOutlined />}
           label="Description"
           value={record.chargeDescription}
+          isMobile={isMobile}
         />
         <InfoRow
           icon={<DollarOutlined />}
           label="Rate"
           value={`${record.currency} ${record.rateAmount?.toLocaleString()}`}
+          isMobile={isMobile}
         />
         <InfoRow
           icon={<DollarOutlined />}
           label="Total"
           value={`${record.currency} ${record.totalAmount?.toLocaleString()}`}
+          isMobile={isMobile}
         />
         <InfoRow
           icon={<FileTextOutlined />}
           label="Signature"
           value={`${record.signature} · ${formatDate(record.signatureDate)}`}
+          isMobile={isMobile}
         />
         <InfoRow
           icon={<FileTextOutlined />}
           label="Notes"
           value={record.notesTerms}
+          isMobile={isMobile}
         />
       </SectionCard>
     </div>
@@ -483,33 +674,30 @@ const AppointmentRecords = () => {
   return (
     <div
       style={{
-        maxWidth: 1200,
+        maxWidth: 1400,
         margin: "0 auto",
-        padding: "0 16px",
-        height: "calc(100vh - 80px)",
-        overflowY: "auto",
-        overflowX: "hidden",
-        scrollbarWidth: "thin",
-        scrollbarColor: "#cbd5e1 #f1f5f9",
+        padding: containerPadding,
+        minHeight: "calc(100vh - 80px)",
+        background: "#f8fafc",
       }}
     >
+      {/* Header Section */}
       <div
         style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 16,
-          flexWrap: "wrap",
-          gap: 12,
+          background: "linear-gradient(135deg, #065f46 0%, #10b981 100%)",
+          padding: headerPadding,
+          marginBottom: isMobile ? 16 : 24,
+          borderRadius: isMobile ? 12 : 16,
+          boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
         }}
       >
         <div>
           <h2
             style={{
               margin: 0,
-              fontSize: 20,
+              fontSize: isMobile ? 20 : 24,
               fontWeight: 700,
-              color: "#0f172a",
+              color: "#fff",
             }}
           >
             Appointment records
@@ -517,8 +705,8 @@ const AppointmentRecords = () => {
           <p
             style={{
               margin: "4px 0 0",
-              fontSize: 13,
-              color: "#94a3b8",
+              fontSize: isMobile ? 12 : 14,
+              color: "rgba(255,255,255,0.85)",
             }}
           >
             All booked trips and shipments
@@ -527,7 +715,16 @@ const AppointmentRecords = () => {
       </div>
 
       <div
-        style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}
+        style={{
+          display: "grid",
+          gridTemplateColumns: isMobile
+            ? "1fr"
+            : isTablet
+              ? "repeat(auto-fit, minmax(200px, 1fr))"
+              : "repeat(3, 1fr)",
+          gap: isMobile ? 10 : 12,
+          marginBottom: isMobile ? 16 : 20,
+        }}
       >
         {stats.map((s) => (
           <div
@@ -535,24 +732,25 @@ const AppointmentRecords = () => {
             style={{
               background: s.color,
               borderRadius: 12,
-              padding: "14px 16px",
-              flex: "1 1 100%",
-              minWidth: 140,
+              padding: cardPadding,
+              border: `1px solid ${s.accent}15`,
             }}
           >
             <div
               style={{
-                fontSize: 11,
+                fontSize: isMobile ? 10 : 11,
                 color: s.accent,
                 fontWeight: 600,
-                marginBottom: 4,
+                marginBottom: isMobile ? 4 : 6,
+                textTransform: "uppercase",
+                letterSpacing: 0.5,
               }}
             >
               {s.label}
             </div>
             <div
               style={{
-                fontSize: 20,
+                fontSize: isMobile ? 18 : 20,
                 fontWeight: 700,
                 color: "#0f172a",
               }}
@@ -567,20 +765,22 @@ const AppointmentRecords = () => {
         <Alert
           type="error"
           message={error}
-          style={{ marginBottom: 16, borderRadius: 12 }}
+          style={{ marginBottom: isMobile ? 12 : 16, borderRadius: 12 }}
         />
       )}
 
       <div
         style={{
           background: "#fff",
-          borderRadius: 12,
+          borderRadius: isMobile ? 10 : 12,
           border: "1px solid #eef0f3",
           overflow: "hidden",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+          padding: isMobile ? "8px" : "16px",
         }}
       >
         {loading ? (
-          <div style={{ textAlign: "center", padding: 40 }}>
+          <div style={{ textAlign: "center", padding: isMobile ? 30 : 40 }}>
             <Spin size="large" />
           </div>
         ) : (
@@ -588,9 +788,26 @@ const AppointmentRecords = () => {
             columns={columns}
             dataSource={appointments}
             rowKey={(record) => record._id}
-            pagination={{ pageSize: 10, size: "small" }}
-            size="small"
-            expandable={{ expandedRowRender, expandRowByClick: true }}
+            pagination={{
+              pageSize: isMobile ? 5 : 10,
+              size: "small",
+              showSizeChanger: !isMobile,
+              showTotal: (total) =>
+                isMobile ? `${total} items` : `Total ${total} items`,
+            }}
+            size={isMobile ? "middle" : "small"}
+            expandable={{
+              expandedRowRender,
+              expandedRowKeys: Array.from(expandedRows),
+              onExpandedRowsChange: (keys) => {
+                setExpandedRows(new Set(keys as string[]));
+              },
+              rowExpandable: () => true,
+            }}
+            scroll={isMobile ? { x: "max-content" } : { x: undefined }}
+            style={{
+              fontSize: isMobile ? 12 : 13,
+            }}
           />
         )}
       </div>

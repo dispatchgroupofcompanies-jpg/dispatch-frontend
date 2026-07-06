@@ -1,10 +1,11 @@
 "use client";
 
 import React from "react";
-import { Divider, Typography, Row, Col } from "antd";
+import { Divider, Typography, Row, Col, Grid } from "antd";
 import type { Invoice } from "../types/invoice";
 
 const { Text, Title } = Typography;
+const { useBreakpoint } = Grid;
 
 const formatDate = (value?: string | null) =>
   value
@@ -58,18 +59,22 @@ const getStatusTagStyle = (status?: string) => {
 };
 
 export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
   const tripCount = invoice.trips?.length || 0;
   const title = tripCount > 1 ? "INVOICE - T" : "INVOICE - 1";
+
+  const containerPadding = isMobile ? "12px 16px" : "20px 24px";
 
   return (
     <div
       style={{
         position: "relative",
         backgroundColor: "#ffffff",
-        padding: "20px 24px",
+        padding: containerPadding,
         color: "#1e293b",
         overflow: "hidden",
-        borderRadius: 12,
+        borderRadius: isMobile ? 8 : 12,
       }}
     >
       {/* Background Watermark */}
@@ -100,8 +105,9 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "flex-start",
-            gap: 16,
-            marginBottom: 10,
+            gap: isMobile ? 12 : 16,
+            marginBottom: isMobile ? 8 : 10,
+            flexWrap: isMobile ? "wrap" : "nowrap",
           }}
         >
           <div>
@@ -113,14 +119,14 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
                 color: "#102a63",
                 letterSpacing: 0.5,
                 lineHeight: 1.1,
-                fontSize: 24,
+                fontSize: isMobile ? 20 : 24,
               }}
             >
               {title}
             </Title>
             <Text
               style={{
-                fontSize: 12,
+                fontSize: isMobile ? 11 : 12,
                 color: "#64748b",
                 display: "block",
                 marginTop: 4,
@@ -136,7 +142,7 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
-                padding: "6px 14px",
+                padding: isMobile ? "4px 10px" : "6px 14px",
                 borderRadius: 999,
                 border: `1px solid ${getStatusTagStyle(invoice.invoiceStatus).borderColor}`,
                 backgroundColor: getStatusTagStyle(invoice.invoiceStatus)
@@ -144,27 +150,33 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
                 color: getStatusTagStyle(invoice.invoiceStatus).color,
                 fontWeight: 700,
                 textTransform: "uppercase",
-                fontSize: 11,
+                fontSize: isMobile ? 10 : 11,
                 letterSpacing: 0.5,
               }}
             >
               {invoice.invoiceStatus?.toUpperCase() || "DRAFT"}
             </div>
-            <div style={{ marginTop: 6, color: "#64748b", fontSize: 12 }}>
+            <div
+              style={{
+                marginTop: 6,
+                color: "#64748b",
+                fontSize: isMobile ? 11 : 12,
+              }}
+            >
               Date: {formatDate(invoice.createdAt)}
             </div>
           </div>
         </div>
 
-        <Divider style={{ margin: "12px 0" }} />
+        <Divider style={{ margin: isMobile ? "8px 0" : "12px 0" }} />
 
         {/* Addresses Section */}
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 32,
-            marginBottom: 16,
+            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+            gap: isMobile ? 16 : 32,
+            marginBottom: isMobile ? 12 : 16,
           }}
         >
           <div>
@@ -257,11 +269,11 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
             style={{
               backgroundColor: "#f8fafc",
               border: "1px solid #e2e8f0",
-              padding: "8px 12px",
+              padding: isMobile ? "6px 10px" : "8px 12px",
               borderRadius: 6,
-              marginBottom: 16,
+              marginBottom: isMobile ? 12 : 16,
               color: "#334155",
-              fontSize: 12,
+              fontSize: isMobile ? 11 : 12,
             }}
           >
             <strong>📅 Billing Period:</strong>{" "}
@@ -271,30 +283,45 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
         )}
 
         {/* Responsive Fluid Table Layout */}
-        <div style={{ marginBottom: 16, width: "100%" }}>
+        <div
+          style={{
+            marginBottom: isMobile ? 12 : 16,
+            width: "100%",
+            overflowX: "auto",
+          }}
+        >
           <table
             style={{
               width: "100%",
               borderCollapse: "collapse",
               textAlign: "left",
               tableLayout: "fixed",
+              minWidth: isMobile ? 600 : undefined,
             }}
           >
             <thead>
               <tr style={{ backgroundColor: "#102a63", color: "#ffffff" }}>
-                <th style={{ ...tableHeaderStyle, width: "5%" }}>#</th>
-                <th style={{ ...tableHeaderStyle, width: "12%" }}>Date</th>
-                <th style={{ ...tableHeaderStyle, width: "12%" }}>VRID</th>
-                <th style={{ ...tableHeaderStyle, width: "14%" }}>
+                <th style={{ ...getTableHeaderStyle(isMobile), width: "5%" }}>
+                  #
+                </th>
+                <th style={{ ...getTableHeaderStyle(isMobile), width: "12%" }}>
+                  Date
+                </th>
+                <th style={{ ...getTableHeaderStyle(isMobile), width: "12%" }}>
+                  VRID
+                </th>
+                <th style={{ ...getTableHeaderStyle(isMobile), width: "14%" }}>
                   Driver Name
                 </th>
-                <th style={{ ...tableHeaderStyle, width: "10%" }}>Route</th>
-                <th style={{ ...tableHeaderStyle, width: "17%" }}>
+                <th style={{ ...getTableHeaderStyle(isMobile), width: "10%" }}>
+                  Route
+                </th>
+                <th style={{ ...getTableHeaderStyle(isMobile), width: "17%" }}>
                   Description
                 </th>
                 <th
                   style={{
-                    ...tableHeaderStyle,
+                    ...getTableHeaderStyle(isMobile),
                     textAlign: "right",
                     width: "10%",
                   }}
@@ -303,7 +330,7 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
                 </th>
                 <th
                   style={{
-                    ...tableHeaderStyle,
+                    ...getTableHeaderStyle(isMobile),
                     textAlign: "center",
                     width: "10%",
                   }}
@@ -312,7 +339,7 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
                 </th>
                 <th
                   style={{
-                    ...tableHeaderStyle,
+                    ...getTableHeaderStyle(isMobile),
                     textAlign: "right",
                     width: "10%",
                   }}
@@ -325,13 +352,13 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
               {(invoice.trips || []).length > 0 ? (
                 invoice.trips!.map((trip, index) => (
                   <tr key={index} style={{ borderBottom: "1px solid #e2e8f0" }}>
-                    <td style={tableCellStyle}>{index + 1}</td>
-                    <td style={tableCellStyle}>
+                    <td style={getTableCellStyle(isMobile)}>{index + 1}</td>
+                    <td style={getTableCellStyle(isMobile)}>
                       {formatDate(trip.tripDate || null)}
                     </td>
                     <td
                       style={{
-                        ...tableCellStyle,
+                        ...getTableCellStyle(isMobile),
                         fontWeight: 700,
                         color: "#1e293b",
                       }}
@@ -340,17 +367,19 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
                     </td>
                     <td
                       style={{
-                        ...tableCellStyle,
+                        ...getTableCellStyle(isMobile),
                         fontWeight: 600,
                         color: "#2563eb",
                       }}
                     >
                       {trip.driverName || "N/A"}
                     </td>
-                    <td style={tableCellStyle}>{trip.route || "N/A"}</td>
+                    <td style={getTableCellStyle(isMobile)}>
+                      {trip.route || "N/A"}
+                    </td>
                     <td
                       style={{
-                        ...tableCellStyle,
+                        ...getTableCellStyle(isMobile),
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
@@ -358,12 +387,17 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
                     >
                       {`${trip.pickup || "N/A"} to ${trip.drop || "N/A"}`}
                     </td>
-                    <td style={{ ...tableCellStyle, textAlign: "right" }}>
+                    <td
+                      style={{
+                        ...getTableCellStyle(isMobile),
+                        textAlign: "right",
+                      }}
+                    >
                       ${(trip.totalCharges ?? 0).toFixed(2)}
                     </td>
                     <td
                       style={{
-                        ...tableCellStyle,
+                        ...getTableCellStyle(isMobile),
                         textAlign: "center",
                         color: "#475569",
                       }}
@@ -372,7 +406,7 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
                     </td>
                     <td
                       style={{
-                        ...tableCellStyle,
+                        ...getTableCellStyle(isMobile),
                         textAlign: "right",
                         fontWeight: 700,
                         color: "#b91c1c",
@@ -387,10 +421,10 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
                   <td
                     colSpan={9}
                     style={{
-                      padding: 16,
+                      padding: isMobile ? 12 : 16,
                       textAlign: "center",
                       color: "#94a3b8",
-                      fontSize: 12,
+                      fontSize: isMobile ? 11 : 12,
                     }}
                   >
                     No active trips found in system database
@@ -406,33 +440,47 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
           style={{
             display: "flex",
             justifyContent: "flex-end",
-            marginBottom: 16,
+            marginBottom: isMobile ? 12 : 16,
           }}
         >
-          <div style={{ width: 260 }}>
+          <div style={{ width: isMobile ? 220 : 260 }}>
             <div style={summaryRowStyle}>
-              <Text type="secondary">Subtotal:</Text>
-              <Text strong>${(invoice.subtotal ?? 0).toFixed(2)}</Text>
+              <Text type="secondary" style={{ fontSize: isMobile ? 11 : 12 }}>
+                Subtotal:
+              </Text>
+              <Text strong style={{ fontSize: isMobile ? 12 : 13 }}>
+                ${(invoice.subtotal ?? 0).toFixed(2)}
+              </Text>
             </div>
             {invoice.tax ? (
               <div style={summaryRowStyleWithBorder}>
-                <Text type="secondary">Tax / VAT:</Text>
-                <Text strong>${(invoice.tax ?? 0).toFixed(2)}</Text>
+                <Text type="secondary" style={{ fontSize: isMobile ? 11 : 12 }}>
+                  Tax / VAT:
+                </Text>
+                <Text strong style={{ fontSize: isMobile ? 12 : 13 }}>
+                  ${(invoice.tax ?? 0).toFixed(2)}
+                </Text>
               </div>
             ) : null}
             <div
               style={{
                 ...summaryRowStyle,
-                marginTop: 8,
+                marginTop: isMobile ? 6 : 8,
                 alignItems: "center",
                 borderTop: "1px solid #e2e8f0",
-                paddingTop: 8,
+                paddingTop: isMobile ? 6 : 8,
               }}
             >
-              <Text strong style={{ fontSize: 13, color: "#1e293b" }}>
+              <Text
+                strong
+                style={{ fontSize: isMobile ? 12 : 13, color: "#1e293b" }}
+              >
                 Grand Total:
               </Text>
-              <Text strong style={{ fontSize: 16, color: "#2563eb" }}>
+              <Text
+                strong
+                style={{ fontSize: isMobile ? 14 : 16, color: "#2563eb" }}
+              >
                 {invoice.currency || "CAD"} $
                 {(invoice.grandTotal ?? 0).toFixed(2)}
               </Text>
@@ -447,12 +495,12 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
           invoice.payee?.eTransferAddress) && (
           <div
             style={{
-              padding: "12px 16px",
+              padding: isMobile ? "10px 12px" : "12px 16px",
               backgroundColor: "#f8fafc",
               borderRadius: 8,
             }}
           >
-            <Row gutter={[16, 8]}>
+            <Row gutter={[12, 6]}>
               {invoice.accountNumber && (
                 <Col xs={24} sm={14}>
                   <Text
@@ -460,7 +508,7 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
                     style={{
                       display: "block",
                       marginBottom: 2,
-                      fontSize: 10,
+                      fontSize: isMobile ? 9 : 10,
                       textTransform: "uppercase",
                       letterSpacing: 0.5,
                       color: "#64748b",
@@ -469,7 +517,11 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
                     Direct Deposit Details
                   </Text>
                   <Text
-                    style={{ fontSize: 12, color: "#475569", display: "block" }}
+                    style={{
+                      fontSize: isMobile ? 11 : 12,
+                      color: "#475569",
+                      display: "block",
+                    }}
                   >
                     Institution: {invoice.institutionNumber || "N/A"} | Transit:{" "}
                     {invoice.transitNumber || "N/A"} | Account:{" "}
@@ -485,7 +537,7 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
                     style={{
                       display: "block",
                       marginBottom: 2,
-                      fontSize: 10,
+                      fontSize: isMobile ? 9 : 10,
                       textTransform: "uppercase",
                       letterSpacing: 0.5,
                       color: "#64748b",
@@ -494,7 +546,11 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
                     💥 E-Transfer Details
                   </Text>
                   <Text
-                    style={{ fontSize: 12, color: "#1e293b", fontWeight: 600 }}
+                    style={{
+                      fontSize: isMobile ? 11 : 12,
+                      color: "#1e293b",
+                      fontWeight: 600,
+                    }}
                   >
                     {invoice.customer?.eTransfer ||
                       invoice.payee?.eTransferAddress}
@@ -506,7 +562,13 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
         )}
 
         {invoice.notes && (
-          <div style={{ marginTop: 12, fontSize: 11, color: "#64748b" }}>
+          <div
+            style={{
+              marginTop: isMobile ? 10 : 12,
+              fontSize: isMobile ? 10 : 11,
+              color: "#64748b",
+            }}
+          >
             <Text strong>Notes:</Text> {invoice.notes}
           </div>
         )}
@@ -515,21 +577,21 @@ export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
   );
 }
 
-const tableHeaderStyle: React.CSSProperties = {
-  padding: "8px 8px",
-  fontSize: 11,
+const getTableHeaderStyle = (mobile: boolean): React.CSSProperties => ({
+  padding: mobile ? "6px 6px" : "8px 8px",
+  fontSize: mobile ? 10 : 11,
   fontWeight: 700,
   color: "#ffffff",
   lineHeight: 1.2,
-};
+});
 
-const tableCellStyle: React.CSSProperties = {
-  padding: "6px 8px",
-  fontSize: 11,
+const getTableCellStyle = (mobile: boolean): React.CSSProperties => ({
+  padding: mobile ? "4px 6px" : "6px 8px",
+  fontSize: mobile ? 10 : 11,
   color: "#475569",
   verticalAlign: "middle",
   lineHeight: 1.3,
-};
+});
 
 const summaryRowStyle: React.CSSProperties = {
   display: "flex",

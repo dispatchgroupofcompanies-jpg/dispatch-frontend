@@ -11,6 +11,7 @@ import {
   Space,
   Table,
   message,
+  Grid,
 } from "antd";
 import {
   UserAddOutlined,
@@ -28,6 +29,8 @@ import {
   deleteUserApi,
 } from "@/src/services/addUserService";
 
+const { useBreakpoint } = Grid;
+
 interface User {
   _id: string;
   name: string;
@@ -36,6 +39,8 @@ interface User {
 }
 
 export default function AddUsersPage() {
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -232,72 +237,186 @@ export default function AddUsersPage() {
     },
   ];
 
+  const containerPadding = isMobile ? "12px" : "20px";
+  const headerPadding = isMobile ? "20px 16px" : "24px 20px";
+
+  // Stats cards data
+  const stats = [
+    {
+      title: "Total Users",
+      value: users.length,
+      icon: <UserOutlined />,
+      color: "#eff6ff",
+      accent: "#2563eb",
+    },
+  ];
+
   return (
-    <div style={{ padding: "20px" }}>
-      {/* Header Container */}
+    <div
+      style={{
+        minHeight: "100vh",
+        backgroundColor: "#f8fafc",
+        padding: containerPadding,
+      }}
+    >
+      {/* Header Section */}
       <div
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "16px",
-          flexWrap: "wrap",
-          gap: "12px",
+          background: "linear-gradient(135deg, #065f46 0%, #10b981 100%)",
+          padding: headerPadding,
+          marginBottom: isMobile ? 16 : 24,
+          borderRadius: isMobile ? 12 : 16,
+          boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
         }}
       >
-        <div>
-          <h1
-            style={{
-              margin: 0,
-              fontSize: "20px",
-              fontWeight: 700,
-              color: "#0f172a",
-            }}
-          >
-            Users Directory
-          </h1>
-          <p style={{ margin: "4px 0 0 0", fontSize: 13, color: "#64748b" }}>
-            Manage and onboard system users.
-          </p>
-        </div>
-
-        <Button
-          type="primary"
-          icon={<UserAddOutlined />}
-          onClick={showModal}
-          size="middle"
+        <div
           style={{
-            background: "#2563eb",
-            borderRadius: "6px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "12px",
           }}
         >
-          Add User
-        </Button>
+          <div>
+            <h1
+              style={{
+                margin: 0,
+                fontSize: isMobile ? 22 : 28,
+                fontWeight: 700,
+                color: "#fff",
+              }}
+            >
+              Users Directory
+            </h1>
+            <p
+              style={{
+                margin: "4px 0 0 0",
+                fontSize: isMobile ? 12 : 14,
+                color: "rgba(255,255,255,0.85)",
+              }}
+            >
+              Manage and onboard system users.
+            </p>
+          </div>
+
+          <Button
+            type="primary"
+            icon={<UserAddOutlined />}
+            onClick={showModal}
+            size={isMobile ? "middle" : "large"}
+            style={{
+              background: "#ffffff",
+              color: "#2563eb",
+              borderRadius: "8px",
+              fontWeight: 600,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+            }}
+          >
+            Add User
+          </Button>
+        </div>
       </div>
 
-      <hr
+      {/* Stats Cards */}
+      <div
         style={{
-          border: "0",
-          borderTop: "1px solid #e2e8f0",
-          marginBottom: "16px",
+          display: "grid",
+          gridTemplateColumns: isMobile
+            ? "1fr"
+            : "repeat(auto-fit, minmax(200px, 1fr))",
+          gap: isMobile ? 12 : 16,
+          marginBottom: isMobile ? 16 : 24,
         }}
-      />
+      >
+        {stats.map((stat, index) => (
+          <div
+            key={index}
+            style={{
+              background: stat.color,
+              borderRadius: isMobile ? 12 : 16,
+              padding: isMobile ? "16px" : "20px",
+              border: `1px solid ${stat.accent}15`,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    fontSize: isMobile ? 10 : 11,
+                    color: stat.accent,
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    letterSpacing: 0.5,
+                    marginBottom: 4,
+                  }}
+                >
+                  {stat.title}
+                </div>
+                <div
+                  style={{
+                    fontSize: isMobile ? 24 : 32,
+                    fontWeight: 700,
+                    color: "#0f172a",
+                  }}
+                >
+                  {stat.value}
+                </div>
+              </div>
+              <div
+                style={{
+                  width: isMobile ? 40 : 48,
+                  height: isMobile ? 40 : 48,
+                  borderRadius: isMobile ? 10 : 12,
+                  background: stat.accent,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#fff",
+                  fontSize: isMobile ? 20 : 24,
+                }}
+              >
+                {stat.icon}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
 
-      {/* 📊 Placeholder block hata kar actual Ant Design Table lagayi hai */}
-      <Table
-        dataSource={users}
-        columns={columns}
-        rowKey="_id" // MongoDB mapping target identification key
-        loading={loading}
-        pagination={{ pageSize: 8, size: "small" }}
-        size="small"
+      {/* Table Container */}
+      <div
         style={{
           background: "#fff",
-          borderRadius: "8px",
+          borderRadius: isMobile ? 12 : 16,
+          padding: isMobile ? "12px" : "20px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
           border: "1px solid #e2e8f0",
-          overflow: "hidden",
         }}
-      />
+      >
+        <Table
+          dataSource={users}
+          columns={columns}
+          rowKey="_id"
+          loading={loading}
+          pagination={{
+            pageSize: isMobile ? 5 : 8,
+            size: "small",
+            showSizeChanger: !isMobile,
+            showTotal: (total) =>
+              isMobile ? `${total} items` : `Total ${total} items`,
+          }}
+          size={isMobile ? "middle" : "small"}
+          scroll={isMobile ? { x: "max-content" } : { x: undefined }}
+          style={{ fontSize: isMobile ? 12 : 13 }}
+        />
+      </div>
 
       {/* Responsive Input Modal Form */}
       <Modal

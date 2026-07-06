@@ -51,33 +51,35 @@ API.interceptors.response.use(
 // -------------------------
 
 export const createInvoice = (data: Record<string, unknown>) => {
-  return API.post("/invoices", data);
+  return API.post("/user/invoices", data);
 };
 
 export const getInvoices = () => {
-  return API.get("/invoices");
+  return API.get("/admin/invoices");
 };
 
 export const getInvoiceById = (invoiceId: string) => {
-  return API.get(`/invoices/${invoiceId}`);
+  return API.get(`/admin/invoices/${invoiceId}`);
 };
 
 export const updateInvoice = (
   invoiceId: string,
   data: Record<string, unknown>,
 ) => {
-  return API.put(`/invoices/${invoiceId}`, data);
+  return API.put(`/admin/invoices/${invoiceId}`, data);
 };
 
 export const deleteInvoice = (invoiceId: string) => {
-  return API.delete(`/invoices/${invoiceId}`);
+  return API.delete(`/admin/invoices/${invoiceId}`);
 };
 // Specific field status patch update function
 export const updateInvoiceStatus = (invoiceId: string, status: string) => {
-  return API.patch(`/invoices/${invoiceId}/status`, { invoiceStatus: status });
+  return API.patch(`/admin/invoices/${invoiceId}/status`, {
+    invoiceStatus: status,
+  });
 };
 export const deleteInvoiceAPI = (invoiceId: string) => {
-  return API.delete(`/invoices/${invoiceId}`);
+  return API.delete(`/admin/invoices/${invoiceId}`);
 };
 
 // -------------------------
@@ -85,7 +87,7 @@ export const deleteInvoiceAPI = (invoiceId: string) => {
 // -------------------------
 
 export const getDashboardStats = () => {
-  return API.get("/dashboard/stats");
+  return API.get("/admin/dashboard/stats");
 };
 
 export default API;

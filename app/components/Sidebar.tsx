@@ -2,11 +2,8 @@
 
 import { Layout, Menu, Drawer } from "antd";
 import {
-  BankOutlined,
   CalendarOutlined,
-  DashboardOutlined,
   FileAddOutlined,
-  HistoryOutlined,
   LogoutOutlined,
   TruckOutlined,
   CloseOutlined,
@@ -36,16 +33,10 @@ export default function Sidebar({ isMobile }: SidebarProps) {
 
   const getSelectedKey = () => {
     switch (pathname) {
-      case "/user/dashboard":
-        return "1";
       case "/user/createInvoice":
-        return "2";
+        return "1";
       case "/user/appointment":
-        return "3";
-      case "/user/company-record":
-        return "6";
-      case "/user/company-history":
-        return "7";
+        return "2";
       default:
         return "1";
     }
@@ -54,33 +45,15 @@ export default function Sidebar({ isMobile }: SidebarProps) {
   const menuItems = [
     {
       key: "1",
-      icon: <DashboardOutlined />,
-      label: "Dashboard",
-      path: "/user/dashboard",
-    },
-    {
-      key: "2",
       icon: <FileAddOutlined />,
       label: "Create Invoice",
       path: "/user/createInvoice",
     },
     {
-      key: "3",
+      key: "2",
       icon: <CalendarOutlined />,
       label: "Book Appointment",
       path: "/user/appointment",
-    },
-    {
-      key: "6",
-      icon: <BankOutlined />,
-      label: "Company Record",
-      path: "/user/company-record",
-    },
-    {
-      key: "7",
-      icon: <HistoryOutlined />,
-      label: "Company History",
-      path: "/user/company-history",
     },
   ];
 

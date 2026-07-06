@@ -101,7 +101,7 @@ export interface Company {
 // Fetch all appointments
 export const fetchAppointments = async (): Promise<Appointment[]> => {
   try {
-    const res = await API.get("/appointments");
+    const res = await API.get("/user/appointments");
     return res.data?.data || [];
   } catch (error) {
     console.error("Error fetching appointments:", error);
@@ -114,7 +114,7 @@ export const fetchAppointmentById = async (
   id: string,
 ): Promise<Appointment> => {
   try {
-    const res = await API.get(`/appointments/${id}`);
+    const res = await API.get(`/user/appointments/${id}`);
     return res.data?.data;
   } catch (error) {
     console.error("Error fetching appointment:", error);
@@ -127,7 +127,7 @@ export const createAppointment = async (
   data: Partial<Appointment>,
 ): Promise<Appointment> => {
   try {
-    const res = await API.post("/appointments", data);
+    const res = await API.post("/user/appointments", data);
     return res.data?.data;
   } catch (error) {
     console.error("Error creating appointment:", error);
@@ -141,7 +141,7 @@ export const updateAppointment = async (
   data: Partial<Appointment>,
 ): Promise<Appointment> => {
   try {
-    const res = await API.put(`/appointments/${id}`, data);
+    const res = await API.put(`/user/appointments/${id}`, data);
     return res.data?.data;
   } catch (error) {
     console.error("Error updating appointment:", error);
@@ -152,7 +152,7 @@ export const updateAppointment = async (
 // Delete appointment
 export const deleteAppointment = async (id: string): Promise<void> => {
   try {
-    await API.delete(`/appointments/${id}`);
+    await API.delete(`/user/appointments/${id}`);
   } catch (error) {
     console.error("Error deleting appointment:", error);
     throw error;
@@ -162,7 +162,7 @@ export const deleteAppointment = async (id: string): Promise<void> => {
 // Download appointment PDF
 export const downloadAppointmentPDF = async (id: string): Promise<Blob> => {
   try {
-    const res = await API.get(`/appointments/${id}/download`, {
+    const res = await API.get(`/user/appointments/${id}/download`, {
       responseType: "blob",
     });
     return res.data;
@@ -193,7 +193,7 @@ export const updateAppointmentStatus = async (
   status: string,
 ): Promise<Appointment> => {
   try {
-    const res = await API.patch(`/appointments/${id}/status`, { status });
+    const res = await API.patch(`/user/appointments/${id}/status`, { status });
     return res.data?.data;
   } catch (error) {
     console.error("Error updating appointment status:", error);
