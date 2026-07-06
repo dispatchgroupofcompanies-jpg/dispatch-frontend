@@ -13,6 +13,7 @@ import {
   MenuFoldOutlined,
   UserOutlined,
   GlobalOutlined,
+  LockOutlined,
 } from "@ant-design/icons";
 
 export default function AdminLayout({
@@ -414,6 +415,44 @@ export default function AdminLayout({
                 </span>
               )}
             </div>
+
+            <div
+              onClick={() => router.push("/admin/reset-password")}
+              style={{
+                padding: "14px 16px",
+                cursor: "pointer",
+                backgroundColor: isActive("/admin/reset-password")
+                  ? "rgba(255,255,255,0.15)"
+                  : "transparent",
+                display: "flex",
+                alignItems: "center",
+                gap: 14,
+                borderRadius: 8,
+                marginBottom: 6,
+                transition: "all 0.2s",
+                borderLeft: isActive("/admin/reset-password")
+                  ? "3px solid #60a5fa"
+                  : "3px solid transparent",
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive("/admin/reset-password")) {
+                  e.currentTarget.style.backgroundColor =
+                    "rgba(255,255,255,0.08)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive("/admin/reset-password")) {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                }
+              }}
+            >
+              <LockOutlined style={{ fontSize: 18, color: "#fff" }} />
+              {!sidebarCollapsed && (
+                <span style={{ fontSize: 14, fontWeight: 500, color: "#fff" }}>
+                  Reset Password
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Logout Button */}
@@ -715,6 +754,34 @@ export default function AdminLayout({
                 Invoice History
               </span>
             </div>
+
+            {/* <div
+              onClick={() => {
+                setDrawerOpen(false);
+                router.push("/admin/reset-password");
+              }}
+              style={{
+                padding: "14px 16px",
+                cursor: "pointer",
+                backgroundColor: isActive("/admin/reset-password")
+                  ? "rgba(255,255,255,0.15)"
+                  : "transparent",
+                display: "flex",
+                alignItems: "center",
+                gap: 14,
+                borderRadius: 8,
+                marginBottom: 6,
+                transition: "all 0.2s",
+                borderLeft: isActive("/admin/reset-password")
+                  ? "3px solid #60a5fa"
+                  : "3px solid transparent",
+              }}
+            >
+              <LockOutlined style={{ fontSize: 18 }} />
+              <span style={{ fontSize: 14, fontWeight: 500 }}>
+                Reset Password
+              </span>
+            </div> */}
           </div>
 
           {/* Drawer Logout */}

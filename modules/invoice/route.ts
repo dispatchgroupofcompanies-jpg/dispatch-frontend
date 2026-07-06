@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const DEBUG = false; // 👈 turn true only when debugging
+const DEBUG = false;
 
 const API = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api",
@@ -80,6 +80,12 @@ export const updateInvoiceStatus = (invoiceId: string, status: string) => {
 };
 export const deleteInvoiceAPI = (invoiceId: string) => {
   return API.delete(`/admin/invoices/${invoiceId}`);
+};
+
+export const downloadInvoicePDF = (invoiceId: string) => {
+  return API.get(`/user/invoices/${invoiceId}/download`, {
+    responseType: "blob",
+  });
 };
 
 // -------------------------

@@ -56,7 +56,7 @@ export default function LoginForm() {
             window.location.href = "/admin/dashboard"; // Forces full fresh load
           } else {
             console.log("Redirecting to User Dashboard...");
-            window.location.href = "/user/dashboard";
+            window.location.href = "/user";
           }
         }, 800);
 

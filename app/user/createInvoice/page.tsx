@@ -28,7 +28,11 @@ import {
 } from "@ant-design/icons";
 import CreateInvoiceModal from "../../../modules/invoice/InvoiceModal";
 import InvoicePreview from "../../../src/components/InvoicePreview";
-import { getInvoices, deleteInvoiceAPI } from "../../../modules/invoice/route";
+import {
+  getInvoices,
+  deleteInvoiceAPI,
+  downloadInvoicePDF,
+} from "../../../modules/invoice/route";
 import type { Invoice as InvoiceType } from "../../../src/types/invoice";
 
 function DashboardComponent() {
@@ -47,26 +51,23 @@ function DashboardComponent() {
   // -------------------------
   // FETCH DATA FROM SERVER
   // -------------------------
+  const loadInvoices = async () => {
+    try {
+      setLoading(true);
+      const res = await getInvoices();
+      setInvoices(res.data?.data || []);
+    } catch (err) {
+      message.error("Failed to fetch invoices");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    let active = true;
-
-    const loadInvoices = async () => {
-      try {
-        setLoading(true);
-        const res = await getInvoices();
-        if (!active) return;
-        setInvoices(res.data?.data || []);
-      } catch (err) {
-        if (active) message.error("Failed to fetch invoices");
-      } finally {
-        if (active) setLoading(false);
-      }
+    const init = async () => {
+      await loadInvoices();
     };
-
-    loadInvoices();
-    return () => {
-      active = false;
-    };
+    init();
   }, []);
 
   // -------------------------
@@ -85,51 +86,39 @@ function DashboardComponent() {
   }, [invoices]);
 
   // -------------------------
-  // HIGH PRECISION ISOLATED SECTION PDF CAPTURE HANDLER
+  // SERVER-SIDE PDF DOWNLOAD HANDLER
   // -------------------------
   const triggerDownloadPDF = async (record: InvoiceType) => {
     if (!record || typeof window === "undefined") return;
     setDownloading(true);
-    const hideLoading = message.loading(
-      `Compiling Invoice #${record.invoiceNumber} PDF...`,
-      0,
-    );
 
     try {
-      const html2pdf = (await import("html2pdf.js")).default;
-      const element = document.getElementById(
-        "printable-invoice-modal-content",
-      );
+      const response = await downloadInvoicePDF(record._id);
 
-      if (!element) {
-        setSelected(record);
-        setViewOpen(true);
-        setTimeout(() => triggerDownloadPDF(record), 500);
-        hideLoading();
-        return;
-      }
+      // Create blob from response
+      const blob = new Blob([response.data], { type: "application/pdf" });
 
-      const options = {
-        margin: [8, 10, 8, 10] as [number, number, number, number],
-        filename: `Invoice-${record.invoiceNumber || "Statement"}.pdf`,
-        image: { type: "jpeg" as const, quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          letterRendering: true,
-        },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      } as const;
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `Invoice-${record.invoiceNumber || "Statement"}.pdf`;
 
-      await html2pdf().set(options).from(element).save();
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
       message.success("PDF Downloaded successfully!");
     } catch (error) {
-      console.error("PDF engine crash context track:", error);
+      console.error("PDF download error:", error);
       message.error(
-        "Could not render selected HTML node block into PDF stream.",
+        "Could not download PDF. Please try again or contact support.",
       );
     } finally {
-      hideLoading();
       setDownloading(false);
     }
   };
