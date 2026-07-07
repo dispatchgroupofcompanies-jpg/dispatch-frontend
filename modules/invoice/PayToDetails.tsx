@@ -28,7 +28,7 @@ export default function PayToDetails() {
         boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
       }}
     >
-      <Form layout="vertical">
+      <div>
         <Row gutter={[12, 8]}>
           {/* Mobile: single column (xs=24), Tablet and up: 2 columns (sm=12) */}
           <Col xs={24} sm={12} lg={12}>
@@ -112,7 +112,7 @@ export default function PayToDetails() {
             </Form.Item>
           </Col>
         </Row>
-      </Form>
+      </div>
     </Card>
   );
 }

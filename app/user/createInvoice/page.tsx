@@ -55,6 +55,8 @@ function DashboardComponent() {
     try {
       setLoading(true);
       const res = await getInvoices();
+
+      console.log("Fetched Invoices:", res.data?.data || []);
       setInvoices(res.data?.data || []);
     } catch (err) {
       message.error("Failed to fetch invoices");

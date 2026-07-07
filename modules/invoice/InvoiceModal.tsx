@@ -97,6 +97,16 @@ export default function CreateInvoiceModal({
       const hstAmount = (calculatedSubtotal * hstRate) / 100;
       const grandTotal = calculatedSubtotal + hstAmount;
 
+      // Debug: Log form values to see if customer data is present
+      console.log(
+        "📤 FORM VALUES BEING SUBMITTED:",
+        JSON.stringify(values, null, 2),
+      );
+      console.log(
+        "📤 CUSTOMER DATA:",
+        JSON.stringify(values.customer, null, 2),
+      );
+
       const formattedTrips = (values.trips || []).map((trip: TripForm) => {
         const tCharges = Number(trip?.totalCharges || 0);
         const dPercent = Number(trip?.dispatchPercent || 0);
@@ -124,12 +134,6 @@ export default function CreateInvoiceModal({
         tax: hstAmount,
         grandTotal: grandTotal,
       };
-
-      console.log("🔴 FINAL PAYLOAD BEING SENT TO BACKEND:", finalPayload);
-      console.log(
-        "🔴 E-TRANSFER IN PAYLOAD:",
-        finalPayload.payee?.eTransferAddress,
-      );
 
       // TypeScript Fixed Condition block below
       if (isEditMode && editData?._id) {

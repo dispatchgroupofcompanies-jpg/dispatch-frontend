@@ -59,7 +59,11 @@ const getStatusTagStyle = (status?: string) => {
 };
 
 export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
-  const screens = useBreakpoint();
+console.log("👉 RAW CUSTOMER DATA CHECK:", {
+  customerObject: invoice?.customer,
+  allInvoiceKeys: Object.keys(invoice || {}),
+  fullPayload: invoice,
+});  const screens = useBreakpoint();
   const isMobile = !screens.md;
   const tripCount = invoice.trips?.length || 0;
   const title = tripCount > 1 ? "INVOICE - T" : "INVOICE - 1";
