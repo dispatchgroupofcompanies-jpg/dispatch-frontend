@@ -53,7 +53,7 @@ export default function LoginForm() {
             window.location.href = customRedirect; // URL query parameters ka redirection handle karega
           } else if (isAdmin) {
             console.log("Redirecting to Admin Dashboard...");
-            window.location.href = "/admin/dashboard"; // Forces full fresh load
+            window.location.href = "/admin/dashboard"; 
           } else {
             console.log("Redirecting to User Dashboard...");
             window.location.href = "/user";
