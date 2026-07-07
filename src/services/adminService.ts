@@ -10,9 +10,11 @@ export const updateInvoiceStatus = async (
   id: string,
   newStatus: "approved" | "rejected",
 ): Promise<ApiResponse<Invoice>> => {
+  console.log("🔄 FRONTEND - Calling updateInvoiceStatus:", { id, newStatus });
   const res = await API.patch(`/admin/invoices/${id}/status`, {
     status: newStatus,
   });
+  console.log("✅ FRONTEND - updateInvoiceStatus response:", res.data);
   return res.data as ApiResponse<Invoice>;
 };
 

@@ -175,16 +175,34 @@ function AppointmentPage() {
 
   const handleDownloadPDF = useCallback(async (id: string) => {
     try {
-      const blob = await downloadAppointmentPDF(id);
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `appointment-${id}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode?.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      message.success("PDF downloaded successfully!");
+      const response = await downloadAppointmentPDF(id);
+
+      // Check if response is JSON with Cloudinary URL
+      if (
+        typeof response === "object" &&
+        response !== null &&
+        "data" in response &&
+        (response as any).data &&
+        typeof (response as any).data === "object" &&
+        (response as any).data.pdfUrl
+      ) {
+        // Open Cloudinary URL directly in new tab
+        window.open((response as any).data.pdfUrl, "_blank");
+        message.success("PDF opened in new tab!");
+      } else if (response instanceof Blob) {
+        // Download blob
+        const url = window.URL.createObjectURL(response);
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `appointment-${id}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode?.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        message.success("PDF downloaded successfully!");
+      } else {
+        throw new Error("Invalid response format");
+      }
     } catch (err) {
       console.error(err);
       message.error("Failed to download PDF");
@@ -286,11 +304,34 @@ function AppointmentPage() {
           key: "invoice-loading",
         });
 
-        const blob = await downloadAppointmentPDF(record._id);
-        const url = window.URL.createObjectURL(blob);
-        setInvoiceUrl(url);
-        setSelectedAppointment(record);
-        setInvoiceModalOpen(true);
+        const response = await downloadAppointmentPDF(record._id);
+
+        // Check if response is JSON with Cloudinary URL
+        if (
+          typeof response === "object" &&
+          response !== null &&
+          "data" in response &&
+          (response as any).data &&
+          typeof (response as any).data === "object" &&
+          (response as any).data.pdfUrl
+        ) {
+          // Use Cloudinary URL directly
+          console.log(
+            "📥 Using Cloudinary URL:",
+            (response as any).data.pdfUrl,
+          );
+          setInvoiceUrl((response as any).data.pdfUrl);
+          setSelectedAppointment(record);
+          setInvoiceModalOpen(true);
+        } else if (response instanceof Blob) {
+          // Use blob URL
+          const url = window.URL.createObjectURL(response);
+          setInvoiceUrl(url);
+          setSelectedAppointment(record);
+          setInvoiceModalOpen(true);
+        } else {
+          throw new Error("Invalid response format");
+        }
 
         // Hide loading message
         message.destroy("invoice-loading");

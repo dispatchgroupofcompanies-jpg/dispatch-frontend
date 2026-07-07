@@ -66,20 +66,17 @@ export const updateInvoice = (
   invoiceId: string,
   data: Record<string, unknown>,
 ) => {
-  return API.put(`/admin/invoices/${invoiceId}`, data);
+  return API.put(`/user/invoices/${invoiceId}`, data);
 };
 
 export const deleteInvoice = (invoiceId: string) => {
-  return API.delete(`/admin/invoices/${invoiceId}`);
+  return API.delete(`/user/invoices/${invoiceId}`);
 };
 // Specific field status patch update function
 export const updateInvoiceStatus = (invoiceId: string, status: string) => {
   return API.patch(`/admin/invoices/${invoiceId}/status`, {
     invoiceStatus: status,
   });
-};
-export const deleteInvoiceAPI = (invoiceId: string) => {
-  return API.delete(`/admin/invoices/${invoiceId}`);
 };
 
 export const downloadInvoicePDF = (invoiceId: string) => {

@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import { Card, Col, DatePicker, Form, Input, Row, Select } from "antd";
-import dayjs from "dayjs";
+import { Card, Col, Form, Input, Row, Select } from "antd";
 
 export default function InvoiceDetails() {
   return (
@@ -96,7 +95,6 @@ export default function InvoiceDetails() {
           <Form.Item
             label="Invoice Date"
             name="invoiceDate"
-            initialValue={dayjs()}
             layout="vertical"
             style={{ marginBottom: 0 }}
             labelCol={{
@@ -108,14 +106,14 @@ export default function InvoiceDetails() {
               },
             }}
           >
-            <DatePicker
+            <Input
+              type="date"
               style={{
                 width: "100%",
                 borderRadius: 4,
                 height: 32,
                 fontSize: 12,
               }}
-              format="YYYY-MM-DD"
               placeholder="YYYY-MM-DD"
             />
           </Form.Item>

@@ -30,7 +30,7 @@ import CreateInvoiceModal from "../../../modules/invoice/InvoiceModal";
 import InvoicePreview from "../../../src/components/InvoicePreview";
 import {
   getInvoices,
-  deleteInvoiceAPI,
+  deleteInvoice,
   downloadInvoicePDF,
 } from "../../../modules/invoice/route";
 import type { Invoice as InvoiceType } from "../../../src/types/invoice";
@@ -140,7 +140,7 @@ function DashboardComponent() {
     );
 
     try {
-      const shareUrl = `${window.location.origin}/public/invoice/${record._id}`;
+      const shareUrl = `${process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") || window.location.origin}/public/invoice/${record._id}`;
       const shareData = {
         title: `Invoice #${record.invoiceNumber}`,
         text: `Please review Invoice #${record.invoiceNumber} from Extreme Logistics for $${record.grandTotal?.toLocaleString()}`,
@@ -196,7 +196,7 @@ function DashboardComponent() {
   const handleDeleteInvoice = async (id: string) => {
     try {
       setLoading(true);
-      await deleteInvoiceAPI(id);
+      await deleteInvoice(id);
       setInvoices((prev) => prev.filter((inv) => inv._id !== id));
       message.success("Invoice statement wiped permanently.");
     } catch (err) {

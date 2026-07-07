@@ -1,6 +1,6 @@
 "use client";
 
-import { Form, Input, InputNumber, DatePicker, TimePicker } from "antd";
+import { Form, InputNumber, DatePicker, TimePicker, Row, Col } from "antd";
 import dayjs from "dayjs";
 
 // Safe dayjs wrapper to prevent isValid errors
@@ -38,135 +38,172 @@ export default function ShipmentScheduleSection() {
       </h4>
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-          gap: "12px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "16px",
         }}
       >
-        <Form.Item
-          name="pickupDate"
-          label="Pickup Date"
-          rules={[{ required: true, message: "Required" }]}
-          style={{ marginBottom: 0 }}
+        {/* Pickup Section */}
+        <div
+          style={{
+            padding: "16px",
+            backgroundColor: "#ffffff",
+            borderRadius: "8px",
+            border: "1px solid #e5e7eb",
+          }}
         >
-          <DatePicker
-            style={{ width: "100%" }}
-            size="large"
-            disabledDate={(current) => {
-              if (!current) return false;
-              const dayjsCurrent = safeDayjs(current);
-              if (!dayjsCurrent) return false;
-              return dayjsCurrent < dayjs().startOf("day");
+          <h5
+            style={{
+              fontSize: "12px",
+              fontWeight: 700,
+              color: "#2563eb",
+              margin: "0 0 16px 0",
+              textTransform: "uppercase",
+              letterSpacing: 0.5,
             }}
-            format="YYYY-MM-DD"
-          />
-        </Form.Item>
-        <Form.Item
-          name="pickupTimeStart"
-          label="Pickup Time Start"
-          rules={[{ required: true, message: "Required" }]}
-          style={{ marginBottom: 0 }}
+          >
+            📍 Pickup Details
+          </h5>
+          <Row gutter={[16, 16]}>
+            <Col xs={24} sm={12} md={8}>
+              <Form.Item
+                name="pickupDate"
+                label="Date"
+                rules={[{ required: true, message: "Required" }]}
+                style={{ marginBottom: 0 }}
+              >
+                <DatePicker
+                  style={{ width: "100%" }}
+                  size="large"
+                  disabledDate={(current) => {
+                    if (!current) return false;
+                    const dayjsCurrent = safeDayjs(current);
+                    if (!dayjsCurrent) return false;
+                    return dayjsCurrent < dayjs().startOf("day");
+                  }}
+                  format="YYYY-MM-DD"
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={8}>
+              <Form.Item
+                name="pickupTimeStart"
+                label="Arrival Time"
+                rules={[{ required: true, message: "Required" }]}
+                style={{ marginBottom: 0 }}
+              >
+                <TimePicker
+                  style={{ width: "100%" }}
+                  size="large"
+                  format="HH:mm"
+                  placeholder="Arrival"
+                  needConfirm={false}
+                  getPopupContainer={(trigger) =>
+                    trigger.parentElement || document.body
+                  }
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={8}>
+              <Form.Item
+                name="pickupTimeEnd"
+                label="Departure Time"
+                rules={[{ required: true, message: "Required" }]}
+                style={{ marginBottom: 0 }}
+              >
+                <TimePicker
+                  style={{ width: "100%" }}
+                  size="large"
+                  format="HH:mm"
+                  placeholder="Departure"
+                  needConfirm={false}
+                  getPopupContainer={(trigger) =>
+                    trigger.parentElement || document.body
+                  }
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+        </div>
+
+        {/* Delivery & Weight Combined Section */}
+        <div
+          style={{
+            padding: "16px",
+            backgroundColor: "#ffffff",
+            borderRadius: "8px",
+            border: "1px solid #e5e7eb",
+          }}
         >
-          <TimePicker
-            style={{ width: "100%" }}
-            size="large"
-            format="HH:mm"
-            placeholder="Start"
-            needConfirm={false}
-            getPopupContainer={(trigger) =>
-              trigger.parentElement || document.body
-            }
-          />
-        </Form.Item>
-        <Form.Item
-          name="pickupTimeEnd"
-          label="Pickup Time End"
-          rules={[{ required: true, message: "Required" }]}
-          style={{ marginBottom: 0 }}
-        >
-          <TimePicker
-            style={{ width: "100%" }}
-            size="large"
-            format="HH:mm"
-            placeholder="End"
-            needConfirm={false}
-            getPopupContainer={(trigger) =>
-              trigger.parentElement || document.body
-            }
-          />
-        </Form.Item>
-        <Form.Item
-          name="deliveryDate"
-          label="Delivery Date"
-          rules={[{ required: true, message: "Required" }]}
-          style={{ marginBottom: 0 }}
-        >
-          <DatePicker
-            style={{ width: "100%" }}
-            size="large"
-            disabledDate={(current) => {
-              if (!current) return false;
-              const dayjsCurrent = safeDayjs(current);
-              if (!dayjsCurrent) return false;
-              return dayjsCurrent < dayjs().startOf("day");
+          <h5
+            style={{
+              fontSize: "12px",
+              fontWeight: 700,
+              color: "#dc2626",
+              margin: "0 0 16px 0",
+              textTransform: "uppercase",
+              letterSpacing: 0.5,
             }}
-            format="YYYY-MM-DD"
-          />
-        </Form.Item>
-        <Form.Item
-          name="deliveryTime"
-          label="Delivery Time"
-          rules={[{ required: true, message: "Required" }]}
-          style={{ marginBottom: 0 }}
-        >
-          <TimePicker
-            style={{ width: "100%" }}
-            size="large"
-            format="HH:mm"
-            placeholder="Select time"
-            needConfirm={false}
-            getPopupContainer={(trigger) =>
-              trigger.parentElement || document.body
-            }
-          />
-        </Form.Item>
-        <Form.Item
-          name="pickupNumber"
-          label="Pickup Number"
-          rules={[{ required: true, message: "Required" }]}
-          style={{ marginBottom: 0 }}
-        >
-          <Input size="large" placeholder="Pickup ref#" />
-        </Form.Item>
-        <Form.Item
-          name="dropOffNumber"
-          label="Drop Off Number"
-          rules={[{ required: true, message: "Required" }]}
-          style={{ marginBottom: 0 }}
-        >
-          <Input size="large" placeholder="Drop off ref#" />
-        </Form.Item>
-        <Form.Item
-          name="commodityDescription"
-          label="Commodity"
-          rules={[{ required: true, message: "Required" }]}
-          style={{ marginBottom: 0 }}
-        >
-          <Input size="large" placeholder="e.g., Baled Paper" />
-        </Form.Item>
-        <Form.Item
-          name="weight"
-          label="Weight (lbs)"
-          rules={[{ required: true, message: "Required" }]}
-          style={{ marginBottom: 0 }}
-        >
-          <InputNumber
-            size="large"
-            style={{ width: "100%" }}
-            placeholder="50000"
-            min={0}
-          />
-        </Form.Item>
+          >
+            📦 Delivery & Shipment Details
+          </h5>
+          <Row gutter={[16, 16]}>
+            <Col xs={24} sm={12} md={8}>
+              <Form.Item
+                name="deliveryDate"
+                label="Delivery Date"
+                rules={[{ required: true, message: "Required" }]}
+                style={{ marginBottom: 0 }}
+              >
+                <DatePicker
+                  style={{ width: "100%" }}
+                  size="large"
+                  disabledDate={(current) => {
+                    if (!current) return false;
+                    const dayjsCurrent = safeDayjs(current);
+                    if (!dayjsCurrent) return false;
+                    return dayjsCurrent < dayjs().startOf("day");
+                  }}
+                  format="YYYY-MM-DD"
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={8}>
+              <Form.Item
+                name="deliveryTime"
+                label="Delivery Time"
+                rules={[{ required: true, message: "Required" }]}
+                style={{ marginBottom: 0 }}
+              >
+                <TimePicker
+                  style={{ width: "100%" }}
+                  size="large"
+                  format="HH:mm"
+                  placeholder="Select time"
+                  needConfirm={false}
+                  getPopupContainer={(trigger) =>
+                    trigger.parentElement || document.body
+                  }
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={8}>
+              <Form.Item
+                name="weight"
+                label="Weight (lbs)"
+                rules={[{ required: true, message: "Required" }]}
+                style={{ marginBottom: 0 }}
+              >
+                <InputNumber
+                  size="large"
+                  style={{ width: "100%" }}
+                  placeholder="50000"
+                  min={0}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+        </div>
       </div>
     </div>
   );

@@ -159,14 +159,28 @@ export const deleteAppointment = async (id: string): Promise<void> => {
   }
 };
 
-// Download appointment PDF
-export const downloadAppointmentPDF = async (id: string): Promise<Blob> => {
+// Cloudinary URL response type
+export interface CloudinaryPDFResponse {
+  data: {
+    pdfUrl: string;
+    filename: string;
+  };
+}
+
+// Download appointment PDF - returns either Blob or JSON with Cloudinary URL
+export const downloadAppointmentPDF = async (
+  id: string,
+): Promise<Blob | CloudinaryPDFResponse> => {
   try {
     const res = await API.get(`/user/appointments/${id}/download`, {
       responseType: "blob",
     });
     return res.data;
-  } catch (error) {
+  } catch (error: any) {
+    // If backend returns JSON with Cloudinary URL, return that instead
+    if (error.response?.data?.pdfUrl) {
+      return error.response.data;
+    }
     console.error("Error downloading PDF:", error);
     throw error;
   }

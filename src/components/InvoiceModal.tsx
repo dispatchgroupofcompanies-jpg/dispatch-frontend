@@ -70,7 +70,12 @@ export default function InvoiceModal({
           <Button
             type="default"
             icon={<FilePdfOutlined />}
-            href={`${process.env.NEXT_PUBLIC_API_URL?.replace("/api", "")}${invoice.pdfUrl}`}
+            href={
+              invoice.pdfUrl.startsWith("http://") ||
+              invoice.pdfUrl.startsWith("https://")
+                ? invoice.pdfUrl
+                : `${process.env.NEXT_PUBLIC_API_URL?.replace("/api", "")}${invoice.pdfUrl}`
+            }
             target="_blank"
             style={{ borderRadius: 6, fontSize: isMobile ? 12 : 14 }}
           >

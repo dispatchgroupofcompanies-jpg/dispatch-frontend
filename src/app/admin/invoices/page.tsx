@@ -52,10 +52,13 @@ export default function AdminInvoicesPage() {
   }, []);
 
   const handleUpdate = async (id: string, status: "approved" | "rejected") => {
+    console.log("🔔 PAGE - handleUpdate called:", { id, status });
     if (status === "approved") setApproveLoading(true);
     else setRejectLoading(true);
     try {
+      console.log("🔔 PAGE - Calling updateInvoiceStatus...");
       await updateInvoiceStatus(id, status);
+      console.log("🔔 PAGE - updateInvoiceStatus completed");
       setSelected(null);
       await fetch();
     } finally {
