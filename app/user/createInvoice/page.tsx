@@ -446,7 +446,7 @@ function DashboardComponent() {
               width: isMobile ? "100%" : "auto",
             }}
           >
-            Create Statement
+            Create Invoice
           </Button>
         </div>
       </div>

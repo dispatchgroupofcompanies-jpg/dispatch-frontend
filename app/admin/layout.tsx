@@ -32,8 +32,8 @@ export default function AdminLayout({
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token && pathname !== "/admin/login") {
-      router.push("/admin/login");
+    if (!token && pathname !== "/login") {
+      router.push("/login");
     }
     const check = () =>
       setIsMobile(

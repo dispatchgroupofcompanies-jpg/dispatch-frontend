@@ -18,7 +18,6 @@ export default function LoginForm() {
 
     try {
       const res = await signin(values);
-      console.log("Login response:", res);
 
       if (res.success) {
         message.success("Login successful! Redirecting...");
@@ -49,13 +48,10 @@ export default function LoginForm() {
           const customRedirect = urlParams.get("redirect");
 
           if (customRedirect) {
-            console.log("Redirecting to targeted query path...", customRedirect);
             window.location.href = customRedirect; // URL query parameters ka redirection handle karega
           } else if (isAdmin) {
-            console.log("Redirecting to Admin Dashboard...");
             window.location.href = "/admin/dashboard"; 
           } else {
-            console.log("Redirecting to User Dashboard...");
             window.location.href = "/user";
           }
         }, 800);
