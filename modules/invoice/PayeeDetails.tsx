@@ -151,9 +151,9 @@ export default function PayeeDetails({
     >
       {shouldShowFields && (
         <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-          {/* Row 1: 3 Columns (Company, Contact, Phone) - Responsive */}
+          {/* Row 1: 2 Columns (Company, Contact) - Responsive */}
           <Row gutter={[12, 12]}>
-            <Col xs={24} sm={12} md={12} lg={8}>
+            <Col xs={24} sm={12} lg={12}>
               <span style={labelStyle}>Company Name</span>
               <Form.Item
                 name={["payee", "companyName"]}
@@ -167,7 +167,7 @@ export default function PayeeDetails({
                 />
               </Form.Item>
             </Col>
-            <Col xs={24} sm={12} md={12} lg={8}>
+            <Col xs={24} sm={12} lg={12}>
               <span style={labelStyle}>Contact Person / Carrier</span>
               <Form.Item
                 name={["payee", "contactPerson"]}
@@ -180,7 +180,11 @@ export default function PayeeDetails({
                 />
               </Form.Item>
             </Col>
-            <Col xs={24} sm={12} md={12} lg={8}>
+          </Row>
+
+          {/* Row 2: 2 Columns (Phone, Email) - Responsive */}
+          <Row gutter={[12, 12]}>
+            <Col xs={24} sm={12} lg={12}>
               <span style={labelStyle}>Phone</span>
               <Form.Item name={["payee", "phone"]} style={{ marginBottom: 0 }}>
                 <Input
@@ -190,11 +194,7 @@ export default function PayeeDetails({
                 />
               </Form.Item>
             </Col>
-          </Row>
-
-          {/* Row 2: 2 Columns (Email, GST/HST) - Responsive */}
-          <Row gutter={[12, 12]}>
-            <Col xs={24} sm={12} md={12} lg={12}>
+            <Col xs={24} sm={12} lg={12}>
               <span style={labelStyle}>Email</span>
               <Form.Item name={["payee", "email"]} style={{ marginBottom: 0 }}>
                 <Input
@@ -204,7 +204,11 @@ export default function PayeeDetails({
                 />
               </Form.Item>
             </Col>
-            <Col xs={24} sm={12} md={12} lg={12}>
+          </Row>
+
+          {/* Row 3: 2 Columns (GST/HST, Address) - Responsive */}
+          <Row gutter={[12, 12]}>
+            <Col xs={24} sm={12} lg={12}>
               <span style={labelStyle}>GST/HST</span>
               <Form.Item
                 name={["payee", "gstNumber"]}
@@ -217,11 +221,7 @@ export default function PayeeDetails({
                 />
               </Form.Item>
             </Col>
-          </Row>
-
-          {/* Row 3: 1 Full-Width Address Column */}
-          <Row>
-            <Col span={24}>
+            <Col xs={24} sm={12} lg={12}>
               <span style={labelStyle}>Address</span>
               <Form.Item
                 name={["payee", "address1"]}

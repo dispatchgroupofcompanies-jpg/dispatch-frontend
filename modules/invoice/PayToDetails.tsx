@@ -30,8 +30,8 @@ export default function PayToDetails() {
     >
       <Form layout="vertical">
         <Row gutter={[12, 8]}>
-          {/* Mobile: single column (xs=24), Tablet/Desktop: 2 columns (sm=12, md=12), Large screens: 3 columns (lg=8) */}
-          <Col xs={24} sm={12} md={12} lg={8}>
+          {/* Mobile: single column (xs=24), Tablet and up: 2 columns (sm=12) */}
+          <Col xs={24} sm={12} lg={12}>
             <Form.Item
               label="Customer/Company Name"
               name={["customer", "companyName"]}
@@ -45,7 +45,7 @@ export default function PayToDetails() {
             </Form.Item>
           </Col>
 
-          <Col xs={24} sm={12} md={12} lg={8}>
+          <Col xs={24} sm={12} lg={12}>
             <Form.Item
               label="Phone"
               name={["customer", "phone"]}
@@ -58,7 +58,7 @@ export default function PayToDetails() {
             </Form.Item>
           </Col>
 
-          <Col xs={24} sm={12} md={12} lg={8}>
+          <Col xs={24} sm={12} lg={12}>
             <Form.Item
               label="Email"
               name={["customer", "email"]}
@@ -72,7 +72,7 @@ export default function PayToDetails() {
             </Form.Item>
           </Col>
 
-          <Col xs={24} sm={12} md={12} lg={8}>
+          <Col xs={24} sm={12} lg={12}>
             <Form.Item
               label="GST/HST"
               name={["customer", "gstNumber"]}
@@ -85,7 +85,7 @@ export default function PayToDetails() {
             </Form.Item>
           </Col>
 
-          <Col xs={24} sm={12} md={12} lg={8}>
+          <Col xs={24} sm={12} lg={12}>
             <Form.Item
               label="E-Transfer Email"
               name={["customer", "eTransfer"]}
@@ -99,7 +99,7 @@ export default function PayToDetails() {
             </Form.Item>
           </Col>
 
-          <Col xs={24} sm={24} md={24} lg={8}>
+          <Col xs={24} sm={12} lg={12}>
             <Form.Item
               label="Address"
               name={["customer", "address1"]}
