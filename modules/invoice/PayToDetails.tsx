@@ -7,15 +7,16 @@ export default function PayToDetails() {
     <Card
       title={
         <span style={{ fontSize: 13, fontWeight: 700, color: "#1e3a8a" }}>
-          💳 PAY TO / Customer Information
+          💳 PAY TO / Customer Info...
         </span>
       }
       variant="borderless"
       styles={{
-        body: { padding: "12px 14px" },
+        // Padding kam kar di choti screens ke liye
+        body: { padding: "10px 12px" },
         header: {
-          minHeight: 38,
-          padding: "0 14px",
+          minHeight: 36,
+          padding: "0 12px",
           borderBottom: "1px solid #e2e8f0",
           background: "#f8fafc",
         },
@@ -27,106 +28,91 @@ export default function PayToDetails() {
         boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
       }}
     >
-      <Row gutter={[12, 8]}>
-        <Col xs={24} sm={12} md={6}>
-          <Form.Item
-            label="Customer/Company Name"
-            name={["customer", "companyName"]}
-            rules={[{ required: true, message: "Required" }]}
-            style={{ marginBottom: 8 }}
-            labelCol={{
-              style: { fontWeight: 600, color: "#475569", fontSize: 11 },
-            }}
-          >
-            <Input
-              placeholder="Customer Company Name"
-              style={{ borderRadius: 4, height: 30 }}
-            />
-          </Form.Item>
-        </Col>
+      <Form layout="vertical">
+        <Row gutter={[12, 8]}>
+          {/* Mobile: single column (xs=24), Tablet/Desktop: 2 columns (sm=12, md=12), Large screens: 3 columns (lg=8) */}
+          <Col xs={24} sm={12} md={12} lg={8}>
+            <Form.Item
+              label="Customer/Company Name"
+              name={["customer", "companyName"]}
+              rules={[{ required: true, message: "Required" }]}
+              style={{ marginBottom: 4 }}
+            >
+              <Input
+                placeholder="Customer Company Name"
+                style={{ borderRadius: 4, height: 34 }}
+              />
+            </Form.Item>
+          </Col>
 
-        <Col xs={24} sm={12} md={6}>
-          <Form.Item
-            label="Phone"
-            name={["customer", "phone"]}
-            style={{ marginBottom: 8 }}
-            labelCol={{
-              style: { fontWeight: 600, color: "#475569", fontSize: 11 },
-            }}
-          >
-            <Input
-              placeholder="+1 647 XXX XXXX"
-              style={{ borderRadius: 4, height: 30 }}
-            />
-          </Form.Item>
-        </Col>
+          <Col xs={24} sm={12} md={12} lg={8}>
+            <Form.Item
+              label="Phone"
+              name={["customer", "phone"]}
+              style={{ marginBottom: 4 }}
+            >
+              <Input
+                placeholder="+1 647 XXX XXXX"
+                style={{ borderRadius: 4, height: 34 }}
+              />
+            </Form.Item>
+          </Col>
 
-        <Col xs={24} sm={12} md={6}>
-          <Form.Item
-            label="Email"
-            name={["customer", "email"]}
-            rules={[{ type: "email", message: "Invalid email" }]}
-            style={{ marginBottom: 8 }}
-            labelCol={{
-              style: { fontWeight: 600, color: "#475569", fontSize: 11 },
-            }}
-          >
-            <Input
-              placeholder="email@company.com"
-              style={{ borderRadius: 4, height: 30 }}
-            />
-          </Form.Item>
-        </Col>
+          <Col xs={24} sm={12} md={12} lg={8}>
+            <Form.Item
+              label="Email"
+              name={["customer", "email"]}
+              rules={[{ type: "email", message: "Invalid email" }]}
+              style={{ marginBottom: 4 }}
+            >
+              <Input
+                placeholder="email@company.com"
+                style={{ borderRadius: 4, height: 34 }}
+              />
+            </Form.Item>
+          </Col>
 
-        <Col xs={24} sm={12} md={6}>
-          <Form.Item
-            label="GST/HST"
-            name={["customer", "gstNumber"]}
-            style={{ marginBottom: 8 }}
-            labelCol={{
-              style: { fontWeight: 600, color: "#475569", fontSize: 11 },
-            }}
-          >
-            <Input
-              placeholder="123456789RT0001"
-              style={{ borderRadius: 4, height: 30 }}
-            />
-          </Form.Item>
-        </Col>
+          <Col xs={24} sm={12} md={12} lg={8}>
+            <Form.Item
+              label="GST/HST"
+              name={["customer", "gstNumber"]}
+              style={{ marginBottom: 4 }}
+            >
+              <Input
+                placeholder="123456789RT0001"
+                style={{ borderRadius: 4, height: 34 }}
+              />
+            </Form.Item>
+          </Col>
 
-        <Col xs={24} sm={12} md={6}>
-          <Form.Item
-            label="E-Transfer Email"
-            name={["customer", "eTransfer"]}
-            rules={[{ type: "email", message: "Invalid email" }]}
-            style={{ marginBottom: 8 }}
-            labelCol={{
-              style: { fontWeight: 600, color: "#475569", fontSize: 11 },
-            }}
-          >
-            <Input
-              placeholder="etransfer@company.com"
-              style={{ borderRadius: 4, height: 30 }}
-            />
-          </Form.Item>
-        </Col>
+          <Col xs={24} sm={12} md={12} lg={8}>
+            <Form.Item
+              label="E-Transfer Email"
+              name={["customer", "eTransfer"]}
+              rules={[{ type: "email", message: "Invalid email" }]}
+              style={{ marginBottom: 4 }}
+            >
+              <Input
+                placeholder="etransfer@company.com"
+                style={{ borderRadius: 4, height: 34 }}
+              />
+            </Form.Item>
+          </Col>
 
-        <Col xs={24} sm={24} md={12}>
-          <Form.Item
-            label="Address"
-            name={["customer", "address1"]}
-            style={{ marginBottom: 8 }}
-            labelCol={{
-              style: { fontWeight: 600, color: "#475569", fontSize: 11 },
-            }}
-          >
-            <Input
-              placeholder="Street Address, City, Province, Postal Code"
-              style={{ borderRadius: 4, height: 30 }}
-            />
-          </Form.Item>
-        </Col>
-      </Row>
+          <Col xs={24} sm={24} md={24} lg={8}>
+            <Form.Item
+              label="Address"
+              name={["customer", "address1"]}
+              style={{ marginBottom: 0 }}
+            >
+              <Input
+                placeholder="Street Address, City, Province, Postal Code"
+                style={{ borderRadius: 4, height: 34 }}
+              />
+            </Form.Item>
+          </Col>
+        </Row>
+      </Form>
     </Card>
   );
 }

@@ -220,11 +220,20 @@ export default function CreateInvoiceModal({
           <InvoiceDetails />
         </div>
 
-        <Row gutter={[8, 8]} style={{ marginBottom: 8 }}>
-          <Col span={12} style={{ display: "flex", flexDirection: "column" }}>
+        <Row gutter={[12, 12]} style={{ marginBottom: 8 }}>
+          <Col
+            xs={24}
+            md={12}
+            style={{ display: "flex", flexDirection: "column" }}
+          >
             <PayeeDetails formInstance={form} companiesList={companies} />
           </Col>
-          <Col span={12} style={{ display: "flex", flexDirection: "column" }}>
+
+          <Col
+            xs={24}
+            md={12}
+            style={{ display: "flex", flexDirection: "column" }}
+          >
             <PayToDetails />
           </Col>
         </Row>

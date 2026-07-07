@@ -35,8 +35,9 @@ export default function InvoiceDetails() {
         No split rows mean no broken empty spacing traps on different viewports.
       */}
       <Row gutter={[12, 10]}>
+        {/* Mobile: single column (xs=24), Tablet/Desktop: 2 columns (sm=12, md=12), Large: 3 columns (lg=8) */}
         {/* Field 1 */}
-        <Col xs={24} sm={12} md={8}>
+        <Col xs={24} sm={12} md={12} lg={8}>
           <Form.Item
             label="Invoice Number"
             name="invoiceNumber"
@@ -65,7 +66,7 @@ export default function InvoiceDetails() {
         </Col>
 
         {/* Field 2 */}
-        <Col xs={24} sm={12} md={8}>
+        <Col xs={24} sm={12} md={12} lg={8}>
           <Form.Item
             label="Currency"
             name="currency"
@@ -91,7 +92,7 @@ export default function InvoiceDetails() {
         </Col>
 
         {/* Field 3 */}
-        <Col xs={24} sm={12} md={8}>
+        <Col xs={24} sm={12} md={12} lg={8}>
           <Form.Item
             label="Invoice Date"
             name="invoiceDate"
@@ -121,7 +122,7 @@ export default function InvoiceDetails() {
         </Col>
 
         {/* Field 4 */}
-        <Col xs={24} sm={12} md={8}>
+        <Col xs={24} sm={12} md={12} lg={8}>
           <Form.Item
             label="Transit Number"
             name="transitNumber"
@@ -144,7 +145,7 @@ export default function InvoiceDetails() {
         </Col>
 
         {/* Field 5 */}
-        <Col xs={24} sm={12} md={8}>
+        <Col xs={24} sm={12} md={12} lg={8}>
           <Form.Item
             label="Institution Number"
             name="institutionNumber"
@@ -167,7 +168,7 @@ export default function InvoiceDetails() {
         </Col>
 
         {/* Field 6 */}
-        <Col xs={24} sm={12} md={8}>
+        <Col xs={24} sm={12} md={12} lg={8}>
           <Form.Item
             label="Account Number"
             name="accountNumber"
