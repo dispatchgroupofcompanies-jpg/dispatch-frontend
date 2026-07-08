@@ -133,6 +133,7 @@ export default function AdminInvoicesPage() {
             invoices={invoices}
             loading={loading}
             onView={(inv) => setSelected(inv)}
+            isAdmin={true}
           />
         </Card>
 

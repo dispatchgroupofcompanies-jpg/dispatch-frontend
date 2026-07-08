@@ -43,16 +43,7 @@ export default function InvoiceModal({
       onCancel={onClose}
       width={isMobile ? "95vw" : 980}
       style={{ top: isMobile ? 10 : 20 }}
-      footer={[
-        <Button
-          key="close"
-          size={isMobile ? "middle" : "large"}
-          onClick={onClose}
-          style={{ borderRadius: 6 }}
-        >
-          Close
-        </Button>,
-      ]}
+      footer={[]}
     >
       <div
         style={{
@@ -66,25 +57,6 @@ export default function InvoiceModal({
           marginBottom: isMobile ? 8 : 0,
         }}
       >
-        {invoice.pdfUrl ? (
-          <Button
-            type="default"
-            icon={<FilePdfOutlined />}
-            href={
-              invoice.pdfUrl.startsWith("http://") ||
-              invoice.pdfUrl.startsWith("https://")
-                ? invoice.pdfUrl
-                : `${process.env.NEXT_PUBLIC_API_URL?.replace("/api", "")}${invoice.pdfUrl}`
-            }
-            target="_blank"
-            style={{ borderRadius: 6, fontSize: isMobile ? 12 : 14 }}
-          >
-            {isMobile ? "PDF" : "Download Original PDF"}
-          </Button>
-        ) : (
-          <div />
-        )}
-
         {(invoice.invoiceStatus === "pending" ||
           invoice.invoiceStatus === "draft") && (
           <Space

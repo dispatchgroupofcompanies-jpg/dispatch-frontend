@@ -79,9 +79,22 @@ export const updateInvoiceStatus = (invoiceId: string, status: string) => {
   });
 };
 
-export const downloadInvoicePDF = (invoiceId: string) => {
-  return API.get(`/user/invoices/${invoiceId}/download`, {
+export const downloadInvoicePDF = (
+  invoiceId: string,
+  isAdmin: boolean = false,
+) => {
+  const endpoint = isAdmin
+    ? `/admin/invoices/${invoiceId}/download`
+    : `/user/invoices/${invoiceId}/download`;
+
+  return API.get(endpoint, {
     responseType: "blob",
+  }).catch((error) => {
+    // If blob download fails, try to get JSON with URL
+    if (error.response?.data?.pdfUrl) {
+      return API.get(endpoint);
+    }
+    throw error;
   });
 };
 

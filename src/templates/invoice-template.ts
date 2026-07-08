@@ -83,10 +83,10 @@ export const getInvoiceTemplate = (invoice: any): string => {
             top: 63%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 43px;
+            font-size: 28px;
             font-weight: 900;
             color: rgba(148, 163, 184, 0.48);
-            letter-spacing: 5px;
+            letter-spacing: 3px;
             white-space: normal;
             width: 100%;
             text-align: center;
@@ -97,9 +97,9 @@ export const getInvoiceTemplate = (invoice: any): string => {
 
           .watermark-subtitle {
             display: block;
-            margin-top: 8px;
-            font-size: 17px;
-            letter-spacing: 1.5px;
+            margin-top: 6px;
+            font-size: 12px;
+            letter-spacing: 1px;
             color: rgba(148, 163, 184, 0.42);
           }
 
@@ -242,9 +242,10 @@ export const getInvoiceTemplate = (invoice: any): string => {
             left: 0;
             right: 0;
             bottom: 0;
-            height: 38mm;
-            background: #102a63;
-            color: #ffffff;
+            height: 46mm;
+            background: #f8fafc;
+            color: #64748b;
+            border-top: 0.5px solid #64748b;
             box-sizing: border-box;
             padding: 9mm 15mm 8mm 15mm;
           }
@@ -255,20 +256,20 @@ export const getInvoiceTemplate = (invoice: any): string => {
             line-height: 0.9;
             font-weight: 900;
             letter-spacing: 3px;
-            color: #10f4f2;
+            color: #64748b;
           }
 
           .footer-left-copy {
             font-size: 15px;
             line-height: 1.15;
-            font-weight: 800;
-            color: #ffffff;
+            font-weight: 600;
+            color: #64748b;
           }
 
           .footer-right-copy {
             font-size: 14px;
             line-height: 1.35;
-            color: #f8fafc;
+            color: #64748b;
             text-align: center;
           }
         </style>
@@ -277,8 +278,7 @@ export const getInvoiceTemplate = (invoice: any): string => {
         <div class="page-container">
           <div class="watermark">
             XCDGOC PVT LTD
-            <span class="watermark-subtitle">Complete Amazon Load Board Solutions</span>
-            <span class="watermark-subtitle">Bision , Walmart, Load Link ,</span>
+       
           </div>
           <!-- Header Section -->
           <div class="header-section">
@@ -402,9 +402,7 @@ export const getInvoiceTemplate = (invoice: any): string => {
                   <h2 class="footer-brand">XCDGOC PVT LTD</h2>
                   <div class="footer-left-copy">
                     Extreme Canada Dispatch Group of Companies<br/>
-                    Complete Amazon Load board Solution's<br/>
-                    We are Canada's Large and Leading Dispatch<br/>
-                    Services Provider's
+                   
                   </div>
                 </td>
                 <td style="width: 42%; vertical-align: top; padding-top: 9px;">
@@ -499,6 +497,30 @@ export const getInvoiceEmailBody = (invoice: any): string => {
               <td style="padding-top: 15px;">
                 <p style="margin: 0 0 8px 0; font-size: 13px; line-height: 1.5; color: #1e293b;">Thank you for your business!</p>
                 <p style="margin: 0; font-size: 11px; color: #64748b;">— Dispatch Group Billing Team</p>
+              </td>
+            </tr>
+          </table>
+
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 20px;">
+            <tr>
+              <td style="padding: 20px; background-color: #f8fafc; border-radius: 4px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td style="width: 58%; vertical-align: top;">
+                      <h2 style="margin: 0 0 7px 0; font-size: 20px; font-weight: 900; letter-spacing: 3px; color: #64748b;">XCDGOC PVT LTD</h2>
+                      <p style="margin: 0; font-size: 14px; line-height: 1.3; color: #64748b; font-weight: 600;">Extreme Canada Dispatch Group of Companies</p>
+                    </td>
+                    <td style="width: 42%; vertical-align: top; padding-top: 9px;">
+                      <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #64748b; text-align: center;">
+                        Open Board, Bision, Walmart, Load Link<br/>
+                        and Non Amazon Dispatch Solutions<br/><br/>
+                        Contact: xcdgoc@gmsil.com<br/>
+                        +91 750 121 6555<br/>
+                        Shahid ul islam
+                      </p>
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
           </table>

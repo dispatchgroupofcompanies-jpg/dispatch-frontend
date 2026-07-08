@@ -17,6 +17,7 @@ import {
   EditOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
+import { downloadInvoicePDF } from "../../modules/invoice/route";
 import type { ColumnsType } from "antd/es/table";
 import type { Invoice } from "../types/invoice";
 
@@ -27,9 +28,44 @@ interface Props {
   invoices: Invoice[];
   loading: boolean;
   onView: (inv: Invoice) => void;
+  isAdmin?: boolean;
 }
 
-export default function InvoiceTable({ invoices, loading, onView }: Props) {
+const handleDownload = async (
+  invoiceId: string,
+  invoiceNumber: string,
+  isAdmin: boolean = false,
+) => {
+  try {
+    const response = await downloadInvoicePDF(invoiceId, isAdmin);
+
+    // Handle both blob and JSON responses
+    if (response.data instanceof Blob) {
+      // Blob response - create download link
+      const url = window.URL.createObjectURL(response.data);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `Invoice-${invoiceNumber}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } else if (response.data?.pdfUrl) {
+      // JSON response with URL - open in new tab
+      window.open(response.data.pdfUrl, "_blank");
+    }
+  } catch (error) {
+    console.error("Error downloading invoice:", error);
+    alert("Failed to download invoice. Please try again.");
+  }
+};
+
+export default function InvoiceTable({
+  invoices,
+  loading,
+  onView,
+  isAdmin = false,
+}: Props) {
   const screens = useBreakpoint();
   const isMobile = !screens.md;
 
@@ -152,6 +188,23 @@ export default function InvoiceTable({ invoices, loading, onView }: Props) {
       align: "center" as const,
       render: (_, record) => (
         <Space size={isMobile ? "small" : "middle"}>
+          <Tooltip title="Download PDF" placement="top">
+            <Button
+              type="primary"
+              size={isMobile ? "small" : "middle"}
+              icon={<DownloadOutlined />}
+              onClick={() =>
+                handleDownload(record._id, record.invoiceNumber, isAdmin)
+              }
+              style={{
+                borderRadius: "6px",
+                backgroundColor: "#102a63",
+                borderColor: "#102a63",
+              }}
+            >
+              {isMobile ? "" : "Download"}
+            </Button>
+          </Tooltip>
           <Tooltip title="View Invoice" placement="top">
             <Button
               type="primary"
