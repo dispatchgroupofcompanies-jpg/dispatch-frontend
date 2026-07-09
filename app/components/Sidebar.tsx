@@ -5,7 +5,6 @@ import {
   CalendarOutlined,
   FileAddOutlined,
   LogoutOutlined,
-  TruckOutlined,
   CloseOutlined,
   MenuOutlined,
   FileTextOutlined,
@@ -15,12 +14,158 @@ import { useState } from "react";
 
 const { Sider } = Layout;
 
-// Exported so AppShell can use the exact same value for content offset
 export const SIDEBAR_WIDTH = 260;
 
 type SidebarProps = {
   isMobile: boolean;
 };
+
+// --- Optimized Brand Component ---
+const Brand = ({
+  compact = false,
+  mobile = false,
+  onClose,
+}: {
+  compact?: boolean;
+  mobile?: boolean;
+  onClose?: () => void;
+}) => (
+  <div
+    style={{
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: "20px 16px",
+      borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+      background:
+        "linear-gradient(180deg, rgba(15, 23, 42, 0.6) 0%, rgba(15, 23, 42, 0) 100%)",
+    }}
+  >
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        flex: 1,
+        minWidth: 0, // Prevents text container from pushing boundaries
+      }}
+    >
+      {/* Logo Container */}
+      <div
+        style={{
+          width: compact ? 44 : 48,
+          height: compact ? 44 : 48,
+          borderRadius: 10,
+          background: "rgba(255, 255, 255, 0.03)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.4)",
+          flexShrink: 0,
+          overflow: "hidden",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+        }}
+      >
+        <img
+          src="/logo.jpeg"
+          alt="XCDGOC Logo"
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+          }}
+        />
+      </div>
+
+      {/* Text Info (No Wrapping) */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div
+          style={{
+            color: "#ffffff",
+            fontSize: compact ? "14px" : "15px",
+            fontWeight: 700,
+            letterSpacing: "0.5px",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          XCDGOC PVT LTD
+        </div>
+
+        <div
+          style={{
+            color: "#64748b",
+            fontSize: "10px",
+            fontWeight: 600,
+            marginTop: 2,
+            letterSpacing: "0.3px",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          COMPLETE DISPATCH SOLUTIONS
+        </div>
+      </div>
+    </div>
+
+    {mobile && onClose && (
+      <button
+        onClick={onClose}
+        style={{
+          background: "rgba(255, 255, 255, 0.05)",
+          border: "none",
+          color: "#94a3b8",
+          width: 32,
+          height: 32,
+          borderRadius: 8,
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          marginLeft: 8,
+          transition: "all 0.2s ease",
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.color = "#fff")}
+        onMouseLeave={(e) => (e.currentTarget.style.color = "#94a3b8")}
+      >
+        <CloseOutlined style={{ fontSize: 16 }} />
+      </button>
+    )}
+  </div>
+);
+
+// --- Modern Logout Component ---
+const LogoutMenu = ({ onLogout }: { onLogout: () => void }) => (
+  <div
+    style={{
+      padding: "16px 12px",
+      borderTop: "1px solid rgba(255, 255, 255, 0.06)",
+    }}
+  >
+    <Menu
+      theme="dark"
+      mode="inline"
+      selectable={false}
+      style={{ background: "transparent", border: 0 }}
+      inlineIndent={12}
+      items={[
+        {
+          key: "logout",
+          danger: true,
+          icon: <LogoutOutlined style={{ fontSize: "16px" }} />,
+          label: (
+            <span style={{ fontWeight: 600, letterSpacing: "0.3px" }}>
+              LOGOUT
+            </span>
+          ),
+          onClick: onLogout,
+        },
+      ]}
+    />
+  </div>
+);
 
 export default function Sidebar({ isMobile }: SidebarProps) {
   const router = useRouter();
@@ -48,19 +193,19 @@ export default function Sidebar({ isMobile }: SidebarProps) {
   const menuItems = [
     {
       key: "1",
-      icon: <FileAddOutlined />,
+      icon: <FileAddOutlined style={{ fontSize: "16px" }} />,
       label: "CREATE INVOICE",
       path: "/user/createInvoice",
     },
     {
       key: "2",
-      icon: <CalendarOutlined />,
+      icon: <CalendarOutlined style={{ fontSize: "16px" }} />,
       label: "BOOK APPOINTMENT",
       path: "/user/appointment",
     },
     {
       key: "3",
-      icon: <FileTextOutlined />,
+      icon: <FileTextOutlined style={{ fontSize: "16px" }} />,
       label: "3P DISPATCH",
       path: "/user/loadboard",
     },
@@ -70,118 +215,18 @@ export default function Sidebar({ isMobile }: SidebarProps) {
     menuItems.map((item) => ({
       key: item.key,
       icon: item.icon,
-      label: item.label,
+      label: (
+        <span
+          style={{ fontWeight: 600, letterSpacing: "0.4px", fontSize: "13px" }}
+        >
+          {item.label}
+        </span>
+      ),
       onClick: () => {
         if (closeDrawerOnClick) setDrawerOpen(false);
         router.push(item.path);
       },
     }));
-
-  const Brand = ({
-    compact = false,
-    mobile = false,
-  }: {
-    compact?: boolean;
-    mobile?: boolean;
-  }) => (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "22px 16px",
-        borderBottom: "1px solid rgba(255,255,255,.08)",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-        }}
-      >
-        <div
-          style={{
-            width: compact ? 42 : 52,
-            height: compact ? 42 : 52,
-            borderRadius: compact ? 10 : 14,
-            background: "linear-gradient(135deg,#1677ff 0%,#69b1ff 100%)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            boxShadow: "0 10px 20px rgba(22,119,255,.35)",
-            flexShrink: 0,
-          }}
-        >
-          <TruckOutlined
-            style={{
-              color: "#fff",
-              fontSize: compact ? 20 : 26,
-            }}
-          />
-        </div>
-
-        <div>
-          <div
-            style={{
-              color: "#fff",
-              fontSize: compact ? 16 : 19,
-              fontWeight: 700,
-            }}
-          >
-            Extreme Dispatch
-          </div>
-
-          <div
-            style={{
-              color: "#94A3B8",
-              fontSize: compact ? 11 : 12,
-              marginTop: 2,
-            }}
-          >
-            Dispatch Management
-          </div>
-        </div>
-      </div>
-
-      {mobile && (
-        <button
-          onClick={() => setDrawerOpen(false)}
-          style={{
-            background: "transparent",
-            border: "none",
-            color: "#fff",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <CloseOutlined style={{ fontSize: 22 }} />
-        </button>
-      )}
-    </div>
-  );
-
-  const LogoutMenu = ({ onLogout }: { onLogout: () => void }) => (
-    <div style={{ padding: 12, borderTop: "1px solid rgba(255,255,255,.08)" }}>
-      <Menu
-        theme="dark"
-        mode="inline"
-        selectable={false}
-        style={{ background: "#0F172A", border: 0 }}
-        items={[
-          {
-            key: "logout",
-            danger: true,
-            icon: <LogoutOutlined />,
-            label: "Logout",
-            onClick: onLogout,
-          },
-        ]}
-      />
-    </div>
-  );
 
   if (isMobile) {
     return (
@@ -192,21 +237,22 @@ export default function Sidebar({ isMobile }: SidebarProps) {
             onClick={() => setDrawerOpen(true)}
             style={{
               position: "fixed",
-              left: 12,
-              top: 12,
+              left: 16,
+              top: 16,
               zIndex: 1700,
-              width: 40,
-              height: 40,
+              width: 42,
+              height: 42,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               background: "#0F172A",
-              border: "none",
-              borderRadius: 8,
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              borderRadius: 10,
               cursor: "pointer",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.25)",
             }}
           >
-            <MenuOutlined style={{ fontSize: 20, color: "#fff" }} />
+            <MenuOutlined style={{ fontSize: 18, color: "#fff" }} />
           </button>
         )}
 
@@ -219,12 +265,10 @@ export default function Sidebar({ isMobile }: SidebarProps) {
           maskClosable
           style={{ zIndex: 1600 }}
           styles={{
-            body: {
-              padding: 0,
-              background: "#0F172A",
-            },
+            body: { padding: 0, background: "#0F172A" },
             mask: {
-              backgroundColor: "rgba(0,0,0,0.45)",
+              backgroundColor: "rgba(15, 23, 42, 0.75)",
+              backdropFilter: "blur(4px)",
             },
           }}
         >
@@ -236,48 +280,21 @@ export default function Sidebar({ isMobile }: SidebarProps) {
               flexDirection: "column",
             }}
           >
-            {/* Header */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "12px 16px",
-              }}
-            >
-              <Brand compact />
-
-              <button
-                aria-label="Close menu"
-                onClick={() => setDrawerOpen(false)}
-                style={{
-                  background: "transparent",
-                  border: "none",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#fff",
-                }}
-              >
-                <CloseOutlined style={{ fontSize: 20 }} />
-              </button>
-            </div>
-
+            <Brand compact mobile onClose={() => setDrawerOpen(false)} />
             <Menu
               theme="dark"
               mode="inline"
               selectedKeys={[getSelectedKey()]}
+              inlineIndent={12}
               style={{
-                background: "#0F172A",
+                background: "transparent",
                 borderRight: 0,
-                padding: "14px 10px",
+                padding: "16px 12px",
                 flex: 1,
                 overflowY: "auto",
               }}
               items={buildItems(true)}
             />
-
             <LogoutMenu
               onLogout={() => {
                 setDrawerOpen(false);
@@ -303,29 +320,33 @@ export default function Sidebar({ isMobile }: SidebarProps) {
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
-        boxShadow: "4px 0 20px rgba(0,0,0,.15)",
+        borderRight: "1px solid rgba(255, 255, 255, 0.04)",
+        boxShadow: "6px 0 30px rgba(0, 0, 0, 0.2)",
         zIndex: 1000,
       }}
     >
-      <Brand />
+      <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+        <Brand />
 
-      <Menu
-        theme="dark"
-        mode="inline"
-        selectedKeys={[getSelectedKey()]}
-        style={{
-          background: "#0F172A",
-          borderRight: 0,
-          padding: "14px 10px",
-          flex: 1,
-          overflowY: "auto",
-          scrollbarWidth: "thin",
-          scrollbarColor: "rgba(255,255,255,0.2) transparent",
-        }}
-        items={buildItems(false)}
-      />
+        <Menu
+          theme="dark"
+          mode="inline"
+          selectedKeys={[getSelectedKey()]}
+          inlineIndent={12}
+          style={{
+            background: "transparent",
+            borderRight: 0,
+            padding: "20px 12px",
+            flex: 1,
+            overflowY: "auto",
+            scrollbarWidth: "thin",
+            scrollbarColor: "rgba(255,255,255,0.1) transparent",
+          }}
+          items={buildItems(false)}
+        />
 
-      <LogoutMenu onLogout={logout} />
+        <LogoutMenu onLogout={logout} />
+      </div>
     </Sider>
   );
 }

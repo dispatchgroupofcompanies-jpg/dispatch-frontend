@@ -1,3 +1,16 @@
+export interface Load {
+  vrid: string;
+  load1Id: string;
+  load2Id?: string;
+  tripCharges: number;
+  dispatcher: string;
+  driverName: string;
+  dispatchCharges: number;
+  tonu: boolean;
+  date: string;
+  mgCharges: number;
+}
+
 export interface LoadBoardRecord {
   _id?: string;
   carrierName: string;
@@ -17,4 +30,5 @@ export interface LoadBoardRecord {
   tonu: boolean;
   status: "active" | "cancelled";
   createdAt?: string;
+  loads?: Load[];
 }
