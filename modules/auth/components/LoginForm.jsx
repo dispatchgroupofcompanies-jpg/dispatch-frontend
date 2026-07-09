@@ -75,7 +75,7 @@ export default function LoginForm() {
             
             {/* Left Side - Branding */}
             <div className="order-2 lg:order-1 hidden lg:block">
-              <div className="bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-400 p-12 h-full flex flex-col justify-center min-h-screen">
+              <div className="bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-400 p-12 h-full flex flex-col justify-center">
                 <div className="space-y-6">
                   <div className="text-6xl font-bold text-white">📱</div>
                   <Title level={3} className="!text-white !mb-4 !text-4xl">
@@ -114,7 +114,7 @@ export default function LoginForm() {
 
             {/* Right Side - Form */}
             <div className="order-1 lg:order-2">
-              <div className="bg-white dark:bg-gray-800 p-8 sm:p-12 min-h-screen flex flex-col justify-center">
+              <div className="bg-white dark:bg-gray-800 p-8 sm:p-12 flex flex-col justify-center">
                 
                 {/* Header */}
                 <div className="mb-8">

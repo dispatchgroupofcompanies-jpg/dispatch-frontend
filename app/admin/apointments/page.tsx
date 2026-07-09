@@ -523,151 +523,513 @@ const AppointmentRecords = () => {
   const expandedRowRender = (record: AppointmentRecord) => (
     <div
       style={{
-        display: "flex",
-        flexWrap: "wrap",
-        gap: isMobile ? 10 : 12,
-        padding: isMobile ? "10px 4px 4px" : "12px 4px 4px",
+        padding: isMobile ? "12px" : "16px",
+        backgroundColor: "#f8fafc",
+        borderRadius: "8px",
+        marginTop: "8px",
       }}
     >
-      <SectionCard
-        title="Carrier"
-        icon={<TruckOutlined />}
-        color="#2563eb"
-        isMobile={isMobile}
-      >
-        <InfoRow
-          icon={<FileTextOutlined />}
-          label="Equipment / Pro #"
-          value={`${record.equipmentType} · ${record.carrierProNumber}`}
-          isMobile={isMobile}
-        />
-        <InfoRow
-          icon={<PhoneOutlined />}
-          label="Phone"
-          value={record.carrierPhone}
-          isMobile={isMobile}
-        />
-        <InfoRow
-          icon={<MailOutlined />}
-          label="Email"
-          value={record.carrierEmail}
-          isMobile={isMobile}
-        />
-        <InfoRow
-          icon={<EnvironmentOutlined />}
-          label="Address"
-          value={record.carrierAddress}
-          isMobile={isMobile}
-        />
-        <InfoRow
-          icon={<PhoneOutlined />}
-          label="Driver cell"
-          value={record.driverCellNumber}
-          isMobile={isMobile}
-        />
-      </SectionCard>
+      {/* Carrier Section */}
+      <div style={{ marginBottom: isMobile ? 16 : 20 }}>
+        <h3
+          style={{
+            fontSize: isMobile ? 14 : 16,
+            fontWeight: 700,
+            color: "#2563eb",
+            marginBottom: 12,
+            paddingBottom: 8,
+            borderBottom: "2px solid #2563eb",
+          }}
+        >
+          🚛 Carrier Information
+        </h3>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
+            gap: isMobile ? 8 : 12,
+          }}
+        >
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                color: "#64748b",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                marginBottom: 4,
+              }}
+            >
+              Equipment / Pro #
+            </div>
+            <div
+              style={{
+                fontSize: isMobile ? 13 : 14,
+                color: "#1e293b",
+                fontWeight: 500,
+              }}
+            >
+              {record.equipmentType} · {record.carrierProNumber}
+            </div>
+          </div>
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                color: "#64748b",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                marginBottom: 4,
+              }}
+            >
+              Phone
+            </div>
+            <div
+              style={{
+                fontSize: isMobile ? 13 : 14,
+                color: "#1e293b",
+                fontWeight: 500,
+              }}
+            >
+              {record.carrierPhone}
+            </div>
+          </div>
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                color: "#64748b",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                marginBottom: 4,
+              }}
+            >
+              Email
+            </div>
+            <div
+              style={{
+                fontSize: isMobile ? 13 : 14,
+                color: "#1e293b",
+                fontWeight: 500,
+                wordBreak: "break-word",
+              }}
+            >
+              {record.carrierEmail}
+            </div>
+          </div>
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                color: "#64748b",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                marginBottom: 4,
+              }}
+            >
+              Address
+            </div>
+            <div
+              style={{
+                fontSize: isMobile ? 13 : 14,
+                color: "#1e293b",
+                fontWeight: 500,
+                wordBreak: "break-word",
+              }}
+            >
+              {record.carrierAddress}
+            </div>
+          </div>
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                color: "#64748b",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                marginBottom: 4,
+              }}
+            >
+              Driver Cell
+            </div>
+            <div
+              style={{
+                fontSize: isMobile ? 13 : 14,
+                color: "#1e293b",
+                fontWeight: 500,
+              }}
+            >
+              {record.driverCellNumber}
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <SectionCard
-        title="Shipper"
-        icon={<UserOutlined />}
-        color="#16a34a"
-        isMobile={isMobile}
-      >
-        <InfoRow
-          icon={<UserOutlined />}
-          label="Name"
-          value={record.shipperName}
-          isMobile={isMobile}
-        />
-        <InfoRow
-          icon={<EnvironmentOutlined />}
-          label="Address"
-          value={`${record.shipperAddress}, ${record.shipperCity}, ${record.shipperProvince} ${record.shipperPostalCode}`}
-          isMobile={isMobile}
-        />
-        <InfoRow
-          icon={<FileTextOutlined />}
-          label="Pickup # / window"
-          value={`${record.pickupNumber} · ${record.pickupTimeStart}-${record.pickupTimeEnd}`}
-          isMobile={isMobile}
-        />
-        <InfoRow
-          icon={<FileTextOutlined />}
-          label="Commodity"
-          value={record.commodityDescription}
-          isMobile={isMobile}
-        />
-        <InfoRow
-          icon={<FileTextOutlined />}
-          label="Weight"
-          value={`${record.weight?.toLocaleString()} lbs`}
-          isMobile={isMobile}
-        />
-      </SectionCard>
+      {/* Shipper Section */}
+      <div style={{ marginBottom: isMobile ? 16 : 20 }}>
+        <h3
+          style={{
+            fontSize: isMobile ? 14 : 16,
+            fontWeight: 700,
+            color: "#16a34a",
+            marginBottom: 12,
+            paddingBottom: 8,
+            borderBottom: "2px solid #16a34a",
+          }}
+        >
+          📦 Shipper Information
+        </h3>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
+            gap: isMobile ? 8 : 12,
+          }}
+        >
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                color: "#64748b",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                marginBottom: 4,
+              }}
+            >
+              Name
+            </div>
+            <div
+              style={{
+                fontSize: isMobile ? 13 : 14,
+                color: "#1e293b",
+                fontWeight: 500,
+              }}
+            >
+              {record.shipperName}
+            </div>
+          </div>
+          <div style={{ gridColumn: isMobile ? "auto" : "span 2" }}>
+            <div
+              style={{
+                fontSize: 11,
+                color: "#64748b",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                marginBottom: 4,
+              }}
+            >
+              Address
+            </div>
+            <div
+              style={{
+                fontSize: isMobile ? 13 : 14,
+                color: "#1e293b",
+                fontWeight: 500,
+                wordBreak: "break-word",
+              }}
+            >
+              {record.shipperAddress}, {record.shipperCity},{" "}
+              {record.shipperProvince} {record.shipperPostalCode}
+            </div>
+          </div>
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                color: "#64748b",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                marginBottom: 4,
+              }}
+            >
+              Pickup # / Window
+            </div>
+            <div
+              style={{
+                fontSize: isMobile ? 13 : 14,
+                color: "#1e293b",
+                fontWeight: 500,
+              }}
+            >
+              {record.pickupNumber} · {record.pickupTimeStart}-
+              {record.pickupTimeEnd}
+            </div>
+          </div>
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                color: "#64748b",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                marginBottom: 4,
+              }}
+            >
+              Commodity
+            </div>
+            <div
+              style={{
+                fontSize: isMobile ? 13 : 14,
+                color: "#1e293b",
+                fontWeight: 500,
+                wordBreak: "break-word",
+              }}
+            >
+              {record.commodityDescription}
+            </div>
+          </div>
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                color: "#64748b",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                marginBottom: 4,
+              }}
+            >
+              Weight
+            </div>
+            <div
+              style={{
+                fontSize: isMobile ? 13 : 14,
+                color: "#1e293b",
+                fontWeight: 500,
+              }}
+            >
+              {record.weight?.toLocaleString()} lbs
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <SectionCard
-        title="Consignee"
-        icon={<UserOutlined />}
-        color="#d97706"
-        isMobile={isMobile}
-      >
-        <InfoRow
-          icon={<UserOutlined />}
-          label="Name"
-          value={record.consigneeName}
-          isMobile={isMobile}
-        />
-        <InfoRow
-          icon={<EnvironmentOutlined />}
-          label="Address"
-          value={`${record.consigneeAddress}, ${record.consigneeCity}, ${record.consigneeProvince} ${record.consigneePostalCode}`}
-          isMobile={isMobile}
-        />
-        <InfoRow
-          icon={<FileTextOutlined />}
-          label="Drop-off # / time"
-          value={`${record.dropOffNumber} · ${record.deliveryTime}`}
-          isMobile={isMobile}
-        />
-      </SectionCard>
+      {/* Consignee Section */}
+      <div style={{ marginBottom: isMobile ? 16 : 20 }}>
+        <h3
+          style={{
+            fontSize: isMobile ? 14 : 16,
+            fontWeight: 700,
+            color: "#d97706",
+            marginBottom: 12,
+            paddingBottom: 8,
+            borderBottom: "2px solid #d97706",
+          }}
+        >
+          📍 Consignee Information
+        </h3>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
+            gap: isMobile ? 8 : 12,
+          }}
+        >
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                color: "#64748b",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                marginBottom: 4,
+              }}
+            >
+              Name
+            </div>
+            <div
+              style={{
+                fontSize: isMobile ? 13 : 14,
+                color: "#1e293b",
+                fontWeight: 500,
+              }}
+            >
+              {record.consigneeName}
+            </div>
+          </div>
+          <div style={{ gridColumn: isMobile ? "auto" : "span 2" }}>
+            <div
+              style={{
+                fontSize: 11,
+                color: "#64748b",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                marginBottom: 4,
+              }}
+            >
+              Address
+            </div>
+            <div
+              style={{
+                fontSize: isMobile ? 13 : 14,
+                color: "#1e293b",
+                fontWeight: 500,
+                wordBreak: "break-word",
+              }}
+            >
+              {record.consigneeAddress}, {record.consigneeCity},{" "}
+              {record.consigneeProvince} {record.consigneePostalCode}
+            </div>
+          </div>
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                color: "#64748b",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                marginBottom: 4,
+              }}
+            >
+              Drop-off # / Time
+            </div>
+            <div
+              style={{
+                fontSize: isMobile ? 13 : 14,
+                color: "#1e293b",
+                fontWeight: 500,
+              }}
+            >
+              {record.dropOffNumber} · {record.deliveryTime}
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <SectionCard
-        title="Charges"
-        icon={<DollarOutlined />}
-        color="#7c3aed"
-        isMobile={isMobile}
-      >
-        <InfoRow
-          icon={<FileTextOutlined />}
-          label="Description"
-          value={record.chargeDescription}
-          isMobile={isMobile}
-        />
-        <InfoRow
-          icon={<DollarOutlined />}
-          label="Rate"
-          value={`${record.currency} ${record.rateAmount?.toLocaleString()}`}
-          isMobile={isMobile}
-        />
-        <InfoRow
-          icon={<DollarOutlined />}
-          label="Total"
-          value={`${record.currency} ${record.totalAmount?.toLocaleString()}`}
-          isMobile={isMobile}
-        />
-        <InfoRow
-          icon={<FileTextOutlined />}
-          label="Signature"
-          value={`${record.signature} · ${formatDate(record.signatureDate)}`}
-          isMobile={isMobile}
-        />
-        <InfoRow
-          icon={<FileTextOutlined />}
-          label="Notes"
-          value={record.notesTerms}
-          isMobile={isMobile}
-        />
-      </SectionCard>
+      {/* Charges Section */}
+      <div>
+        <h3
+          style={{
+            fontSize: isMobile ? 14 : 16,
+            fontWeight: 700,
+            color: "#7c3aed",
+            marginBottom: 12,
+            paddingBottom: 8,
+            borderBottom: "2px solid #7c3aed",
+          }}
+        >
+          💰 Charges & Payment
+        </h3>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
+            gap: isMobile ? 8 : 12,
+          }}
+        >
+          <div style={{ gridColumn: isMobile ? "auto" : "span 2" }}>
+            <div
+              style={{
+                fontSize: 11,
+                color: "#64748b",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                marginBottom: 4,
+              }}
+            >
+              Description
+            </div>
+            <div
+              style={{
+                fontSize: isMobile ? 13 : 14,
+                color: "#1e293b",
+                fontWeight: 500,
+                wordBreak: "break-word",
+              }}
+            >
+              {record.chargeDescription}
+            </div>
+          </div>
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                color: "#64748b",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                marginBottom: 4,
+              }}
+            >
+              Rate
+            </div>
+            <div
+              style={{
+                fontSize: isMobile ? 13 : 14,
+                color: "#1e293b",
+                fontWeight: 500,
+              }}
+            >
+              {record.currency} {record.rateAmount?.toLocaleString()}
+            </div>
+          </div>
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                color: "#64748b",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                marginBottom: 4,
+              }}
+            >
+              Total
+            </div>
+            <div
+              style={{
+                fontSize: 16,
+                color: "#1e293b",
+                fontWeight: 700,
+              }}
+            >
+              {record.currency} {record.totalAmount?.toLocaleString()}
+            </div>
+          </div>
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                color: "#64748b",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                marginBottom: 4,
+              }}
+            >
+              Signature
+            </div>
+            <div
+              style={{
+                fontSize: isMobile ? 13 : 14,
+                color: "#1e293b",
+                fontWeight: 500,
+              }}
+            >
+              {record.signature} · {formatDate(record.signatureDate)}
+            </div>
+          </div>
+          <div style={{ gridColumn: isMobile ? "auto" : "span 2" }}>
+            <div
+              style={{
+                fontSize: 11,
+                color: "#64748b",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                marginBottom: 4,
+              }}
+            >
+              Notes
+            </div>
+            <div
+              style={{
+                fontSize: isMobile ? 13 : 14,
+                color: "#1e293b",
+                fontWeight: 500,
+                wordBreak: "break-word",
+              }}
+            >
+              {record.notesTerms}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 

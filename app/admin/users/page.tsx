@@ -36,6 +36,7 @@ interface User {
   name: string;
   email: string;
   address: string;
+  role?: string;
 }
 
 export default function AddUsersPage() {
@@ -216,7 +217,6 @@ export default function AddUsersPage() {
     {
       title: "Actions",
       key: "actions",
-      width: 150,
       render: (_: unknown, record: User) => (
         <Space>
           <Button
@@ -226,12 +226,14 @@ export default function AddUsersPage() {
             size="small"
             style={{ background: "#2563eb" }}
           />
-          <Button
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record)}
-            size="small"
-          />
+          {record.role !== "admin" && (
+            <Button
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => handleDelete(record)}
+              size="small"
+            />
+          )}
         </Space>
       ),
     },

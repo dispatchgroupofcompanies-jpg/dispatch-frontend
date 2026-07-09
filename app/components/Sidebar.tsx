@@ -8,6 +8,7 @@ import {
   TruckOutlined,
   CloseOutlined,
   MenuOutlined,
+  FileTextOutlined,
 } from "@ant-design/icons";
 import { useRouter, usePathname } from "next/navigation";
 import { useState } from "react";
@@ -37,6 +38,8 @@ export default function Sidebar({ isMobile }: SidebarProps) {
         return "1";
       case "/user/appointment":
         return "2";
+      case "/user/loadboard":
+        return "3";
       default:
         return "1";
     }
@@ -54,6 +57,12 @@ export default function Sidebar({ isMobile }: SidebarProps) {
       icon: <CalendarOutlined />,
       label: "Book Appointment",
       path: "/user/appointment",
+    },
+    {
+      key: "3",
+      icon: <FileTextOutlined />,
+      label: "3P DISPATCH",
+      path: "/user/loadboard",
     },
   ];
 
