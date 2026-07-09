@@ -37,7 +37,6 @@ export default function LoadBoardPage() {
     setLoading(true);
     try {
       const response = await getAllLoadBoardRecords();
-      console.log("Fetched records:", response); // Log the fetched records
       if (response.success) {
         setRecords(response.data || []);
       }

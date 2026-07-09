@@ -409,7 +409,7 @@ export const getInvoiceTemplate = (invoice: any): string => {
                   <div class="footer-right-copy">
                     Open Board,Bision,Walmart,Load Link<br/>
                     and Non Amazon Dispatch Solutions<br/><br/>
-                    Contact : xcdgoc@gmsil.com<br/>
+                    Contact : xcdgoc@gmail.com<br/>
                     +91 750 121 6555<br/>
                     Shahid ul islam
                   </div>
@@ -514,7 +514,7 @@ export const getInvoiceEmailBody = (invoice: any): string => {
                       <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #64748b; text-align: center;">
                         Open Board, Bision, Walmart, Load Link<br/>
                         and Non Amazon Dispatch Solutions<br/><br/>
-                        Contact: xcdgoc@gmsil.com<br/>
+                        Contact: xcdgoc@gmail.com<br/>
                         +91 750 121 6555<br/>
                         Shahid ul islam
                       </p>
