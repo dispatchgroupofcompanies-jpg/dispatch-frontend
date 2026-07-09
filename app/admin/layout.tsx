@@ -151,7 +151,7 @@ export default function AdminLayout({
                     letterSpacing: "-0.3px",
                   }}
                 >
-                  Admin Panel
+                  Dispatch Admin
                 </h2>
               </div>
             )}

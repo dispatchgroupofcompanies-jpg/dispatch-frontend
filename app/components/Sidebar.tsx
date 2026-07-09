@@ -49,13 +49,13 @@ export default function Sidebar({ isMobile }: SidebarProps) {
     {
       key: "1",
       icon: <FileAddOutlined />,
-      label: "Create Invoice",
+      label: "CREATE INVOICE",
       path: "/user/createInvoice",
     },
     {
       key: "2",
       icon: <CalendarOutlined />,
-      label: "Book Appointment",
+      label: "BOOK APPOINTMENT",
       path: "/user/appointment",
     },
     {

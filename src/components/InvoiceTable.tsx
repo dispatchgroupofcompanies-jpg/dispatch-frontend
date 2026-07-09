@@ -10,13 +10,7 @@ import {
   Tooltip,
   Grid,
 } from "antd";
-import {
-  EyeOutlined,
-  DownloadOutlined,
-  ShareAltOutlined,
-  EditOutlined,
-  DeleteOutlined,
-} from "@ant-design/icons";
+import { EyeOutlined, DownloadOutlined } from "@ant-design/icons";
 import { downloadInvoicePDF } from "../../modules/invoice/route";
 import type { ColumnsType } from "antd/es/table";
 import type { Invoice } from "../types/invoice";

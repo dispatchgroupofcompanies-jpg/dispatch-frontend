@@ -1198,7 +1198,7 @@ const AppointmentRecords = () => {
             }}
           >
             <Button
-              size="large"
+              size={isMobile ? "middle" : "large"}
               onClick={() => {
                 setInvoiceModalOpen(false);
                 if (invoiceUrl) {
@@ -1214,7 +1214,7 @@ const AppointmentRecords = () => {
               <Button
                 type="primary"
                 icon={<DownloadOutlined />}
-                size="large"
+                size={isMobile ? "middle" : "large"}
                 onClick={() => handleDownloadPDF(selectedAppointment._id)}
                 style={{
                   background: "#2563eb",
@@ -1227,13 +1227,22 @@ const AppointmentRecords = () => {
             )}
           </div>
         }
-        width={900}
+        width={isMobile ? "100%" : 900}
         centered
-        style={{ maxWidth: "95vw" }}
+        style={{
+          maxWidth: "95vw",
+          top: isMobile ? 0 : 20,
+          padding: isMobile ? "8px" : "16px",
+        }}
+        styles={{
+          body: {
+            padding: isMobile ? "8px" : "16px",
+          },
+        }}
       >
         <div
           style={{
-            height: "70vh",
+            height: isMobile ? "calc(100vh - 140px)" : "70vh",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",

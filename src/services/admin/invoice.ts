@@ -44,3 +44,10 @@ export const updateInvoiceStatus = (
   });
   return res.then((r) => r.data as ApiResponse<Invoice>);
 };
+
+export const downloadInvoicePDF = async (invoiceId: string): Promise<Blob> => {
+  const res = await API.get(`/admin/invoices/${invoiceId}/download`, {
+    responseType: "blob",
+  });
+  return res.data as Blob;
+};

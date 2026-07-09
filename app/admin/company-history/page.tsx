@@ -24,9 +24,10 @@ import {
   SearchOutlined,
   UpOutlined,
   DownOutlined,
+  FilePdfOutlined,
 } from "@ant-design/icons";
 import { Modal } from "antd";
-import { getInvoices } from "@/src/services/admin/invoice";
+import { getInvoices, downloadInvoicePDF } from "@/src/services/admin/invoice";
 import dayjs from "dayjs";
 import * as XLSX from "xlsx";
 
@@ -41,6 +42,12 @@ interface CompanyHistoryInvoice {
   invoiceStatus: string;
   grandTotal: number;
   customer?: {
+    companyName?: string;
+    contactPerson?: string;
+    phone?: string;
+    email?: string;
+  };
+  payee?: {
     companyName?: string;
     contactPerson?: string;
     phone?: string;
@@ -74,6 +81,8 @@ export default function CompanyHistoryPage() {
   const [searchText, setSearchText] = useState("");
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [exportDays, setExportDays] = useState(7);
+  const [pdfModalOpen, setPdfModalOpen] = useState(false);
+  const [pdfDays, setPdfDays] = useState(7);
   const [expandedRowKeys, setExpandedRowKeys] = useState<readonly React.Key[]>(
     [],
   );
@@ -357,19 +366,15 @@ export default function CompanyHistoryPage() {
       return {
         "S.NO": index + 1,
         "INVOICE NUMBER": invoice.invoiceNumber || "-",
-        "COMPANY NAME": invoice.customer?.companyName || "-",
         "INVOICE DATE": invoice.invoiceDate
           ? formatDate(invoice.invoiceDate)
           : "-",
-        "CARRIER NEED TO PAY":
-          carrierNeedToPay > 0 ? formatCurrency(carrierNeedToPay) : "-",
+        "PAYEE COMPANY": invoice.payee?.companyName || "-",
+        "RECEIVE COMPANY": invoice.customer?.companyName || "-",
+        DISPATCH: carrierNeedToPay > 0 ? formatCurrency(carrierNeedToPay) : "-",
         "DRIVER NAME": driverNames,
         VRID: vrids,
-        AMOUNT: formatCurrency(invoice.grandTotal),
-        "CARRIER NEED TO RECEIVE":
-          carrierNeedsToReceive > 0
-            ? formatCurrency(carrierNeedsToReceive)
-            : "-",
+        TOTAL: formatCurrency(invoice.grandTotal),
         STATUS: invoice.invoiceStatus
           ? invoice.invoiceStatus.toUpperCase()
           : "-",
@@ -416,18 +421,74 @@ export default function CompanyHistoryPage() {
     setExportModalOpen(false);
   };
 
+  const showPdfModal = () => {
+    setPdfModalOpen(true);
+  };
+
+  const handlePdfConfirm = async () => {
+    setPdfModalOpen(false);
+
+    // Filter invoices based on selected days
+    const now = dayjs();
+    const startDate = now.subtract(pdfDays, "days").startOf("day");
+    const endDate = now.endOf("day");
+
+    const invoicesToDownload = filteredInvoices.filter((inv) => {
+      const invDate = dayjs(inv.createdAt);
+      return (
+        (invDate.isAfter(startDate) || invDate.isSame(startDate, "day")) &&
+        (invDate.isBefore(endDate) || invDate.isSame(endDate, "day"))
+      );
+    });
+
+    if (invoicesToDownload.length === 0) {
+      message.warning(`No invoices found in the last ${pdfDays} days`);
+      return;
+    }
+
+    // Download each invoice PDF
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const invoice of invoicesToDownload) {
+      try {
+        const blob = await downloadInvoicePDF(invoice._id);
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `Invoice-${invoice.invoiceNumber}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        successCount++;
+      } catch (error) {
+        console.error(
+          `Failed to download PDF for invoice ${invoice.invoiceNumber}:`,
+          error,
+        );
+        failCount++;
+      }
+    }
+
+    if (successCount > 0) {
+      message.success(`Successfully downloaded ${successCount} PDF(s)`);
+    }
+    if (failCount > 0) {
+      message.error(`Failed to download ${failCount} PDF(s)`);
+    }
+  };
+
+  const handlePdfCancel = () => {
+    setPdfModalOpen(false);
+  };
+
   const columns = [
     {
       title: "Invoice #",
       dataIndex: "invoiceNumber",
       key: "invoiceNumber",
       render: (text: string) => <Text strong>{text}</Text>,
-    },
-    {
-      title: "Company Name",
-      dataIndex: ["customer", "companyName"],
-      key: "companyName",
-      render: (text: string) => text || "N/A",
     },
     {
       title: "Amount",
@@ -544,11 +605,7 @@ export default function CompanyHistoryPage() {
                     <br />
                     <Text>{record.customer.companyName || "N/A"}</Text>
                   </Col>
-                  <Col xs={24} sm={12} md={8} lg={6}>
-                    <Text strong>Contact Person:</Text>
-                    <br />
-                    <Text>{record.customer.contactPerson || "N/A"}</Text>
-                  </Col>
+
                   <Col xs={24} sm={12} md={8} lg={6}>
                     <Text strong>Phone:</Text>
                     <br />
@@ -762,6 +819,19 @@ export default function CompanyHistoryPage() {
                 }}
               >
                 Export to Excel
+              </Button>
+              <Button
+                icon={<FilePdfOutlined />}
+                onClick={showPdfModal}
+                size="large"
+                style={{
+                  background: "#ef4444",
+                  borderColor: "#ef4444",
+                  color: "white",
+                  fontWeight: 600,
+                }}
+              >
+                Download PDF
               </Button>
               <Button
                 icon={<ReloadOutlined />}
@@ -1051,18 +1121,42 @@ export default function CompanyHistoryPage() {
         okText="Export"
         cancelText="Cancel"
         centered
+        width={isMobile ? "90%" : 520}
+        style={{ top: isMobile ? 0 : 20 }}
+        styles={{
+          body: {
+            padding: isMobile ? "12px" : "20px 0",
+          },
+        }}
       >
-        <div style={{ padding: "20px 0" }}>
-          <p style={{ marginBottom: 16, fontSize: 14, color: "#475569" }}>
+        <div>
+          <p
+            style={{
+              marginBottom: 16,
+              fontSize: isMobile ? 13 : 14,
+              color: "#475569",
+            }}
+          >
             Select the number of days to export:
           </p>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div
+            style={{
+              display: "flex",
+              gap: isMobile ? 6 : 8,
+              flexWrap: "wrap",
+              justifyContent: isMobile ? "center" : "flex-start",
+            }}
+          >
             {[7, 15, 30, 90, 180, 365].map((days) => (
               <Button
                 key={days}
                 type={exportDays === days ? "primary" : "default"}
                 onClick={() => setExportDays(days)}
-                style={{ minWidth: 80 }}
+                style={{
+                  minWidth: isMobile ? 60 : 80,
+                  fontSize: isMobile ? 12 : 14,
+                }}
+                size={isMobile ? "small" : "middle"}
               >
                 {days === 365
                   ? "1 Year"
@@ -1076,9 +1170,88 @@ export default function CompanyHistoryPage() {
               </Button>
             ))}
           </div>
-          <p style={{ marginTop: 16, fontSize: 12, color: "#94a3b8" }}>
+          <p
+            style={{
+              marginTop: 16,
+              fontSize: isMobile ? 11 : 12,
+              color: "#94a3b8",
+              textAlign: isMobile ? "center" : "left",
+            }}
+          >
             This will export all invoices from the last {exportDays} days based
             on current filters.
+          </p>
+        </div>
+      </Modal>
+
+      {/* PDF Download Modal */}
+      <Modal
+        title="Download Invoices PDF"
+        open={pdfModalOpen}
+        onOk={handlePdfConfirm}
+        onCancel={handlePdfCancel}
+        okText="Download PDFs"
+        cancelText="Cancel"
+        centered
+        width={isMobile ? "90%" : 520}
+        style={{ top: isMobile ? 0 : 20 }}
+        styles={{
+          body: {
+            padding: isMobile ? "12px" : "20px 0",
+          },
+        }}
+      >
+        <div>
+          <p
+            style={{
+              marginBottom: 16,
+              fontSize: isMobile ? 13 : 14,
+              color: "#475569",
+            }}
+          >
+            Select the number of days to download PDFs:
+          </p>
+          <div
+            style={{
+              display: "flex",
+              gap: isMobile ? 6 : 8,
+              flexWrap: "wrap",
+              justifyContent: isMobile ? "center" : "flex-start",
+            }}
+          >
+            {[7, 15, 30, 90, 180, 365].map((days) => (
+              <Button
+                key={days}
+                type={pdfDays === days ? "primary" : "default"}
+                onClick={() => setPdfDays(days)}
+                style={{
+                  minWidth: isMobile ? 60 : 80,
+                  fontSize: isMobile ? 12 : 14,
+                }}
+                size={isMobile ? "small" : "middle"}
+              >
+                {days === 365
+                  ? "1 Year"
+                  : days === 90
+                    ? "3 Months"
+                    : days === 30
+                      ? "1 Month"
+                      : days === 15
+                        ? "15 Days"
+                        : `${days} Days`}
+              </Button>
+            ))}
+          </div>
+          <p
+            style={{
+              marginTop: 16,
+              fontSize: isMobile ? 11 : 12,
+              color: "#94a3b8",
+              textAlign: isMobile ? "center" : "left",
+            }}
+          >
+            This will download all invoice PDFs from the last {pdfDays} days
+            based on current filters.
           </p>
         </div>
       </Modal>

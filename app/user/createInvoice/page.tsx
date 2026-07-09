@@ -23,7 +23,6 @@ import {
   DollarCircleOutlined,
   FileTextOutlined,
   CheckCircleOutlined,
-  ShareAltOutlined,
   DownloadOutlined,
 } from "@ant-design/icons";
 import CreateInvoiceModal from "../../../modules/invoice/InvoiceModal";
@@ -45,7 +44,6 @@ function DashboardComponent() {
   const [editingInvoice, setEditingInvoice] = useState<InvoiceType | null>(
     null,
   );
-  const [sharing, setSharing] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
   // -------------------------
@@ -122,64 +120,6 @@ function DashboardComponent() {
       );
     } finally {
       setDownloading(false);
-    }
-  };
-
-  // -------------------------
-  // SHARE INVOICE HANDLER
-  // -------------------------
-  const triggerShareInvoice = async (record: InvoiceType) => {
-    if (typeof window === "undefined" || typeof navigator === "undefined") {
-      return;
-    }
-
-    setSharing(true);
-    const hideLoading = message.loading(
-      `Preparing to share Invoice #${record.invoiceNumber}...`,
-      0,
-    );
-
-    try {
-      const shareUrl = `${process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") || window.location.origin}/public/invoice/${record._id}`;
-      const shareData = {
-        title: `Invoice #${record.invoiceNumber}`,
-        text: `Please review Invoice #${record.invoiceNumber} from Extreme Logistics for $${record.grandTotal?.toLocaleString()}`,
-        url: shareUrl,
-      };
-
-      if (navigator.share) {
-        await navigator.share(shareData);
-        message.success("Shared successfully!");
-      } else {
-        await navigator.clipboard.writeText(shareUrl);
-        Modal.success({
-          title: "Invoice Link Copied!",
-          content: (
-            <div>
-              <p>
-                Native sharing is not supported on this browser. Copy the link
-                below to share manually:
-              </p>
-              <pre
-                style={{
-                  background: "#f1f5f9",
-                  padding: "8px",
-                  borderRadius: "4px",
-                  overflowX: "auto",
-                }}
-              >
-                {shareUrl}
-              </pre>
-            </div>
-          ),
-        });
-      }
-    } catch (error) {
-      console.error("Share handler context track:", error);
-      message.error("Could not complete share action.");
-    } finally {
-      hideLoading();
-      setSharing(false);
     }
   };
 
@@ -331,20 +271,6 @@ function DashboardComponent() {
                 />
               </Tooltip>
 
-              <Tooltip title="Share Invoice Link">
-                <Button
-                  type="default"
-                  loading={sharing && selected?._id === record._id}
-                  style={{
-                    color: "#2563eb",
-                    borderColor: "#bfdbfe",
-                    backgroundColor: "#eff6ff",
-                  }}
-                  icon={<ShareAltOutlined />}
-                  onClick={() => triggerShareInvoice(record)}
-                />
-              </Tooltip>
-
               <Tooltip
                 title={
                   isDraft
@@ -376,7 +302,7 @@ function DashboardComponent() {
         },
       },
     ],
-    [selected, downloading, sharing],
+    [selected, downloading],
   );
 
   const isMobile = window.innerWidth < 768;
@@ -427,8 +353,7 @@ function DashboardComponent() {
                 color: "rgba(255,255,255,0.85)",
               }}
             >
-              Create, tracking logs, view, and instantly download or share
-              invoice links.
+              Create, tracking logs, view, and instantly download invoices.
             </p>
           </div>
           <Button
@@ -568,35 +493,16 @@ function DashboardComponent() {
           <Button
             key="close"
             onClick={() => setViewOpen(false)}
-            size="large"
+            size={isMobile ? "middle" : "large"}
             style={{ borderRadius: "6px" }}
           >
             Close Preview
           </Button>,
           <Button
-            key="share"
-            type="default"
-            icon={<ShareAltOutlined />}
-            size="large"
-            loading={sharing}
-            disabled={!selected}
-            style={{
-              borderRadius: "6px",
-              color: "#2563eb",
-              borderColor: "#bfdbfe",
-              backgroundColor: "#eff6ff",
-            }}
-            onClick={() => {
-              if (selected) triggerShareInvoice(selected);
-            }}
-          >
-            Share Link
-          </Button>,
-          <Button
             key="download"
             type="primary"
             icon={<DownloadOutlined />}
-            size="large"
+            size={isMobile ? "middle" : "large"}
             loading={downloading}
             disabled={!selected}
             style={{
@@ -612,23 +518,44 @@ function DashboardComponent() {
           </Button>,
         ]}
         onCancel={() => setViewOpen(false)}
-        width="95vw"
-        style={{ top: 20, maxWidth: 980 }}
+        width={isMobile ? "100%" : "95vw"}
+        style={{
+          top: isMobile ? 0 : 20,
+          maxWidth: 980,
+          padding: isMobile ? "8px" : "16px",
+        }}
         centered
         title={null}
         closable
+        styles={{
+          body: {
+            padding: isMobile ? "8px" : "16px",
+          },
+        }}
       >
         {selected && (
           <div
             id="printable-invoice-modal-content"
             style={{
               backgroundColor: "#ffffff",
-              padding: "10px 15px",
+              padding: isMobile ? "8px" : "15px",
               borderRadius: "4px",
               overflow: "hidden",
+              maxHeight: isMobile
+                ? "calc(100vh - 140px)"
+                : "calc(100vh - 200px)",
+              overflowY: "auto",
             }}
           >
-            <InvoicePreview invoice={selected} />
+            <div
+              style={{
+                transform: isMobile ? "scale(0.55)" : "scale(0.75)",
+                transformOrigin: "top center",
+                marginBottom: isMobile ? "-45%" : "-25%",
+              }}
+            >
+              <InvoicePreview invoice={selected} />
+            </div>
           </div>
         )}
       </Modal>
