@@ -143,27 +143,6 @@ export default function InvoiceDetails() {
         </Col>
 
         {/* Field 5 */}
-        <Col xs={24} sm={12}>
-          <Form.Item
-            label="Institution Number"
-            name="institutionNumber"
-            layout="vertical"
-            style={{ marginBottom: 0 }}
-            labelCol={{
-              style: {
-                fontWeight: 600,
-                color: "#475569",
-                fontSize: 12,
-                paddingBottom: 2,
-              },
-            }}
-          >
-            <Input
-              placeholder="e.g. 001"
-              style={{ borderRadius: 4, height: 32, fontSize: 12 }}
-            />
-          </Form.Item>
-        </Col>
 
         {/* Field 6 */}
         <Col xs={24} sm={12}>

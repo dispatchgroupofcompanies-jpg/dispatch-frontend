@@ -80,7 +80,7 @@ export default function TripSection({ form }: Props) {
 
                 // Checking condition if VRID starts with 'T' or 't'
                 const vridValue = String(trip?.vrid || "");
-                const showLoadId = vridValue.toLowerCase().startsWith("t");
+                const startsWithT = vridValue.toLowerCase().startsWith("t");
 
                 return (
                   <Card
@@ -165,7 +165,7 @@ export default function TripSection({ form }: Props) {
 
                         {/* VRID */}
                         <Col xs={24} sm={12} md={4}>
-                          <span style={labelStyle}>TRIPID</span>
+                          <span style={labelStyle}>TRIPID / VRID</span>
                           <Form.Item
                             {...restField}
                             name={[name, "vrid"]}
@@ -229,7 +229,7 @@ export default function TripSection({ form }: Props) {
                         </Col>
                       </Row>
 
-                      {/* Always show Driver Name and Load ID 1 */}
+                      {/* Driver Info Section */}
                       <div
                         style={{
                           background: "#f8fafc",
@@ -237,11 +237,11 @@ export default function TripSection({ form }: Props) {
                           borderRadius: 6,
                           padding: "10px 12px",
                           marginTop: 2,
-                          animation: "fadeIn 0.2s ease-in-out",
                         }}
                       >
                         <Row gutter={[12, 12]}>
-                          <Col xs={24} sm={12} md={8}>
+                          {/* Driver Name - Expands to full-width (24) if not starting with T */}
+                          <Col xs={24} sm={12} md={startsWithT ? 8 : 24}>
                             <span style={{ ...labelStyle, color: "#1e293b" }}>
                               👤 Driver Name
                             </span>
@@ -263,52 +263,57 @@ export default function TripSection({ form }: Props) {
                             </Form.Item>
                           </Col>
 
-                          <Col xs={24} sm={12} md={8}>
-                            <span style={{ ...labelStyle, color: "#1e293b" }}>
-                              🆔 Load ID 1
-                            </span>
-                            <Form.Item
-                              {...restField}
-                              name={[name, "loadId1"]}
-                              rules={[
-                                {
-                                  required: true,
-                                  message: "Load ID 1 is required",
-                                },
-                              ]}
-                              style={{ marginBottom: 0 }}
-                            >
-                              <Input
-                                placeholder="Enter Load ID 1"
-                                style={{ borderRadius: 4, height: 32 }}
-                              />
-                            </Form.Item>
-                          </Col>
+                          {/* Load IDs are conditionally rendered ONLY if VRID starts with 'T' or 't' */}
+                          {startsWithT && (
+                            <>
+                              <Col xs={24} sm={12} md={8}>
+                                <span
+                                  style={{ ...labelStyle, color: "#1e293b" }}
+                                >
+                                  🆔 Load ID 1
+                                </span>
+                                <Form.Item
+                                  {...restField}
+                                  name={[name, "loadId1"]}
+                                  rules={[
+                                    {
+                                      required: true,
+                                      message: "Load ID 1 is required",
+                                    },
+                                  ]}
+                                  style={{ marginBottom: 0 }}
+                                >
+                                  <Input
+                                    placeholder="Enter Load ID 1"
+                                    style={{ borderRadius: 4, height: 32 }}
+                                  />
+                                </Form.Item>
+                              </Col>
 
-                          {/* Show Load ID 2 only when VRID starts with T */}
-                          {showLoadId && (
-                            <Col xs={24} sm={12} md={8}>
-                              <span style={{ ...labelStyle, color: "#1e293b" }}>
-                                🆔 Load ID 2
-                              </span>
-                              <Form.Item
-                                {...restField}
-                                name={[name, "loadId2"]}
-                                rules={[
-                                  {
-                                    required: true,
-                                    message:
-                                      "Load ID 2 is required when VRID starts with T",
-                                  },
-                                ]}
-                                style={{ marginBottom: 0 }}
-                              >
-                                <Input
-                                  placeholder="Enter Load ID 2"
-                                  style={{ borderRadius: 4, height: 32 }}
-                                />
-                              </Form.Item>
-                            </Col>
+                              <Col xs={24} sm={12} md={8}>
+                                <span
+                                  style={{ ...labelStyle, color: "#1e293b" }}
+                                >
+                                  🆔 Load ID 2
+                                </span>
+                                <Form.Item
+                                  {...restField}
+                                  name={[name, "loadId2"]}
+                                  rules={[
+                                    {
+                                      required: true,
+                                      message: "Load ID 2 is required",
+                                    },
+                                  ]}
+                                  style={{ marginBottom: 0 }}
+                                >
+                                  <Input
+                                    placeholder="Enter Load ID 2"
+                                    style={{ borderRadius: 4, height: 32 }}
+                                  />
+                                </Form.Item>
+                              </Col>
+                            </>
                           )}
                         </Row>
                       </div>

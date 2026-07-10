@@ -68,17 +68,20 @@ export default function InvoiceTable({
       title: "Invoice #",
       dataIndex: "invoiceNumber",
       key: "invoiceNumber",
-      width: isMobile ? 100 : 140,
+      width: isMobile ? 75 : 100,
+      fixed: isMobile ? "left" : undefined,
       render: (text) => (
         <Text
           strong
           style={{
             color: "#ffffff",
             background: "#10b981",
-            padding: isMobile ? "2px 8px" : "4px 10px",
-            borderRadius: "6px",
+            padding: isMobile ? "2px 5px" : "2px 8px",
+            borderRadius: "4px",
             display: "inline-block",
-            fontSize: isMobile ? 11 : 12,
+            fontSize: isMobile ? 9 : 11,
+            whiteSpace: "nowrap",
+            lineHeight: "16px",
           }}
         >
           #{text}
@@ -86,29 +89,91 @@ export default function InvoiceTable({
       ),
     },
     {
-      title: "Payee (Vendor)",
-      dataIndex: ["payee", "companyName"],
-      key: "payeeCompany",
-      responsive: ["md"],
-      render: (text) => (
-        <Text
-          style={{
-            fontWeight: 500,
-            color: "#334155",
-            fontSize: isMobile ? 12 : 13,
-          }}
-        >
-          {text || "N/A"}
-        </Text>
-      ),
+      title: "VRID",
+      key: "vrid",
+      width: isMobile ? 100 : 150,
+      render: (_, record) => {
+        const vrids = record.trips?.map((t) => t.vrid).filter(Boolean) || [];
+        return (
+          <div style={{ fontSize: isMobile ? 9 : 11, lineHeight: 1.3 }}>
+            {vrids.length > 0 ? (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+                {vrids.map((vrid, idx) => (
+                  <span
+                    key={idx}
+                    style={{
+                      background: "#f1f5f9",
+                      padding: "1px 4px",
+                      borderRadius: 2,
+                      fontSize: isMobile ? 9 : 10,
+                      marginRight: 2,
+                      marginBottom: 2,
+                    }}
+                  >
+                    {vrid}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <Text type="secondary">-</Text>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      title: "Load ID",
+      key: "loadId",
+      width: isMobile ? 90 : 120,
+      render: (_, record) => {
+        const loadIds =
+          record.trips
+            ?.map((t) =>
+              t.loadId2 ? `${t.loadId1 || ""}/${t.loadId2}` : t.loadId1,
+            )
+            .filter(Boolean) || [];
+        return (
+          <div style={{ fontSize: isMobile ? 9 : 11, lineHeight: 1.3 }}>
+            {loadIds.length > 0 ? (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+                {loadIds.map((loadId, idx) => (
+                  <span
+                    key={idx}
+                    style={{
+                      background: "#dbeafe",
+                      color: "#2563eb",
+                      padding: "1px 4px",
+                      borderRadius: 2,
+                      fontSize: isMobile ? 9 : 10,
+                      marginRight: 2,
+                      marginBottom: 2,
+                    }}
+                  >
+                    {loadId}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <Text type="secondary">-</Text>
+            )}
+          </div>
+        );
+      },
     },
     {
       title: "Amount",
       dataIndex: "grandTotal",
       key: "grandTotal",
-      width: isMobile ? 120 : 160,
+      width: isMobile ? 90 : 120,
       render: (amount, record) => (
-        <Text strong style={{ color: "#0f172a", fontSize: isMobile ? 12 : 13 }}>
+        <Text
+          strong
+          style={{
+            color: "#0f172a",
+            fontSize: isMobile ? 11 : 13,
+            whiteSpace: "nowrap",
+          }}
+        >
           {record.currency || "CAD"} $
           {amount?.toLocaleString(undefined, {
             minimumFractionDigits: 2,
@@ -118,45 +183,10 @@ export default function InvoiceTable({
       ),
     },
     {
-      title: "Created By",
-      key: "createdByUser",
-      width: isMobile ? 150 : 200,
-      responsive: ["md"],
-      render: (_, record) => {
-        const user = record.createdByUser;
-        if (!user) {
-          return <Text type="secondary">N/A</Text>;
-        }
-        return (
-          <div>
-            <Text
-              style={{
-                fontWeight: 500,
-                color: "#334155",
-                fontSize: isMobile ? 12 : 13,
-                display: "block",
-              }}
-            >
-              {user.name}
-            </Text>
-            <Text
-              type="secondary"
-              style={{
-                fontSize: isMobile ? 10 : 11,
-                display: "block",
-              }}
-            >
-              {user.email}
-            </Text>
-          </div>
-        );
-      },
-    },
-    {
       title: "Status",
       dataIndex: "invoiceStatus",
       key: "invoiceStatus",
-      width: isMobile ? 100 : 140,
+      width: isMobile ? 85 : 110,
       render: (status) => {
         const colorMap: Record<string, string> = {
           draft: "default",
@@ -168,7 +198,7 @@ export default function InvoiceTable({
         return (
           <Tag
             color={colorMap[status] || "default"}
-            style={{ fontSize: isMobile ? 11 : 12 }}
+            style={{ fontSize: isMobile ? 10 : 12 }}
           >
             {status?.toUpperCase()}
           </Tag>
@@ -178,7 +208,7 @@ export default function InvoiceTable({
     {
       title: "Actions",
       key: "action",
-      width: isMobile ? 80 : 120,
+      width: isMobile ? 70 : 100,
       align: "center" as const,
       render: (_, record) => (
         <Space size={isMobile ? "small" : "middle"}>
@@ -194,6 +224,7 @@ export default function InvoiceTable({
                 borderRadius: "6px",
                 backgroundColor: "#102a63",
                 borderColor: "#102a63",
+                padding: isMobile ? "4px 8px" : "8px 16px",
               }}
             >
               {isMobile ? "" : "Download"}
@@ -205,7 +236,10 @@ export default function InvoiceTable({
               size={isMobile ? "small" : "middle"}
               icon={<EyeOutlined />}
               onClick={() => onView(record)}
-              style={{ borderRadius: "6px" }}
+              style={{
+                borderRadius: "6px",
+                padding: isMobile ? "4px 8px" : "8px 16px",
+              }}
             >
               {isMobile ? "" : "View"}
             </Button>
@@ -221,8 +255,9 @@ export default function InvoiceTable({
         style={{
           background: "#fff",
           borderRadius: isMobile ? 8 : 12,
-          overflow: "hidden",
           padding: isMobile ? "8px" : "16px",
+          overflowX: isMobile ? "auto" : "visible",
+          WebkitOverflowScrolling: "touch",
         }}
       >
         <Table
@@ -237,20 +272,10 @@ export default function InvoiceTable({
               isMobile ? `${total} items` : `Total ${total} items`,
           }}
           size="small"
-          scroll={isMobile ? { x: "max-content" } : { x: undefined }}
-          style={{ fontSize: isMobile ? 12 : 13 }}
-          components={{
-            body: {
-              cell: (props) => (
-                <td
-                  {...props}
-                  style={{
-                    ...props.style,
-                    padding: isMobile ? "8px 12px" : "12px 16px",
-                  }}
-                />
-              ),
-            },
+          scroll={isMobile ? { x: 800 } : undefined}
+          style={{
+            fontSize: isMobile ? 12 : 13,
+            minWidth: isMobile ? 800 : "100%",
           }}
         />
       </div>

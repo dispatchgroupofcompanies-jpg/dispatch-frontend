@@ -1,6 +1,8 @@
 type InvoiceTrip = {
   tripDate?: string;
   vrid?: string;
+  loadId1?: string;
+  loadId2?: string;
   driverName?: string;
   route?: string;
   pickup?: string;
@@ -20,11 +22,13 @@ export const getInvoiceTemplate = (invoice: any): string => {
 
   const formatDate = (dateStr: string | undefined) => {
     if (!dateStr) return "N/A";
-    return new Date(dateStr).toLocaleDateString("en-CA", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    return new Date(dateStr)
+      .toLocaleDateString("en-CA", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      })
+      .replace(/\//g, "-");
   };
 
   const maskGstNumber = (gstNumber: string) => {
@@ -39,21 +43,30 @@ export const getInvoiceTemplate = (invoice: any): string => {
     invoice.customer?.eTransfer || invoice.payee?.eTransferAddress;
 
   const tripRows = (invoice.trips || [])
-    .map(
-      (trip: InvoiceTrip, index: number) => `
+    .map((trip: InvoiceTrip) => {
+      // Only show load IDs if there are multiple loads (loadId2 exists)
+      const hasMultipleLoads = trip.loadId2 && trip.loadId2.trim() !== "";
+      const loadIdDisplay = hasMultipleLoads
+        ? `${trip.loadId1 || "N/A"}<br/>${trip.loadId2}`
+        : ""; // Don't show load ID if only one load (trip ID is the load)
+
+      return `
     <tr>
-      <td style="padding: 21px 10px 13px 10px; font-size: 12px; text-align: center; border-bottom: 1px solid #e6eaf0;">${index + 1}</td>
-      <td style="padding: 21px 10px 13px 10px; font-size: 12px; white-space: nowrap; border-bottom: 1px solid #e6eaf0;">${formatDate(trip.tripDate)}</td>
-      <td style="padding: 21px 10px 13px 10px; font-size: 12px; font-weight: 800; color: #1e293b; border-bottom: 1px solid #e6eaf0;">${trip.vrid || "N/A"}</td>
-      <td style="padding: 21px 10px 13px 10px; font-size: 12px; font-weight: 800; color: #2563eb; text-transform: uppercase; border-bottom: 1px solid #e6eaf0;">${trip.driverName || "N/A"}</td>
-      <td style="padding: 21px 10px 13px 10px; font-size: 12px; border-bottom: 1px solid #e6eaf0;">${trip.route || "N/A"}</td>
-      <td style="padding: 21px 10px 13px 10px; font-size: 12px; border-bottom: 1px solid #e6eaf0;">${trip.pickup || "N/A"} to ${trip.drop || "N/A"}</td>
-      <td style="padding: 21px 10px 13px 10px; font-size: 12px; text-align: right; white-space: nowrap; border-bottom: 1px solid #e6eaf0;">${formatCurrency(trip.totalCharges || 0)}</td>
-      <td style="padding: 21px 10px 13px 10px; font-size: 12px; text-align: right; font-weight: 800; color: #b91c1c; white-space: nowrap; border-bottom: 1px solid #e6eaf0;">${formatCurrency(trip.dispatchAmount || 0)}</td>
-      <td style="padding: 21px 10px 13px 10px; font-size: 12px; text-align: right; font-weight: 800; color: #10b981; white-space: nowrap; border-bottom: 1px solid #e6eaf0;">${formatCurrency((trip.totalCharges || 0) - (trip.dispatchAmount || 0))}</td>
+      <td style="padding: 12px 10px; font-size: 12px; border-bottom: 1px solid #e6eaf0; vertical-align: top;">${formatDate(trip.tripDate)}</td>
+      <td style="padding: 12px 10px; font-size: 12px; font-weight: bold; color: #1e293b; border-bottom: 1px solid #e6eaf0; vertical-align: top;">
+        ${trip.vrid || "N/A"}${loadIdDisplay ? `<br/><span style="font-size: 11px; color: #64748b; font-weight: normal;">${loadIdDisplay}</span>` : ""}
+      </td>
+      <td style="padding: 12px 10px; font-size: 12px; text-transform: uppercase; border-bottom: 1px solid #e6eaf0; vertical-align: top;">${trip.driverName || "N/A"}</td>
+      <td style="padding: 12px 10px; font-size: 12px; text-transform: uppercase; border-bottom: 1px solid #e6eaf0; vertical-align: top;">${trip.route || "N/A"}</td>
+      <td style="padding: 12px 10px; font-size: 12px; text-transform: uppercase; border-bottom: 1px solid #e6eaf0; vertical-align: top;">
+        ${trip.pickup || "N/A"} - ${trip.drop || "N/A"}
+      </td>
+      <td style="padding: 12px 10px; font-size: 12px; text-align: right; font-weight: bold; color: #dc2626; white-space: nowrap; border-bottom: 1px solid #e6eaf0; vertical-align: top;">
+        ${formatCurrency(trip.totalCharges || 0)}
+      </td>
     </tr>
-  `,
-    )
+  `;
+    })
     .join("");
 
   return `
@@ -78,36 +91,30 @@ export const getInvoiceTemplate = (invoice: any): string => {
             overflow: hidden;
           }
 
+          /* Diagonal Watermark Styling */
           .watermark {
             position: absolute;
-            top: 63%;
+            top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 28px;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            transform-origin: center center;
+            font-size: 56px;
             font-weight: 900;
-            color: rgba(148, 163, 184, 0.48);
-            letter-spacing: 3px;
-            white-space: normal;
-            width: 100%;
+            color: rgba(148, 163, 184, 0.12);
+            letter-spacing: 8px;
+            white-space: nowrap;
             text-align: center;
-            line-height: 1;
             z-index: 0;
             pointer-events: none;
-          }
-
-          .watermark-subtitle {
-            display: block;
-            margin-top: 6px;
-            font-size: 12px;
-            letter-spacing: 1px;
-            color: rgba(148, 163, 184, 0.42);
+            width: 100%;
+            text-transform: uppercase;
           }
 
           .page-container {
             position: relative;
             width: 210mm;
             height: 296mm;
-            padding: 16mm 15mm 45mm 15mm;
+            padding: 16mm 15mm 48mm 15mm;
             box-sizing: border-box;
             display: block;
             z-index: 1;
@@ -115,14 +122,14 @@ export const getInvoiceTemplate = (invoice: any): string => {
           }
 
           .header-section {
-            margin-bottom: 48px;
+            margin-bottom: 40px;
           }
 
           .invoice-title {
-            font-size: 31px;
-            font-weight: 800;
+            font-size: 34px;
+            font-weight: 900;
             letter-spacing: 1px;
-            color: #102a63;
+            color: #0f2962;
             margin: 0;
             line-height: 1.1;
             text-transform: uppercase;
@@ -133,38 +140,26 @@ export const getInvoiceTemplate = (invoice: any): string => {
             color: #5f6978;
             margin-top: 4px;
             display: block;
-            padding-left: 75px;
-          }
-
-          .status-badge {
-            padding: 6px 14px;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            border-radius: 999px;
-            display: inline-block;
-            background-color: #ecfdf5;
-            border: 1px solid #bbf7d0;
-            color: #166534;
           }
 
           .details-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 58px;
+            margin-bottom: 45px;
           }
 
           .company-name-red {
             font-size: 14px;
-            font-weight: 700;
+            font-weight: bold;
             color: #dc2626;
             display: block;
             margin-bottom: 2px;
+            text-transform: uppercase;
           }
 
           .company-name-blue {
             font-size: 14px;
-            font-weight: 700;
+            font-weight: bold;
             color: #2563eb;
             display: block;
             margin-bottom: 2px;
@@ -173,7 +168,7 @@ export const getInvoiceTemplate = (invoice: any): string => {
           .items-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 46px;
+            margin-bottom: 20px;
           }
 
           .items-table thead tr {
@@ -183,58 +178,10 @@ export const getInvoiceTemplate = (invoice: any): string => {
 
           .items-table th {
             font-weight: 700;
-            padding: 10px 10px;
+            padding: 12px 10px;
             font-size: 12px;
             text-align: left;
-            line-height: 1.3;
-          }
-
-          .items-table td {
-            padding: 14px 10px;
-            font-size: 12px;
-            border-bottom: 1px solid #e6eaf0;
-          }
-
-          .totals-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 0;
-          }
-
-          .grand-total-row {
-            border-top: 3px solid #102a63;
-            border-bottom: 1px solid #e6eaf0;
-          }
-
-          .payment-section {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 0;
-          }
-
-          .payment-box {
-            padding: 10px 12px;
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 2px;
-          }
-
-          .payment-label {
-            font-size: 10px;
-            text-transform: uppercase;
-            color: #64748b;
-            margin: 0 0 6px 0;
             letter-spacing: 0.5px;
-            font-weight: 700;
-          }
-
-          .payment-label-blue {
-            font-size: 10px;
-            text-transform: uppercase;
-            color: #2563eb;
-            margin: 0 0 6px 0;
-            letter-spacing: 0.5px;
-            font-weight: 700;
           }
 
           .footer-band {
@@ -242,84 +189,77 @@ export const getInvoiceTemplate = (invoice: any): string => {
             left: 0;
             right: 0;
             bottom: 0;
-            height: 46mm;
+            height: 44mm;
             background: #f8fafc;
             color: #64748b;
-            border-top: 0.5px solid #64748b;
+            border-top: 1px solid #e2e8f0;
             box-sizing: border-box;
-            padding: 9mm 15mm 8mm 15mm;
+            padding: 8mm 15mm 8mm 15mm;
           }
 
           .footer-brand {
-            margin: 0 0 7px 0;
-            font-size: 35px;
-            line-height: 0.9;
+            margin: 0 0 4px 0;
+            font-size: 32px;
+            line-height: 1;
             font-weight: 900;
-            letter-spacing: 3px;
-            color: #64748b;
+            letter-spacing: 2px;
+            color: #475569;
           }
 
           .footer-left-copy {
-            font-size: 15px;
-            line-height: 1.15;
-            font-weight: 600;
-            color: #64748b;
+            font-size: 13px;
+            line-height: 1.3;
+            font-weight: bold;
+            color: #475569;
           }
 
           .footer-right-copy {
-            font-size: 14px;
-            line-height: 1.35;
+            font-size: 12px;
+            line-height: 1.4;
             color: #64748b;
-            text-align: center;
+            text-align: right;
           }
         </style>
       </head>
       <body>
+        <!-- Watermark base layer behind content -->
+        <div class="watermark">XCDGOC PVT LTD</div>
+
         <div class="page-container">
-          <div class="watermark">
-            XCDGOC PVT LTD
-       
-          </div>
           <!-- Header Section -->
           <div class="header-section">
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr>
-                <td style="text-align: left; vertical-align: top; padding-bottom: 10px;">
-                  <h1 class="invoice-title">${dynamicInvoiceTitle}</h1>
-                  <span class="invoice-number">Num: <b>#${invoice.invoiceNumber}</b></span>
-                </td>
-              </tr>
-            </table>
+            <h1 class="invoice-title">${dynamicInvoiceTitle}</h1>
+            <span class="invoice-number">Num: <b>#${invoice.invoiceNumber || "N/A"}</b></span>
           </div>
 
           <!-- Company Details Section -->
           <table class="details-table" style="table-layout: fixed;">
             <tr>
-              <td style="vertical-align: top; width: 50%; padding-right: 30px;">
-                <div style="font-size: 12px; text-transform: uppercase; color: #7b8492; margin: 0 0 6px 0; letter-spacing: 0.9px; font-weight: 800;">EXTREME LOGISTICS INVOICE FROM:</div>
+              <td style="vertical-align: top; width: 50%; padding-right: 20px;">
+                <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin: 0 0 6px 0; font-weight: bold; letter-spacing: 0.5px;">EXTREME LOGISTICS INVOICE FROM:</div>
                 <div>
                   <span class="company-name-red">${invoice.payee?.companyName || invoice.payee?.customerName || "N/A"}</span>
-                  <div style="color: #475569; font-size: 12px; line-height: 1.25; text-transform: uppercase;">
+                  <div style="color: #475569; font-size: 12px; line-height: 1.3; text-transform: uppercase;">
                     ${invoice.payee?.address1 || invoice.payee?.address || "N/A"}
                   </div>
-                  <div style="margin-top: 2px; color: #475569; font-size: 12px; line-height: 1.25;">
+                  <div style="margin-top: 4px; color: #475569; font-size: 12px; line-height: 1.35;">
                     <b>Phone:</b> ${invoice.payee?.phone || "N/A"}<br/>
                     <b>Email:</b> ${invoice.payee?.email || "N/A"}<br/>
                     <b>GST/HST:</b> ${maskGstNumber(invoice.payee?.gstNumber)}
                   </div>
                 </div>
               </td>
-              <td style="vertical-align: top; width: 50%; padding-left: 130px;">
-                <div style="font-size: 12px; text-transform: uppercase; color: #7b8492; margin: 0 0 6px 0; letter-spacing: 0.9px; font-weight: 800;">INVOICE TO:</div>
+              <td style="vertical-align: top; width: 50%; padding-left: 40px;">
+                <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin: 0 0 6px 0; font-weight: bold; letter-spacing: 0.5px;">INVOICE TO:</div>
                 <div>
                   <span class="company-name-blue">${invoice.customer?.companyName || invoice.customer?.customerName || "N/A"}</span>
-                  <div style="color: #475569; font-size: 12px; line-height: 1.25; text-transform: uppercase;">
+                  <div style="color: #475569; font-size: 12px; line-height: 1.3; text-transform: uppercase;">
                     ${invoice.customer?.address1 || invoice.customer?.address || "N/A"}
                   </div>
-                  <div style="margin-top: 2px; color: #475569; font-size: 12px; line-height: 1.25;">
+                  <div style="margin-top: 4px; color: #475569; font-size: 12px; line-height: 1.35;">
                     <b>Phone:</b> ${invoice.customer?.phone || "N/A"}<br/>
                     <b>Email:</b> ${invoice.customer?.email || "N/A"}<br/>
-                    <b>GST/HST:</b> ${maskGstNumber(invoice.customer?.gstNumber)}
+                    <b>GST/HST:</b> ${invoice.customer?.gstNumber || "N/A"}
                   </div>
                 </div>
               </td>
@@ -330,15 +270,12 @@ export const getInvoiceTemplate = (invoice: any): string => {
           <table class="items-table">
             <thead>
               <tr>
-                <th style="text-align: center; width: 4%;">#</th>
-                <th style="text-align: left; width: 11%;">Date</th>
-                <th style="text-align: left; width: 12%;">VRID</th>
-                <th style="text-align: left; width: 14%;">Driver Name</th>
-                <th style="text-align: left; width: 10%;">Route</th>
-                <th style="text-align: left; width: 21%;">Description</th>
-                <th style="text-align: right; width: 10%;">Charges</th>
-                <th style="text-align: right; width: 9%;">Dispatch</th>
-                <th style="text-align: right; width: 9%;">Total</th>
+                <th style="width: 15%;">DATE</th>
+                <th style="width: 20%;">TRIP ID</th>
+                <th style="width: 20%;">ASSIGNED</th>
+                <th style="width: 15%;">ROUTE</th>
+                <th style="width: 18%;">DISCRIPTION</th>
+                <th style="width: 12%; text-align: right;">CHARGES</th>
               </tr>
             </thead>
             <tbody>
@@ -346,70 +283,60 @@ export const getInvoiceTemplate = (invoice: any): string => {
             </tbody>
           </table>
 
-          <table class="payment-section">
+          <!-- Right-aligned Summary & Deposit Area -->
+          <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
             <tr>
-              <td style="width: 50%; padding-right: 40px; vertical-align: top;">
-                ${
-                  invoice.accountNumber
-                    ? `
-                  <div class="payment-box" style="margin-top: 18px;">
-                    <div class="payment-label">Direct Deposit Details</div>
-                    <div style="font-size: 12px; color: #475569; line-height: 1.25;">
-                      Institution: ${invoice.institutionNumber || "003"} | Transit: ${invoice.transitNumber || "115000"} | Account: ${invoice.accountNumber}
-                    </div>
-                  </div>
-                `
-                    : ""
-                }
-              </td>
-              <td style="width: 50%; padding-left: 40px; vertical-align: top;">
-                <table class="totals-table" style="width: 100%;">
-                  ${
-                    invoice.tax
-                      ? `
+              <td style="width: 50%;"></td>
+              <td style="width: 50%; vertical-align: top;">
+                <table style="width: 100%; border-collapse: collapse; background-color: #f8fafc; border-top: 3px solid #102a63; padding: 10px;">
+                  <tr>
+                    <td style="padding: 6px 8px; font-size: 11px; font-weight: bold; color: #dc2626; text-transform: uppercase; width: 50%;">DISPATCH CHARGES</td>
+                    <td style="padding: 6px 8px; font-size: 12px; font-weight: bold; text-align: right; color: #dc2626;">${formatCurrency(invoice.dispatchTotal || invoice.trips?.reduce((acc: number, t: any) => acc + (t.dispatchAmount || 0), 0) || 0)}</td>
+                  </tr>
                   <tr style="border-bottom: 1px solid #e2e8f0;">
-                    <td style="padding: 6px 0; font-size: 12px; color: #475569;">Tax / VAT:</td>
-                    <td style="padding: 6px 0; font-size: 12px; text-align: right; color: #0f172a; font-weight: 500;">${formatCurrency(invoice.tax)}</td>
+                    <td style="padding: 6px 8px; font-size: 11px; font-weight: bold; color: #dc2626; text-transform: uppercase;">GRAND TOTAL</td>
+                    <td style="padding: 6px 8px; font-size: 14px; font-weight: bold; text-align: right; color: #1e293b; white-space: nowrap;">${formatCurrency(invoice.grandTotal)}</td>
+                  </tr>
+                  <tr>
+                    <td colspan="2" style="padding: 8px 8px 4px 8px; font-size: 11px; font-weight: bold; color: #dc2626; text-transform: uppercase;">DEPOSIT DETAILS</td>
+                  </tr>
+                  ${
+                    eTransferAddress
+                      ? `
+                  <tr>
+                    <td colspan="2" style="padding: 2px 8px 2px 18px; font-size: 11px; color: #dc2626;">
+                      e-transfer: <span style="color: #475569; font-weight: bold;">${eTransferAddress}</span>
+                    </td>
                   </tr>
                   `
                       : ""
                   }
-                  <tr class="grand-total-row">
-                    <td style="padding: 11px 0; font-size: 16px; font-weight: 800; color: #1e293b;">Grand Total:</td>
-                    <td style="padding: 11px 0; font-size: 21px; font-weight: 800; text-align: right; color: #2563eb; white-space: nowrap;">${invoice.currency || "CAD"} ${formatCurrency(invoice.grandTotal)}</td>
+                  <tr>
+                    <td colspan="2" style="padding: 2px 8px 6px 18px; font-size: 11px; color: #dc2626; line-height: 1.4;">
+                      VOID CHEQUE ${invoice.accountNumber ? `<br/><span style="color: #475569; font-weight: normal; font-size: 10px;">Inst: ${invoice.institutionNumber || "003"} | Transit: ${invoice.transitNumber || "115000"} | Acct: ${invoice.accountNumber}</span>` : ""}
+                    </td>
                   </tr>
                 </table>
-                ${
-                  eTransferAddress
-                    ? `
-                  <div class="payment-box" style="text-align: right; border: 0; margin-top: 5px;">
-                    <div class="payment-label-blue">E-Transfer Details</div>
-                    <div style="font-size: 12px; color: #1e293b; font-weight: 800; line-height: 1.3;">
-                      ${eTransferAddress}
-                    </div>
-                  </div>
-                `
-                    : ""
-                }
               </td>
             </tr>
           </table>
 
+          <!-- Footer Band -->
           <div class="footer-band">
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
-                <td style="width: 58%; vertical-align: top;">
+                <td style="width: 55%; vertical-align: top;">
                   <h2 class="footer-brand">XCDGOC PVT LTD</h2>
                   <div class="footer-left-copy">
                     Extreme Canada Dispatch Group of Companies<br/>
-                   
+                    <span style="font-size: 11px; font-weight: 800; color: #0f2962; letter-spacing: 0.2px;">WE ARE CANADA'S LEADING AND LARGEST DISPATCH SERVICES PROVIDEERS</span>
                   </div>
                 </td>
-                <td style="width: 42%; vertical-align: top; padding-top: 9px;">
+                <td style="width: 45%; vertical-align: top;">
                   <div class="footer-right-copy">
                     Open Board,Bision,Walmart,Load Link<br/>
                     and Non Amazon Dispatch Solutions<br/><br/>
-                    Contact : xcdgoc@gmail.com<br/>
+                    <b>Contact :</b> xcdgoc@gmail.com<br/>
                     +91 750 121 6555<br/>
                     Shahid ul islam
                   </div>
@@ -423,7 +350,7 @@ export const getInvoiceTemplate = (invoice: any): string => {
   `;
 };
 
-// Email-safe template for invoices (no @page, no position:fixed, no classes)
+// Email-safe template matching the new invoice design
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getInvoiceEmailBody = (invoice: any): string => {
   const formatCurrency = (amount: number) => {
@@ -433,99 +360,189 @@ export const getInvoiceEmailBody = (invoice: any): string => {
     }).format(amount || 0);
   };
 
+  const formatDate = (dateStr: string | undefined) => {
+    if (!dateStr) return "N/A";
+    return new Date(dateStr)
+      .toLocaleDateString("en-CA", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      })
+      .replace(/\//g, "-");
+  };
+
   const invoiceNumber = invoice.invoiceNumber || "N/A";
   const grandTotal = formatCurrency(invoice.grandTotal);
+  const dispatchTotal = formatCurrency(
+    invoice.dispatchTotal ||
+      invoice.trips?.reduce(
+        (acc: number, t: any) => acc + (t.dispatchAmount || 0),
+        0,
+      ) ||
+      0,
+  );
   const customerName =
     invoice.customer?.companyName ||
     invoice.customer?.customerName ||
     "Valued Customer";
+  const eTransferAddress =
+    invoice.customer?.eTransfer || invoice.payee?.eTransferAddress;
+
+  // Generate trip rows for email
+  const tripRows = (invoice.trips || [])
+    .map((trip: unknown) => {
+      const t = trip as Record<string, unknown>;
+      // Only show load IDs if there are multiple loads (loadId2 exists)
+      const hasMultipleLoads = t.loadId2 && (t.loadId2 as string).trim() !== "";
+      const loadIdDisplay = hasMultipleLoads
+        ? `${(t.loadId1 as string) || "N/A"}<br/>${t.loadId2 as string}`
+        : ""; // Don't show load ID if only one load (trip ID is the load)
+
+      return `
+        <tr>
+          <td style="padding: 10px 8px; font-size: 11px; border-bottom: 1px solid #e6eaf0; vertical-align: top; color: #475569;">
+            ${formatDate(t.tripDate as string | undefined)}
+          </td>
+          <td style="padding: 10px 8px; font-size: 11px; font-weight: bold; color: #1e293b; border-bottom: 1px solid #e6eaf0; vertical-align: top;">
+            ${(t.vrid as string) || "N/A"}${loadIdDisplay ? `<br/><span style="font-size: 10px; color: #64748b; font-weight: normal;">${loadIdDisplay}</span>` : ""}
+          </td>
+          <td style="padding: 10px 8px; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid #e6eaf0; vertical-align: top; color: #2563eb; font-weight: bold;">
+            ${(t.driverName as string) || "N/A"}
+          </td>
+          <td style="padding: 10px 8px; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid #e6eaf0; vertical-align: top; color: #475569;">
+            ${(t.route as string) || "N/A"}
+          </td>
+          <td style="padding: 10px 8px; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid #e6eaf0; vertical-align: top; color: #475569;">
+            ${(t.pickup as string) || "N/A"} - ${(t.drop as string) || "N/A"}
+          </td>
+          <td style="padding: 10px 8px; font-size: 11px; text-align: right; font-weight: bold; color: #dc2626; white-space: nowrap; border-bottom: 1px solid #e6eaf0; vertical-align: top;">
+            ${formatCurrency((t.totalCharges as number) || 0)}
+          </td>
+        </tr>
+      `;
+    })
+    .join("");
 
   return `
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-family: Arial, sans-serif; color: #1e293b; max-width: 600px; margin: 0 auto;">
-      <tr>
-        <td style="padding: 20px; background-color: #ffffff;">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-            <tr>
-              <td style="text-align: right; padding-bottom: 15px; border-bottom: 2px solid #102a63;">
-                <h1 style="margin: 0; font-size: 20px; font-weight: bold; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.5px;">INVOICE</h1>
-                <p style="margin: 4px 0 0 0; font-size: 12px; color: #64748b;">Invoice #: <strong>#${invoiceNumber}</strong></p>
-              </td>
-            </tr>
-          </table>
+    <div style="position: relative; width: 100%; max-width: 600px; margin: 0 auto; overflow: hidden;">
+      <!-- Email Safe Diagonal Background Watermark -->
+      <div style="position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%) rotate(-35deg); font-family: Arial, sans-serif; font-size: 48px; font-weight: 900; color: rgba(148, 163, 184, 0.12); z-index: 0; pointer-events: none; white-space: nowrap; text-align: center; width: 100%;">
+        XCDGOC PVT LTD
+      </div>
 
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 20px; margin-bottom: 20px;">
-            <tr>
-              <td style="padding: 15px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px;">
-                <p style="margin: 0 0 10px 0; font-size: 14px; line-height: 1.5; color: #1e293b;">Hello ${customerName},</p>
-                <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #475569;">Please find attached your professional invoice as a PDF document.</p>
-              </td>
-            </tr>
-          </table>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="position: relative; z-index: 1; font-family: Arial, sans-serif; color: #1e293b; background: transparent;">
+        <tr>
+          <td style="padding: 20px;">
+            <!-- Header -->
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="text-align: left; padding-bottom: 15px; border-bottom: 2px solid #102a63;">
+                  <h1 style="margin: 0; font-size: 24px; font-weight: 900; color: #0f2962; text-transform: uppercase;">INVOICE</h1>
+                  <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748b;">Num: <strong>#${invoiceNumber}</strong></p>
+                </td>
+              </tr>
+            </table>
 
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 20px;">
-            <tr>
-              <td style="padding: 12px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px;">
-                <h2 style="margin: 0 0 10px 0; font-size: 12px; font-weight: bold; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.5px;">Invoice Summary</h2>
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                  <tr>
-                    <td style="padding: 6px 0; font-size: 13px; color: #475569; width: 50%;">Invoice Number:</td>
-                    <td style="padding: 6px 0; font-size: 13px; color: #1e293b; font-weight: 600; width: 50%; text-align: right;">#${invoiceNumber}</td>
-                  </tr>
-                  <tr style="border-top: 1px solid #e2e8f0;">
-                    <td style="padding: 8px 0; font-size: 14px; font-weight: bold; color: #1e293b;">Grand Total:</td>
-                    <td style="padding: 8px 0; font-size: 16px; font-weight: bold; color: #2563eb; text-align: right;">${grandTotal}</td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-          </table>
+            <!-- Greeting -->
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 20px; margin-bottom: 20px;">
+              <tr>
+                <td style="padding: 15px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px;">
+                  <p style="margin: 0 0 10px 0; font-size: 14px; line-height: 1.5; color: #1e293b;">Hello ${customerName},</p>
+                  <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #475569;">Please find attached your professional invoice as a PDF document.</p>
+                </td>
+              </tr>
+            </table>
 
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 20px;">
-            <tr>
-              <td style="padding: 12px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px;">
-                <h2 style="margin: 0 0 8px 0; font-size: 12px; font-weight: bold; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.5px;">Payment Methods Available:</h2>
-                <ul style="margin: 0; padding-left: 18px; line-height: 1.6; font-size: 13px; color: #475569;">
-                  <li style="margin-bottom: 4px;"><strong>Direct Deposit:</strong> See attached PDF for complete banking details</li>
-                  <li><strong>E-Transfer:</strong> See attached PDF for E-Transfer email address</li>
-                </ul>
-              </td>
-            </tr>
-          </table>
+            <!-- Trip Details Table -->
+            ${
+              invoice.trips && invoice.trips.length > 0
+                ? `
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 20px;">
+              <tr>
+                <td style="padding: 12px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px;">
+                  <h2 style="margin: 0 0 10px 0; font-size: 12px; font-weight: bold; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.5px;">Trip Details</h2>
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size: 11px;">
+                    <thead>
+                      <tr style="background-color: #102a63; color: #ffffff;">
+                        <th style="padding: 8px; text-align: left; font-weight: 700; width: 15%;">DATE</th>
+                        <th style="padding: 8px; text-align: left; font-weight: 700; width: 20%;">TRIP ID</th>
+                        <th style="padding: 8px; text-align: left; font-weight: 700; width: 20%;">ASSIGNED</th>
+                        <th style="padding: 8px; text-align: left; font-weight: 700; width: 15%;">ROUTE</th>
+                        <th style="padding: 8px; text-align: left; font-weight: 700; width: 18%;">DISCRIPTION</th>
+                        <th style="padding: 8px; text-align: right; font-weight: 700; width: 12%;">CHARGES</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${tripRows}
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
+            </table>
+            `
+                : ""
+            }
 
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top: 2px solid #102a63; padding-top: 15px; margin-top: 20px;">
-            <tr>
-              <td style="padding-top: 15px;">
-                <p style="margin: 0 0 8px 0; font-size: 13px; line-height: 1.5; color: #1e293b;">Thank you for your business!</p>
-                <p style="margin: 0; font-size: 11px; color: #64748b;">— Dispatch Group Billing Team</p>
-              </td>
-            </tr>
-          </table>
+            <!-- Right Aligned Pricing Summary -->
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 20px;">
+              <tr>
+                <td width="40%"></td>
+                <td width="60%" style="background-color: #f8fafc; border-top: 3px solid #102a63; padding: 12px;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td style="padding: 4px 0; font-size: 11px; font-weight: bold; color: #dc2626; text-transform: uppercase;">DISPATCH CHARGES</td>
+                      <td style="padding: 4px 0; font-size: 12px; font-weight: bold; text-align: right; color: #dc2626;">${dispatchTotal}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                      <td style="padding: 4px 0; font-size: 11px; font-weight: bold; color: #dc2626; text-transform: uppercase;">GRAND TOTAL</td>
+                      <td style="padding: 4px 0; font-size: 14px; font-weight: bold; text-align: right; color: #1e293b; white-space: nowrap;">${grandTotal}</td>
+                    </tr>
+                    <tr>
+                      <td colspan="2" style="padding: 8px 0 2px 0; font-size: 11px; font-weight: bold; color: #dc2626; text-transform: uppercase;">DEPOSIT DETAILS</td>
+                    </tr>
+                    ${
+                      eTransferAddress
+                        ? `
+                    <tr>
+                      <td colspan="2" style="padding: 2px 0 2px 10px; font-size: 11px; color: #dc2626;">
+                        e-transfer: <span style="color: #475569; font-weight: bold;">${eTransferAddress}</span>
+                      </td>
+                    </tr>
+                    `
+                        : ""
+                    }
+                    <tr>
+                      <td colspan="2" style="padding: 2px 0 2px 10px; font-size: 11px; color: #dc2626; line-height: 1.4;">
+                        VOID CHEQUE ${invoice.accountNumber ? `<br/><span style="color: #475569; font-weight: normal; font-size: 10px;">Inst: ${invoice.institutionNumber || "003"} | Transit: ${invoice.transitNumber || "115000"} | Acct: ${invoice.accountNumber}</span>` : ""}
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
 
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 20px;">
-            <tr>
-              <td style="padding: 20px; background-color: #f8fafc; border-radius: 4px;">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                  <tr>
-                    <td style="width: 58%; vertical-align: top;">
-                      <h2 style="margin: 0 0 7px 0; font-size: 20px; font-weight: 900; letter-spacing: 3px; color: #64748b;">XCDGOC PVT LTD</h2>
-                      <p style="margin: 0; font-size: 14px; line-height: 1.3; color: #64748b; font-weight: 600;">Extreme Canada Dispatch Group of Companies</p>
-                    </td>
-                    <td style="width: 42%; vertical-align: top; padding-top: 9px;">
-                      <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #64748b; text-align: center;">
-                        Open Board, Bision, Walmart, Load Link<br/>
-                        and Non Amazon Dispatch Solutions<br/><br/>
-                        Contact: xcdgoc@gmail.com<br/>
-                        +91 750 121 6555<br/>
-                        Shahid ul islam
-                      </p>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
+            <!-- Footer Band -->
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 20px; margin-top: 20px;">
+              <tr>
+                <td style="width: 55%; vertical-align: top;">
+                  <h2 style="margin: 0 0 4px 0; font-size: 22px; font-weight: 900; color: #475569; letter-spacing: 1px;">XCDGOC PVT LTD</h2>
+                  <p style="margin: 0; font-size: 12px; font-weight: bold; color: #475569; line-height: 1.3;">Extreme Canada Dispatch Group of Companies</p>
+                  <p style="margin: 4px 0 0 0; font-size: 10px; font-weight: bold; color: #0f2962;">WE ARE CANADA'S LEADING AND LARGEST DISPATCH SERVICES PROVIDEERS</p>
+                </td>
+                <td style="width: 45%; vertical-align: top; text-align: right;">
+                  <p style="margin: 0; font-size: 11px; line-height: 1.4; color: #64748b;">
+                    Open Board, Bision, Walmart, Load Link<br/>
+                    and Non Amazon Dispatch Solutions<br/><br/>
+                    <strong>Contact:</strong> xcdgoc@gmail.com<br/>
+                    +91 750 121 6555<br/>
+                    Shahid ul islam
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </div>
   `;
 };

@@ -125,7 +125,7 @@ export default function AdminInvoicesPage() {
             borderRadius: isMobile ? 10 : 12,
             border: "1px solid #e2e8f0",
             boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-            overflow: "hidden",
+            overflow: "visible",
           }}
           bodyStyle={{ padding: isMobile ? "8px" : "12px" }}
         >

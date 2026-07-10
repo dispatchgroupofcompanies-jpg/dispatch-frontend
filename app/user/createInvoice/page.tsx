@@ -289,10 +289,9 @@ function DashboardComponent() {
 
               <Popconfirm
                 title="Purge Invoice Record"
-                description="Are you  sure you want to delete this invoice statement permanently?"
+                description="Are you sure you want to delete this invoice statement permanently?"
                 onConfirm={() => handleDeleteInvoice(record._id)}
                 okText="Confirm Delete"
-                cancelText="Cancel"
                 okButtonProps={{ danger: true, type: "primary" }}
               >
                 <Button danger type="text" icon={<DeleteOutlined />} />
@@ -305,7 +304,7 @@ function DashboardComponent() {
     [selected, downloading],
   );
 
-  const isMobile = window.innerWidth < 768;
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
   const headerPadding = isMobile ? "20px 16px" : "24px 20px";
 
   return (
@@ -487,74 +486,99 @@ function DashboardComponent() {
         editData={editingInvoice || undefined}
       />
 
+      {/* Optimized Modal UI: Removes white backdrop spacing around the invoice */}
       <Modal
         open={viewOpen}
-        footer={[
-          <Button
-            key="close"
-            onClick={() => setViewOpen(false)}
-            size={isMobile ? "middle" : "large"}
-            style={{ borderRadius: "6px" }}
-          >
-            Close Preview
-          </Button>,
-          <Button
-            key="download"
-            type="primary"
-            icon={<DownloadOutlined />}
-            size={isMobile ? "middle" : "large"}
-            loading={downloading}
-            disabled={!selected}
-            style={{
-              borderRadius: "6px",
-              backgroundColor: "#10b981",
-              borderColor: "#10b981",
-            }}
-            onClick={() => {
-              if (selected) triggerDownloadPDF(selected);
-            }}
-          >
-            Download PDF
-          </Button>,
-        ]}
         onCancel={() => setViewOpen(false)}
-        width={isMobile ? "100%" : "95vw"}
-        style={{
-          top: isMobile ? 0 : 20,
-          maxWidth: 980,
-          padding: isMobile ? "8px" : "16px",
-        }}
+        width={isMobile ? "100%" : "auto"}
         centered
         title={null}
-        closable
+        closable={true}
+        footer={null} // Cleaner layout matching original UI
         styles={{
+          mask: {
+            backgroundColor: "rgba(15, 23, 42, 0.85)", // Modern crisp dark blur tint
+          },
           body: {
-            padding: isMobile ? "8px" : "16px",
+            padding: 0,
+            background: "transparent",
+            boxShadow: "none",
           },
         }}
       >
         {selected && (
           <div
-            id="printable-invoice-modal-content"
             style={{
-              backgroundColor: "#ffffff",
-              padding: isMobile ? "8px" : "15px",
-              borderRadius: "4px",
-              overflow: "hidden",
-              maxHeight: isMobile
-                ? "calc(100vh - 140px)"
-                : "calc(100vh - 200px)",
-              overflowY: "auto",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "100%",
             }}
           >
+            {/* Embedded Clean Frame for Invoice Content */}
             <div
+              id="printable-invoice-modal-content"
               style={{
-                transform: isMobile ? "scale(0.55)" : "scale(0.75)",
-                transformOrigin: "top center",
-                marginBottom: isMobile ? "-45%" : "-25%",
+                backgroundColor: "#ffffff",
+                padding: "24px",
+                borderRadius: "8px",
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
+                maxWidth: "100%",
+                maxHeight: "80vh",
+                overflowY: "auto",
               }}
             >
               <InvoicePreview invoice={selected} />
+            </div>
+
+            {/* Seamless Outside UI Controls Floating Container */}
+            <div
+              style={{
+                marginTop: "20px",
+                display: "flex",
+                gap: "12px",
+                width: "100%",
+                maxWidth: "600px",
+                justifyContent: "center",
+              }}
+            >
+              <Button
+                key="close"
+                onClick={() => setViewOpen(false)}
+                size="large"
+                style={{
+                  borderRadius: "8px",
+                  fontWeight: 600,
+                  flex: 1,
+                  border: "1px solid rgba(255, 255, 255, 0.25)",
+                  background: "rgba(255, 255, 255, 0.1)",
+                  color: "#ffffff",
+                }}
+              >
+                Close Preview
+              </Button>
+              <Button
+                key="download"
+                type="primary"
+                icon={<DownloadOutlined />}
+                size="large"
+                loading={downloading}
+                disabled={!selected}
+                style={{
+                  borderRadius: "8px",
+                  fontWeight: 600,
+                  flex: 1,
+                  backgroundColor: "#10b981",
+                  borderColor: "#10b981",
+                  color: "#ffffff",
+                }}
+                onClick={() => {
+                  if (selected) triggerDownloadPDF(selected);
+                }}
+              >
+                Download PDF
+              </Button>
             </div>
           </div>
         )}
