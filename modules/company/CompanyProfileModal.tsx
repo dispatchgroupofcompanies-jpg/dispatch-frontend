@@ -71,16 +71,39 @@ export default function CompanyProfileModal({
   return (
     <Modal
       title={
-        <span
+        <div
           style={{
-            fontSize: 16,
-            fontWeight: 700,
-            color: "#0f172a",
-            letterSpacing: "0.3px",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            padding: "8px 0",
           }}
         >
-          🏢 Company Profile Configurations
-        </span>
+          <div
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: "8px",
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "18px",
+            }}
+          >
+            🏢
+          </div>
+          <span
+            style={{
+              fontSize: 17,
+              fontWeight: 700,
+              color: "#0f172a",
+              letterSpacing: "0.3px",
+            }}
+          >
+            Company Profile Configurations
+          </span>
+        </div>
       }
       open={open}
       onCancel={() => {
@@ -88,11 +111,17 @@ export default function CompanyProfileModal({
         onClose();
       }}
       footer={null}
-      width={900} // Expanded from 800 to 900 to comfortably fit 3 inputs side-by-side
+      width={1100}
       centered
       destroyOnHidden={true}
       forceRender={true}
-      styles={{ body: { padding: "12px 24px" } }}
+      styles={{
+        body: { padding: "24px 32px" },
+        header: {
+          borderBottom: "2px solid #f1f5f9",
+          marginBottom: 8,
+        },
+      }}
     >
       <Form
         form={form}
@@ -176,6 +205,29 @@ export default function CompanyProfileModal({
               >
                 <Input
                   placeholder="Enter email address"
+                  style={{ borderRadius: "6px" }}
+                />
+              </Form.Item>
+            </Col>
+
+            <Col {...gridResponsiveProps}>
+              <Form.Item
+                name="eTransfer"
+                label={
+                  <span style={{ fontWeight: 600, color: "#475569" }}>
+                    E-Transfer Email
+                  </span>
+                }
+                rules={[
+                  {
+                    required: false,
+                    type: "email",
+                    message: "Valid email required",
+                  },
+                ]}
+              >
+                <Input
+                  placeholder="Enter e-transfer email address"
                   style={{ borderRadius: "6px" }}
                 />
               </Form.Item>
@@ -266,6 +318,20 @@ export default function CompanyProfileModal({
                   placeholder="Enter GST/HST number"
                   style={{ borderRadius: "6px" }}
                 />
+              </Form.Item>
+            </Col>
+
+            <Col {...gridResponsiveProps}>
+              <Form.Item
+                name="institutionNumber"
+                label={
+                  <span style={{ fontWeight: 600, color: "#475569" }}>
+                    Institution Number
+                  </span>
+                }
+                rules={[{ required: false, message: "Required" }]}
+              >
+                <Input placeholder="e.g. 003" style={{ borderRadius: "6px" }} />
               </Form.Item>
             </Col>
           </Row>

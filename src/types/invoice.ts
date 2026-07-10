@@ -22,12 +22,13 @@ export interface Party {
   address1?: string;
   address?: string;
   gstNumber?: string;
+  institutionNumber?: string;
   eTransfer?: string;
   eTransferAddress?: string;
 }
 
 export interface Invoice {
-  message: any;
+  message?: string;
   _id: string;
   invoiceNumber: string;
   invoiceStatus: string;

@@ -32,51 +32,60 @@ export default function CreateInvoiceModal({
   const invoiceType = Form.useWatch("invoiceType", form);
   const isEditMode = !!editData;
 
-  const fetchCompaniesList = async () => {
-    try {
-      const res = await getCompanyProfile();
-      console.log("Fetched Companies List:", res);
-      if (res && res.success && res.data) {
-        const data = Array.isArray(res.data)
-          ? (res.data as CompanyProfile[])
-          : [res.data as CompanyProfile];
-        setCompanies(data);
+  useEffect(() => {
+    if (!open) return;
+
+    let isMounted = true;
+
+    const fetchCompaniesList = async () => {
+      try {
+        const res = await getCompanyProfile();
+        console.log("Fetched Companies List:", res);
+        if (isMounted && res && res.success && res.data) {
+          const data = Array.isArray(res.data)
+            ? (res.data as CompanyProfile[])
+            : [res.data as CompanyProfile];
+          setCompanies(data);
+        }
+      } catch (err) {
+        console.error("Error loading profile dataset:", err);
       }
-    } catch (err) {
-      console.error("Error loading profile dataset:", err);
-    }
-  };
+    };
+
+    fetchCompaniesList();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [open]);
 
   useEffect(() => {
-    if (open) {
-      fetchCompaniesList();
-      if (editData) {
-        const period = editData.invoicePeriod;
+    if (open && editData) {
+      const period = editData.invoicePeriod;
 
-        // Explicitly check that period is an object containing 'startDate' and not an array
-        const hasObjectDates =
-          period &&
-          !Array.isArray(period) &&
-          typeof period === "object" &&
-          "startDate" in period;
+      // Explicitly check that period is an object containing 'startDate' and not an array
+      const hasObjectDates =
+        period &&
+        !Array.isArray(period) &&
+        typeof period === "object" &&
+        "startDate" in period;
 
-        const formattedEditData = {
-          ...editData,
-          invoicePeriod: hasObjectDates
-            ? [
-                dayjs((period as { startDate: string }).startDate),
-                dayjs((period as { endDate: string }).endDate),
-              ]
-            : null,
-          trips: (editData.trips || []).map((trip: TripForm) => ({
-            ...trip,
-            tripDate: trip.tripDate ? dayjs(trip.tripDate) : null,
-          })),
-        };
-        form.setFieldsValue(formattedEditData);
-      } else {
-        form.resetFields();
-      }
+      const formattedEditData = {
+        ...editData,
+        invoicePeriod: hasObjectDates
+          ? [
+              dayjs((period as { startDate: string }).startDate),
+              dayjs((period as { endDate: string }).endDate),
+            ]
+          : null,
+        trips: (editData.trips || []).map((trip: TripForm) => ({
+          ...trip,
+          tripDate: trip.tripDate ? dayjs(trip.tripDate) : null,
+        })),
+      };
+      form.setFieldsValue(formattedEditData);
+    } else if (open && !editData) {
+      form.resetFields();
     }
   }, [open, editData, form]);
 
@@ -238,7 +247,7 @@ export default function CreateInvoiceModal({
             md={12}
             style={{ display: "flex", flexDirection: "column" }}
           >
-            <PayToDetails />
+            <PayToDetails formInstance={form} companiesList={companies} />
           </Col>
         </Row>
 

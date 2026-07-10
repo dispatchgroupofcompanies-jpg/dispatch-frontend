@@ -1,31 +1,130 @@
 "use client";
 
-import { Card, Col, Form, Input, Row } from "antd";
+import { Card, Col, Form, Input, Row, Select } from "antd";
+import { FormInstance } from "antd";
+import type { CompanyProfile } from "../../src/types/company";
 
-export default function PayToDetails() {
+interface PayToProps {
+  formInstance: FormInstance;
+  companiesList: CompanyProfile[];
+}
+
+export default function PayToDetails({
+  formInstance,
+  companiesList,
+}: PayToProps) {
+  const handleCompanySelect = (companyId: string) => {
+    const targetCompany = companiesList.find(
+      (c) => c._id === companyId || c.companyName === companyId,
+    );
+    if (targetCompany) {
+      formInstance.setFieldsValue({
+        customer: {
+          companyName: targetCompany.companyName,
+          phone: targetCompany.phone || "",
+          email: targetCompany.email || "",
+          gstNumber: targetCompany.gstHst || "",
+          eTransfer: targetCompany.eTransfer || "",
+          address1: `${targetCompany.addressLine1 || ""}, ${targetCompany.city || ""}, ${targetCompany.province || ""}, ${targetCompany.postCode || ""}`,
+        },
+      });
+    }
+  };
+
+  const handleClear = () => {
+    formInstance.setFieldsValue({
+      customer: {
+        companyName: undefined,
+        phone: undefined,
+        email: undefined,
+        gstNumber: undefined,
+        eTransfer: undefined,
+        address1: undefined,
+      },
+    });
+  };
+
   return (
     <Card
       title={
-        <span style={{ fontSize: 13, fontWeight: 700, color: "#1e3a8a" }}>
-          💳 PAY TO / Customer Info...
-        </span>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            width: "100%",
+            gap: "16px",
+            flexWrap: "wrap",
+          }}
+        >
+          <span
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              color: "#1e3a8a",
+              whiteSpace: "nowrap",
+              flex: "0 0 auto",
+            }}
+          >
+            💳 PAY TO / Customer Info...
+          </span>
+
+          <div
+            style={{
+              flex: "1 1 280px",
+              minWidth: "220px",
+              maxWidth: "400px",
+              position: "relative",
+            }}
+          >
+            <Form.Item
+              name={["customer", "companySelectKey"]}
+              style={{
+                marginBottom: 0,
+                width: "100%",
+                position: "relative",
+                zIndex: 1,
+              }}
+            >
+              <Select
+                placeholder="Select Company..."
+                size="middle"
+                onChange={handleCompanySelect}
+                onClear={handleClear}
+                allowClear
+                showSearch
+                optionFilterProp="label"
+                style={{ width: "100%", position: "relative", zIndex: 9999 }}
+                getPopupContainer={() => document.body}
+                popupClassName="customer-select-dropdown"
+                options={companiesList.map((company) => ({
+                  value: company._id || company.companyName,
+                  label: `🏢 ${company.companyName}`,
+                }))}
+              />
+            </Form.Item>
+          </div>
+        </div>
       }
       variant="borderless"
       styles={{
-        // Padding kam kar di choti screens ke liye
-        body: { padding: "10px 12px" },
+        body: { padding: "16px 14px", flex: 1, overflow: "visible" },
         header: {
-          minHeight: 36,
-          padding: "0 12px",
+          minHeight: 42,
+          padding: "0 14px",
           borderBottom: "1px solid #e2e8f0",
           background: "#f8fafc",
+          overflow: "visible",
         },
       }}
       style={{
-        marginBottom: 12,
         border: "1px solid #e2e8f0",
         borderRadius: 6,
-        boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+        overflow: "visible",
+        position: "relative",
+        minHeight: "100px",
+        zIndex: 1,
+        isolation: "isolate",
       }}
     >
       <div>
