@@ -313,7 +313,7 @@ export const getInvoiceTemplate = (invoice: any): string => {
                   }
                   <tr>
                     <td colspan="2" style="padding: 2px 8px 6px 18px; font-size: 11px; color: #dc2626; line-height: 1.4;">
-                      VOID CHEQUE ${invoice.accountNumber ? `<br/><span style="color: #475569; font-weight: normal; font-size: 10px;">Inst: ${invoice.institutionNumber || "003"} | Transit: ${invoice.transitNumber || "115000"} | Acct: ${invoice.accountNumber}</span>` : ""}
+                      VOID CHEQUE ${invoice.accountNumber ? `<br/><span style="color: #475569; font-weight: normal; font-size: 10px;">Transit: ${invoice.transitNumber || "115000"} | Acct: ${invoice.accountNumber}</span>` : ""}
                     </td>
                   </tr>
                 </table>
@@ -513,7 +513,7 @@ export const getInvoiceEmailBody = (invoice: any): string => {
                     }
                     <tr>
                       <td colspan="2" style="padding: 2px 0 2px 10px; font-size: 11px; color: #dc2626; line-height: 1.4;">
-                        VOID CHEQUE ${invoice.accountNumber ? `<br/><span style="color: #475569; font-weight: normal; font-size: 10px;">Inst: ${invoice.institutionNumber || "003"} | Transit: ${invoice.transitNumber || "115000"} | Acct: ${invoice.accountNumber}</span>` : ""}
+                        VOID CHEQUE ${invoice.accountNumber ? `<br/><span style="color: #475569; font-weight: normal; font-size: 10px;">Transit: ${invoice.transitNumber || "115000"} | Acct: ${invoice.accountNumber}</span>` : ""}
                       </td>
                     </tr>
                   </table>

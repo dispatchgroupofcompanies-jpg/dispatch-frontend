@@ -27,6 +27,7 @@ export interface Party {
 }
 
 export interface Invoice {
+  message: any;
   _id: string;
   invoiceNumber: string;
   invoiceStatus: string;

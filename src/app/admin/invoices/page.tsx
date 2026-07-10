@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
-import { Card, Typography, Grid } from "antd";
+import { Card, Typography, Grid, message } from "antd";
 import InvoiceTable from "../../../components/InvoiceTable";
 import InvoiceModal from "../../../components/InvoiceModal";
 import {
@@ -57,10 +57,29 @@ export default function AdminInvoicesPage() {
     else setRejectLoading(true);
     try {
       console.log("🔔 PAGE - Calling updateInvoiceStatus...");
-      await updateInvoiceStatus(id, status);
-      console.log("🔔 PAGE - updateInvoiceStatus completed");
+      const response = await updateInvoiceStatus(id, status);
+      console.log("🔔 PAGE - updateInvoiceStatus completed:", response);
+
+      // Show success/error message based on response
+      const apiResponse = response as { message?: string };
+      if (apiResponse.message) {
+        if (apiResponse.message.includes("email notification failed")) {
+          message.warning(apiResponse.message);
+        } else {
+          message.success(apiResponse.message);
+        }
+      } else {
+        message.success(`Invoice ${status} successfully!`);
+      }
+
       setSelected(null);
       await fetch();
+    } catch (error) {
+      console.error("🔔 PAGE - Error:", error);
+      const err = error as { response?: { data?: { message?: string } } };
+      message.error(
+        err?.response?.data?.message || `Failed to ${status} invoice`,
+      );
     } finally {
       setApproveLoading(false);
       setRejectLoading(false);
