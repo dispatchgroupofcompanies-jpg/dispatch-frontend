@@ -1,10 +1,10 @@
 "use client";
 import React from "react";
-import { Modal, Button, Space, Tag, Grid } from "antd";
+import { Modal, Button, Space, Grid } from "antd";
 import {
-  FilePdfOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
+  DownloadOutlined,
 } from "@ant-design/icons";
 import InvoicePreview from "./InvoicePreview";
 import type { Invoice } from "../types/invoice";
@@ -36,59 +36,168 @@ export default function InvoiceModal({
 
   if (!invoice) return null;
 
+  const handleDownloadPDF = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `/api/user/invoice/${invoice._id}/download`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to download PDF");
+      }
+
+      // Get the blob
+      const blob = await response.blob();
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `Invoice-${invoice.invoiceNumber}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      alert("Failed to download PDF. Please try again.");
+    }
+  };
+
   return (
     <Modal
-      title={null}
+      title={
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            width: "100%",
+            paddingRight: "20px",
+          }}
+        >
+          <span style={{ fontSize: "14px", fontWeight: 600, color: "#1e293b" }}>
+            Invoice #{invoice.invoiceNumber}
+          </span>
+          <Button
+            type="text"
+            onClick={onClose}
+            style={{
+              color: "#dc2626",
+              fontSize: "20px",
+              fontWeight: "bold",
+              width: "32px",
+              height: "32px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            ✕
+          </Button>
+        </div>
+      }
       open={open}
       onCancel={onClose}
-      width={isMobile ? "95vw" : 980}
-      style={{ top: isMobile ? 10 : 20 }}
+      width={isMobile ? "95vw" : 900}
+      style={{ top: isMobile ? 5 : 20 }}
       footer={[]}
+      closeIcon={null}
+      styles={{
+        body: {
+          padding: isMobile ? "8px" : "12px",
+          maxHeight: "85vh",
+          overflowY: "auto",
+        },
+      }}
     >
       <div
         style={{
           display: "flex",
           gap: isMobile ? 8 : 12,
           flexWrap: "wrap",
-          justifyContent: isMobile ? "center" : "space-between",
+          justifyContent: isMobile ? "center" : "flex-end",
           backgroundColor: "#f8fafc",
-          padding: isMobile ? "12px 16px" : "16px 24px",
+          padding: isMobile ? "10px 12px" : "12px 16px",
           borderBottom: "1px solid #e2e8f0",
-          marginBottom: isMobile ? 8 : 0,
+          marginBottom: isMobile ? 8 : 12,
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
         }}
       >
-        {(invoice.invoiceStatus === "pending" ||
-          invoice.invoiceStatus === "draft") && (
-          <Space
-            size={isMobile ? "small" : "middle"}
-            direction={isMobile ? "vertical" : "horizontal"}
+        <Space
+          size={isMobile ? "small" : "small"}
+          direction={isMobile ? "vertical" : "horizontal"}
+        >
+          <Button
+            icon={<DownloadOutlined />}
+            onClick={handleDownloadPDF}
+            size="small"
+            style={{ borderRadius: 6, minWidth: "120px" }}
           >
-            <Button
-              type="primary"
-              icon={<CheckCircleOutlined />}
-              onClick={() => onUpdateStatus(invoice._id, "approved")}
-              loading={approveLoading}
-              disabled={rejectLoading}
-              style={{ background: "#10b981", borderRadius: 6 }}
-            >
-              {isMobile ? "Approve" : "Approve Invoice"}
-            </Button>
-            <Button
-              type="primary"
-              danger
-              icon={<CloseCircleOutlined />}
-              onClick={() => onUpdateStatus(invoice._id, "rejected")}
-              loading={rejectLoading}
-              disabled={approveLoading}
-              style={{ borderRadius: 6 }}
-            >
-              {isMobile ? "Reject" : "Reject Invoice"}
-            </Button>
-          </Space>
-        )}
+            {isMobile ? "PDF" : "Download"}
+          </Button>
+          {(invoice.invoiceStatus === "pending" ||
+            invoice.invoiceStatus === "draft") && (
+            <>
+              <Button
+                type="primary"
+                icon={<CheckCircleOutlined />}
+                onClick={() => onUpdateStatus(invoice._id, "approved")}
+                loading={approveLoading}
+                disabled={rejectLoading}
+                size="small"
+                style={{
+                  background: "#10b981",
+                  borderRadius: 6,
+                  minWidth: "100px",
+                }}
+              >
+                {isMobile ? "✓" : "Approve"}
+              </Button>
+              <Button
+                type="primary"
+                danger
+                icon={<CloseCircleOutlined />}
+                onClick={() => onUpdateStatus(invoice._id, "rejected")}
+                loading={rejectLoading}
+                disabled={approveLoading}
+                size="small"
+                style={{ borderRadius: 6, minWidth: "100px" }}
+              >
+                {isMobile ? "✗" : "Reject"}
+              </Button>
+            </>
+          )}
+        </Space>
       </div>
 
-      <InvoicePreview invoice={invoice} />
+      <div
+        style={{
+          padding: isMobile ? "8px" : "12px",
+          overflowX: "auto",
+          display: "flex",
+          justifyContent: "center",
+        }}
+      >
+        <div
+          style={{
+            width: "100%",
+            maxWidth: "210mm",
+            minHeight: "296mm",
+          }}
+        >
+          <InvoicePreview invoice={invoice} />
+        </div>
+      </div>
     </Modal>
   );
 }

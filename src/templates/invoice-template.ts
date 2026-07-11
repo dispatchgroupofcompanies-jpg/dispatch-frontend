@@ -44,11 +44,10 @@ export const getInvoiceTemplate = (invoice: any): string => {
 
   const tripRows = (invoice.trips || [])
     .map((trip: InvoiceTrip) => {
-      // Only show load IDs if there are multiple loads (loadId2 exists)
       const hasMultipleLoads = trip.loadId2 && trip.loadId2.trim() !== "";
       const loadIdDisplay = hasMultipleLoads
         ? `${trip.loadId1 || "N/A"}<br/>${trip.loadId2}`
-        : ""; // Don't show load ID if only one load (trip ID is the load)
+        : "";
 
       return `
     <tr>
@@ -91,7 +90,6 @@ export const getInvoiceTemplate = (invoice: any): string => {
             overflow: hidden;
           }
 
-          /* Diagonal Watermark Styling */
           .watermark {
             position: absolute;
             top: 50%;
@@ -145,7 +143,7 @@ export const getInvoiceTemplate = (invoice: any): string => {
           .details-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 45px;
+            margin-bottom: 20px;
           }
 
           .company-name-red {
@@ -168,7 +166,7 @@ export const getInvoiceTemplate = (invoice: any): string => {
           .items-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
           }
 
           .items-table thead tr {
@@ -189,12 +187,12 @@ export const getInvoiceTemplate = (invoice: any): string => {
             left: 0;
             right: 0;
             bottom: 0;
-            height: 44mm;
+            height: 40mm;
             background: #f8fafc;
             color: #64748b;
             border-top: 1px solid #e2e8f0;
             box-sizing: border-box;
-            padding: 8mm 15mm 8mm 15mm;
+            padding: 6mm 15mm 6mm 15mm;
           }
 
           .footer-brand {
@@ -222,7 +220,6 @@ export const getInvoiceTemplate = (invoice: any): string => {
         </style>
       </head>
       <body>
-        <!-- Watermark base layer behind content -->
         <div class="watermark">XCDGOC PVT LTD</div>
 
         <div class="page-container">
@@ -288,24 +285,24 @@ export const getInvoiceTemplate = (invoice: any): string => {
             <tr>
               <td style="width: 50%;"></td>
               <td style="width: 50%; vertical-align: top;">
-                <table style="width: 100%; border-collapse: collapse; background-color: #f8fafc; border-top: 3px solid #102a63; padding: 10px;">
-                  <tr>
-                    <td style="padding: 6px 8px; font-size: 11px; font-weight: bold; color: #dc2626; text-transform: uppercase; width: 50%;">DISPATCH CHARGES</td>
+                <table style="width: 100%; border-collapse: collapse; background-color: #f8fafc; border-top: 3px solid #102a63; border-bottom: 3px solid #102a63; padding: 10px;">
+                  <tr style="border-bottom: 1px solid #e2e8f0;">
+                    <td style="padding: 6px 8px; font-size: 11px; font-weight: bold; color: #dc2626; text-transform: uppercase; letter-spacing: 0.5px;">DISPATCH CHARGES</td>
                     <td style="padding: 6px 8px; font-size: 12px; font-weight: bold; text-align: right; color: #dc2626;">${formatCurrency(invoice.dispatchTotal || invoice.trips?.reduce((acc: number, t: any) => acc + (t.dispatchAmount || 0), 0) || 0)}</td>
                   </tr>
                   <tr style="border-bottom: 1px solid #e2e8f0;">
-                    <td style="padding: 6px 8px; font-size: 11px; font-weight: bold; color: #dc2626; text-transform: uppercase;">GRAND TOTAL</td>
+                    <td style="padding: 6px 8px; font-size: 11px; font-weight: bold; color: #dc2626; text-transform: uppercase; letter-spacing: 0.5px;">GRAND TOTAL</td>
                     <td style="padding: 6px 8px; font-size: 14px; font-weight: bold; text-align: right; color: #1e293b; white-space: nowrap;">${formatCurrency(invoice.grandTotal)}</td>
                   </tr>
                   <tr>
-                    <td colspan="2" style="padding: 8px 8px 4px 8px; font-size: 11px; font-weight: bold; color: #dc2626; text-transform: uppercase;">DEPOSIT DETAILS</td>
+                    <td colspan="2" style="padding: 8px 8px 4px 8px; font-size: 11px; font-weight: bold; color: #dc2626; text-transform: uppercase; letter-spacing: 0.5px;">DEPOSIT DETAILS</td>
                   </tr>
                   ${
                     eTransferAddress
                       ? `
                   <tr>
-                    <td colspan="2" style="padding: 2px 8px 2px 18px; font-size: 11px; color: #dc2626;">
-                      e-transfer: <span style="color: #475569; font-weight: bold;">${eTransferAddress}</span>
+                    <td colspan="2" style="padding: 2px 8px 2px 18px; font-size: 11px; color: #dc2626; line-height: 1.4;">
+                      <span style="font-weight: bold; text-transform: uppercase;">E-TRANSFER:</span> <span style="color: #475569; font-weight: bold;">${eTransferAddress}</span>
                     </td>
                   </tr>
                   `
@@ -313,7 +310,7 @@ export const getInvoiceTemplate = (invoice: any): string => {
                   }
                   <tr>
                     <td colspan="2" style="padding: 2px 8px 6px 18px; font-size: 11px; color: #dc2626; line-height: 1.4;">
-                      VOID CHEQUE ${invoice.accountNumber ? `<br/><span style="color: #475569; font-weight: normal; font-size: 10px;">Transit: ${invoice.transitNumber || "115000"} | Acct: ${invoice.accountNumber}</span>` : ""}
+                      ${invoice.accountNumber ? `<span style="font-weight: bold; text-transform: uppercase;">VOID CHEQUE:</span> <span style="color: #475569; font-weight: normal; font-size: 10px; text-transform: uppercase;">Institution: ${invoice.institutionNumber || "003"} | Transit: ${invoice.transitNumber || "115000"} | Acct: ${invoice.accountNumber}</span>` : ""}
                     </td>
                   </tr>
                 </table>
@@ -388,15 +385,13 @@ export const getInvoiceEmailBody = (invoice: any): string => {
   const eTransferAddress =
     invoice.customer?.eTransfer || invoice.payee?.eTransferAddress;
 
-  // Generate trip rows for email
   const tripRows = (invoice.trips || [])
     .map((trip: unknown) => {
       const t = trip as Record<string, unknown>;
-      // Only show load IDs if there are multiple loads (loadId2 exists)
       const hasMultipleLoads = t.loadId2 && (t.loadId2 as string).trim() !== "";
       const loadIdDisplay = hasMultipleLoads
         ? `${(t.loadId1 as string) || "N/A"}<br/>${t.loadId2 as string}`
-        : ""; // Don't show load ID if only one load (trip ID is the load)
+        : "";
 
       return `
         <tr>
@@ -425,7 +420,6 @@ export const getInvoiceEmailBody = (invoice: any): string => {
 
   return `
     <div style="position: relative; width: 100%; max-width: 600px; margin: 0 auto; overflow: hidden;">
-      <!-- Email Safe Diagonal Background Watermark -->
       <div style="position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%) rotate(-35deg); font-family: Arial, sans-serif; font-size: 48px; font-weight: 900; color: rgba(148, 163, 184, 0.12); z-index: 0; pointer-events: none; white-space: nowrap; text-align: center; width: 100%;">
         XCDGOC PVT LTD
       </div>
@@ -433,7 +427,6 @@ export const getInvoiceEmailBody = (invoice: any): string => {
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="position: relative; z-index: 1; font-family: Arial, sans-serif; color: #1e293b; background: transparent;">
         <tr>
           <td style="padding: 20px;">
-            <!-- Header -->
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
               <tr>
                 <td style="text-align: left; padding-bottom: 15px; border-bottom: 2px solid #102a63;">
@@ -443,7 +436,6 @@ export const getInvoiceEmailBody = (invoice: any): string => {
               </tr>
             </table>
 
-            <!-- Greeting -->
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 20px; margin-bottom: 20px;">
               <tr>
                 <td style="padding: 15px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px;">
@@ -453,7 +445,6 @@ export const getInvoiceEmailBody = (invoice: any): string => {
               </tr>
             </table>
 
-            <!-- Trip Details Table -->
             ${
               invoice.trips && invoice.trips.length > 0
                 ? `
@@ -483,7 +474,6 @@ export const getInvoiceEmailBody = (invoice: any): string => {
                 : ""
             }
 
-            <!-- Right Aligned Pricing Summary -->
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 20px;">
               <tr>
                 <td width="40%"></td>
@@ -504,16 +494,16 @@ export const getInvoiceEmailBody = (invoice: any): string => {
                       eTransferAddress
                         ? `
                     <tr>
-                      <td colspan="2" style="padding: 2px 0 2px 10px; font-size: 11px; color: #dc2626;">
-                        e-transfer: <span style="color: #475569; font-weight: bold;">${eTransferAddress}</span>
+                      <td colspan="2" style="padding: 2px 0 2px 10px; font-size: 11px; color: #dc2626; text-transform: uppercase;">
+                        E-TRANSFER: <span style="color: #475569; font-weight: bold;">${eTransferAddress}</span>
                       </td>
                     </tr>
                     `
                         : ""
                     }
                     <tr>
-                      <td colspan="2" style="padding: 2px 0 2px 10px; font-size: 11px; color: #dc2626; line-height: 1.4;">
-                        VOID CHEQUE ${invoice.accountNumber ? `<br/><span style="color: #475569; font-weight: normal; font-size: 10px;">Transit: ${invoice.transitNumber || "115000"} | Acct: ${invoice.accountNumber}</span>` : ""}
+                      <td colspan="2" style="padding: 2px 0 2px 10px; font-size: 11px; color: #dc2626; text-transform: uppercase; line-height: 1.4;">
+                        VOID CHEQUE ${invoice.accountNumber ? `<br/><span style="color: #475569; font-weight: normal; font-size: 10px; text-transform: uppercase;">Institution: ${invoice.institutionNumber || "003"} | Transit: ${invoice.transitNumber || "115000"} | Acct: ${invoice.accountNumber}</span>` : ""}
                       </td>
                     </tr>
                   </table>
@@ -521,7 +511,6 @@ export const getInvoiceEmailBody = (invoice: any): string => {
               </tr>
             </table>
 
-            <!-- Footer Band -->
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 20px; margin-top: 20px;">
               <tr>
                 <td style="width: 55%; vertical-align: top;">
