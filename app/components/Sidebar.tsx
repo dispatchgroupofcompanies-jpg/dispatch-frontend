@@ -47,7 +47,7 @@ const Brand = ({
         alignItems: "center",
         gap: 12,
         flex: 1,
-        minWidth: 0, // Prevents text container from pushing boundaries
+        minWidth: 0,
       }}
     >
       {/* Logo Container */}
@@ -77,7 +77,7 @@ const Brand = ({
         />
       </div>
 
-      {/* Text Info (No Wrapping) */}
+      {/* Text Info */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div
           style={{
@@ -140,8 +140,7 @@ const Brand = ({
 const LogoutMenu = ({ onLogout }: { onLogout: () => void }) => (
   <div
     style={{
-      padding: "16px 12px",
-      borderTop: "1px solid rgba(255, 255, 255, 0.06)",
+      padding: "0px 12px 16px 12px", // dynamic clean gap
     }}
   >
     <Menu
@@ -289,9 +288,7 @@ export default function Sidebar({ isMobile }: SidebarProps) {
               style={{
                 background: "transparent",
                 borderRight: 0,
-                padding: "16px 12px",
-                flex: 1,
-                overflowY: "auto",
+                padding: "16px 12px 4px 12px", // Bottom padding kam kiya
               }}
               items={buildItems(true)}
             />
@@ -336,11 +333,7 @@ export default function Sidebar({ isMobile }: SidebarProps) {
           style={{
             background: "transparent",
             borderRight: 0,
-            padding: "20px 12px",
-            flex: 1,
-            overflowY: "auto",
-            scrollbarWidth: "thin",
-            scrollbarColor: "rgba(255,255,255,0.1) transparent",
+            padding: "10px 12px 4px 12px",
           }}
           items={buildItems(false)}
         />

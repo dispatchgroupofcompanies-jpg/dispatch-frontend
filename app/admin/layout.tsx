@@ -109,11 +109,14 @@ export default function AdminLayout({
             color: "white",
             transition: "width 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
             position: "fixed",
+            top: 0,
+            left: 0,
             height: "100vh",
             zIndex: 1000,
             boxShadow: "2px 0 8px rgba(0,0,0,0.15)",
             display: "flex",
             flexDirection: "column",
+            overflow: "hidden",
           }}
         >
           {/* Logo Section */}
@@ -124,6 +127,7 @@ export default function AdminLayout({
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
+              flexShrink: 0,
             }}
           >
             {!sidebarCollapsed && (
@@ -183,10 +187,15 @@ export default function AdminLayout({
             </button>
           </div>
 
-          {/* Navigation Links */}
+          {/* Navigation Links - Scrollable container */}
           <div
             className="no-scrollbar"
-            style={{ padding: "16px 12px", flex: 1, overflowY: "auto" }}
+            style={{
+              padding: "16px 12px",
+              flex: 1,
+              overflowY: "auto",
+              WebkitOverflowScrolling: "touch",
+            }}
           >
             <div
               onClick={() => router.push("/admin/dashboard")}
@@ -455,11 +464,13 @@ export default function AdminLayout({
             </div>
           </div>
 
-          {/* Logout Button */}
+          {/* Logout Button - Permanently fixed at footer */}
           <div
             style={{
               padding: "16px 12px",
               borderTop: "1px solid rgba(255,255,255,0.1)",
+              flexShrink: 0,
+              backgroundColor: "transparent",
             }}
           >
             <div
@@ -564,17 +575,19 @@ export default function AdminLayout({
             color: "white",
             display: "flex",
             flexDirection: "column",
+            overflow: "hidden",
           }}
         >
-          {/* NEW: Dedicated space for the floating hamburger button */}
+          {/* Logo Section */}
           <div
             style={{
               padding: "14px 20px",
               height: "64px",
               display: "flex",
               alignItems: "center",
-              justifyContent: "flex-end", // Pushes text/branding away from the button zone
+              justifyContent: "flex-start",
               borderBottom: "1px solid rgba(255,255,255,0.1)",
+              flexShrink: 0,
             }}
           >
             <span
@@ -582,15 +595,22 @@ export default function AdminLayout({
                 fontSize: 16,
                 fontWeight: 700,
                 opacity: 0.9,
-                marginRight: "10px",
               }}
             >
               Admin Panel
             </span>
           </div>
 
-          {/* Drawer Navigation */}
-          <div style={{ padding: "16px 12px", flex: 1 }}>
+          {/* Drawer Navigation - Scrollable Area */}
+          <div
+            className="no-scrollbar"
+            style={{
+              padding: "16px 12px",
+              flex: 1,
+              overflowY: "auto",
+              WebkitOverflowScrolling: "touch",
+            }}
+          >
             <div
               onClick={() => {
                 setDrawerOpen(false);
@@ -755,7 +775,7 @@ export default function AdminLayout({
               </span>
             </div>
 
-            {/* <div
+            <div
               onClick={() => {
                 setDrawerOpen(false);
                 router.push("/admin/reset-password");
@@ -781,14 +801,16 @@ export default function AdminLayout({
               <span style={{ fontSize: 14, fontWeight: 500 }}>
                 Reset Password
               </span>
-            </div> */}
+            </div>
           </div>
 
-          {/* Drawer Logout */}
+          {/* Drawer Logout Zone - Anchored at the absolute bottom */}
           <div
             style={{
               padding: "16px 12px",
               borderTop: "1px solid rgba(255,255,255,0.1)",
+              flexShrink: 0,
+              backgroundColor: "transparent",
             }}
           >
             <div
