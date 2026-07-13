@@ -70,9 +70,9 @@ const Brand = ({
           src="/logo.jpeg"
           alt="XCDGOC Logo"
           style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
+            background: "transparent",
+            borderRight: 0,
+            padding: "16px 12px 4px 12px",
           }}
         />
       </div>
@@ -136,36 +136,6 @@ const Brand = ({
   </div>
 );
 
-// --- Modern Logout Component ---
-const LogoutMenu = ({ onLogout }: { onLogout: () => void }) => (
-  <div
-    style={{
-      padding: "0px 12px 16px 12px", // dynamic clean gap
-    }}
-  >
-    <Menu
-      theme="dark"
-      mode="inline"
-      selectable={false}
-      style={{ background: "transparent", border: 0 }}
-      inlineIndent={12}
-      items={[
-        {
-          key: "logout",
-          danger: true,
-          icon: <LogoutOutlined style={{ fontSize: "16px" }} />,
-          label: (
-            <span style={{ fontWeight: 600, letterSpacing: "0.3px" }}>
-              LOGOUT
-            </span>
-          ),
-          onClick: onLogout,
-        },
-      ]}
-    />
-  </div>
-);
-
 export default function Sidebar({ isMobile }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -173,6 +143,7 @@ export default function Sidebar({ isMobile }: SidebarProps) {
 
   const logout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("userData");
     router.push("/login");
   };
 
@@ -210,8 +181,8 @@ export default function Sidebar({ isMobile }: SidebarProps) {
     },
   ];
 
-  const buildItems = (closeDrawerOnClick: boolean) =>
-    menuItems.map((item) => ({
+  const buildItems = (closeDrawerOnClick: boolean) => [
+    ...menuItems.map((item) => ({
       key: item.key,
       icon: item.icon,
       label: (
@@ -225,7 +196,24 @@ export default function Sidebar({ isMobile }: SidebarProps) {
         if (closeDrawerOnClick) setDrawerOpen(false);
         router.push(item.path);
       },
-    }));
+    })),
+    {
+      key: "logout",
+      danger: true,
+      icon: <LogoutOutlined style={{ fontSize: "16px" }} />,
+      label: (
+        <span
+          style={{ fontWeight: 600, letterSpacing: "0.3px", fontSize: "13px" }}
+        >
+          LOGOUT
+        </span>
+      ),
+      onClick: () => {
+        if (closeDrawerOnClick) setDrawerOpen(false);
+        logout();
+      },
+    },
+  ];
 
   if (isMobile) {
     return (
@@ -288,15 +276,9 @@ export default function Sidebar({ isMobile }: SidebarProps) {
               style={{
                 background: "transparent",
                 borderRight: 0,
-                padding: "16px 12px 4px 12px", // Bottom padding kam kiya
+                padding: "16px 12px 4px 12px",
               }}
               items={buildItems(true)}
-            />
-            <LogoutMenu
-              onLogout={() => {
-                setDrawerOpen(false);
-                logout();
-              }}
             />
           </div>
         </Drawer>
@@ -337,8 +319,6 @@ export default function Sidebar({ isMobile }: SidebarProps) {
           }}
           items={buildItems(false)}
         />
-
-        <LogoutMenu onLogout={logout} />
       </div>
     </Sider>
   );
