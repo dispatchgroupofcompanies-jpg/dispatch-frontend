@@ -40,35 +40,14 @@ export default function LoginForm() {
         
         console.log("Device ID auto-generated on mount:", newDeviceId);
       } catch (error) {
-        console.error("Failed to auto-generate device ID:", error);
+          console.error("Failed to auto-generate device ID:", error);
       }
     };
     
     initDeviceId();
   }, []);
 
-  // Generate Device ID manually
-  const handleGenerateDeviceId = async () => {
-    try {
-      const FP = await import("@fingerprintjs/fingerprintjs");
-      const fp = await FP.load();
-      const result = await fp.get();
-      const newDeviceId = result.visitorId;
-      setDeviceId(newDeviceId);
-      setDeviceGenerated(true);
-      
-      // Save device ID to localStorage
-      if (typeof window !== "undefined") {
-        localStorage.setItem("deviceId", newDeviceId);
-      }
-      
-      message.success("Device ID generated successfully!");
-      console.log("Device fingerprint captured:", newDeviceId);
-    } catch (error) {
-      console.error("Failed to generate device ID:", error);
-      message.error("Failed to generate device ID. Please try again.");
-    }
-  };
+
 
   const handleFinish = async (values) => {
     setLoading(true);
@@ -257,26 +236,26 @@ export default function LoginForm() {
 
             {/* Right Side - Form */}
             <div className="w-full">
-              <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl p-8 sm:p-10 shadow-2xl rounded-none lg:rounded-l-3xl">
+              <div className="bg-gray-800/95 backdrop-blur-xl p-6 sm:p-8 shadow-2xl rounded-none lg:rounded-l-2xl">
                 
                 {/* Mobile Logo */}
-                <div className="lg:hidden mb-8 text-center">
+                <div className="lg:hidden mb-6 text-center">
                   <div className="inline-block relative">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-xl">
-                      <span className="text-4xl">📱</span>
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-xl">
+                      <span className="text-3xl">📱</span>
                     </div>
                   </div>
-                  <Title level={3} className="!text-white !mt-4 !text-2xl lg:!hidden">
+                  <Title level={3} className="!text-white !mt-3 !text-xl lg:!hidden">
                     Dispatch Management
                   </Title>
                 </div>
 
                 {/* Header */}
-                <div className="mb-8">
-                  <Title level={2} className="!mb-2 !text-3xl !font-bold text-gray-900 dark:text-white">
+                <div className="mb-6">
+                  <Title level={2} className="!mb-2 !text-2xl !font-bold text-white">
                     Welcome Back
                   </Title>
-                  <Text className="text-gray-600 dark:text-gray-400 text-base">
+                  <Text className="text-gray-300 text-sm">
                     Sign in to your account to continue
                   </Text>
                 </div>
@@ -289,10 +268,10 @@ export default function LoginForm() {
                   initialValues={{ email: savedEmail || undefined, remember: rememberMe }}
                   requiredMark="optional"
                   scrollToFirstError
-                  className="space-y-5"
+                  className="space-y-4"
                 >
                   <Form.Item
-                    label={<span className="text-gray-700 dark:text-gray-300 font-semibold text-sm">Email Address</span>}
+                    label={<span style={{ color: "#e5e7eb", fontWeight: 600, fontSize: 12 }}>Email Address</span>}
                     name="email"
                     rules={[
                       { required: true, message: "Email is required" },
@@ -300,27 +279,37 @@ export default function LoginForm() {
                     ]}
                   >
                     <Input
-                      size="large"
+                      size="middle"
                       type="email"
                       placeholder="your@email.com"
-                      prefix={<MailOutlined className="text-gray-400" />}
-                      className="!rounded-xl !border-gray-300 focus:!border-blue-500"
+                      prefix={<MailOutlined style={{ color: "#9ca3af" }} />}
+                      style={{ 
+                        borderRadius: 8, 
+                        backgroundColor: "#374151", 
+                        borderColor: "#4b5563",
+                        color: "#ffffff"
+                      }}
                       disabled={loading}
                     />
                   </Form.Item>
 
                   <Form.Item
-                    label={<span className="text-gray-700 dark:text-gray-300 font-semibold text-sm">Password</span>}
+                    label={<span style={{ color: "#e5e7eb", fontWeight: 600, fontSize: 12 }}>Password</span>}
                     name="password"
                     rules={[
                       { required: true, message: "Password is required" }
                     ]}
                   >
                     <Input.Password
-                      size="large"
+                      size="middle"
                       placeholder="••••••••"
-                      prefix={<LockOutlined className="text-gray-400" />}
-                      className="!rounded-xl !border-gray-300 focus:!border-blue-500"
+                      prefix={<LockOutlined style={{ color: "#9ca3af" }} />}
+                      style={{ 
+                        borderRadius: 8, 
+                        backgroundColor: "#374151", 
+                        borderColor: "#4b5563",
+                        color: "#ffffff"
+                      }}
                       disabled={loading}
                       iconRender={(visible) => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)}
                     />
@@ -330,17 +319,17 @@ export default function LoginForm() {
                     <Form.Item name="remember" valuePropName="checked" noStyle>
                       <Checkbox 
                         onChange={(e) => setRememberMe(e.target.checked)}
-                        className="text-gray-600 dark:text-gray-300"
+                        className="text-gray-300"
                       >
-                        <span className="text-sm">Remember me</span>
+                        <span className="text-xs">Remember me</span>
                       </Checkbox>
                     </Form.Item>
                   </div>
 
                   {/* Device ID Status - Only show if needed */}
                   {!deviceGenerated && (
-                    <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                      <LoadingOutlined className="text-blue-500" />
+                    <div className="text-xs text-gray-400 flex items-center gap-2">
+                      <LoadingOutlined className="text-blue-400" />
                       <span>Generating device ID...</span>
                     </div>
                   )}
@@ -348,18 +337,18 @@ export default function LoginForm() {
                   <Button
                     type="primary"
                     htmlType="submit"
-                    size="large"
+                    size="middle"
                     block
                     loading={loading}
-                    className="!h-12 !rounded-xl !bg-gradient-to-r !from-blue-600 !to-cyan-500 hover:!from-blue-700 hover:!to-cyan-600 !font-semibold !text-base !shadow-lg hover:!shadow-xl !transition-all mt-2"
+                    className="!h-10 !rounded-lg !bg-gradient-to-r !from-blue-600 !to-cyan-500 hover:!from-blue-700 hover:!to-cyan-600 !font-semibold !text-sm !shadow-lg hover:!shadow-xl !transition-all"
                   >
                     {loading ? "Signing in..." : "Sign In"}
                   </Button>
                 </Form>
 
                 {/* Footer */}
-                <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-                  <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+                <div className="mt-6 pt-4 border-t border-gray-700">
+                  <p className="text-center text-xs text-gray-400">
                     Contact your administrator for account access
                   </p>
                 </div>
@@ -369,7 +358,7 @@ export default function LoginForm() {
         </div>
       </Spin>
 
-      <style jsx>{`
+      <style jsx global>{`
         @keyframes blob {
           0%, 100% { transform: translate(0, 0) scale(1); }
           33% { transform: translate(30px, -50px) scale(1.1); }
@@ -383,6 +372,34 @@ export default function LoginForm() {
         }
         .animation-delay-4000 {
           animation-delay: 4s;
+        }
+        
+        /* Force white text in all inputs */
+        .ant-input,
+        .ant-input-password input,
+        .ant-input-affix-wrapper input {
+          color: #ffffff !important;
+        }
+        
+        .ant-input::placeholder,
+        .ant-input-password input::placeholder,
+        .ant-input-affix-wrapper input::placeholder {
+          color: #9ca3af !important;
+        }
+        
+        /* Override Ant Design input styles */
+        .ant-input {
+          background-color: #374151 !important;
+          border-color: #4b5563 !important;
+        }
+        
+        .ant-input-affix-wrapper {
+          background-color: #374151 !important;
+          border-color: #4b5563 !important;
+        }
+        
+        .ant-input-affix-wrapper input {
+          background-color: transparent !important;
         }
       `}</style>
     </div>
