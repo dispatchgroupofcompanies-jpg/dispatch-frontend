@@ -419,119 +419,196 @@ export const getInvoiceEmailBody = (invoice: any): string => {
     .join("");
 
   return `
-    <div style="position: relative; width: 100%; max-width: 600px; margin: 0 auto; overflow: hidden;">
-      <div style="position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%) rotate(-35deg); font-family: Arial, sans-serif; font-size: 48px; font-weight: 900; color: rgba(148, 163, 184, 0.12); z-index: 0; pointer-events: none; white-space: nowrap; text-align: center; width: 100%;">
-        XCDGOC PVT LTD
-      </div>
-
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="position: relative; z-index: 1; font-family: Arial, sans-serif; color: #1e293b; background: transparent;">
-        <tr>
-          <td style="padding: 20px;">
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-              <tr>
-                <td style="text-align: left; padding-bottom: 15px; border-bottom: 2px solid #102a63;">
-                  <h1 style="margin: 0; font-size: 24px; font-weight: 900; color: #0f2962; text-transform: uppercase;">INVOICE</h1>
-                  <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748b;">Num: <strong>#${invoiceNumber}</strong></p>
-                </td>
-              </tr>
-            </table>
-
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 20px; margin-bottom: 20px;">
-              <tr>
-                <td style="padding: 15px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px;">
-                  <p style="margin: 0 0 10px 0; font-size: 14px; line-height: 1.5; color: #1e293b;">Hello ${customerName},</p>
-                  <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #475569;">Please find attached your professional invoice as a PDF document.</p>
-                </td>
-              </tr>
-            </table>
-
-            ${
-              invoice.trips && invoice.trips.length > 0
-                ? `
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 20px;">
-              <tr>
-                <td style="padding: 12px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px;">
-                  <h2 style="margin: 0 0 10px 0; font-size: 12px; font-weight: bold; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.5px;">Trip Details</h2>
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size: 11px;">
-                    <thead>
-                      <tr style="background-color: #102a63; color: #ffffff;">
-                        <th style="padding: 8px; text-align: left; font-weight: 700; width: 15%;">DATE</th>
-                        <th style="padding: 8px; text-align: left; font-weight: 700; width: 20%;">TRIP ID</th>
-                        <th style="padding: 8px; text-align: left; font-weight: 700; width: 20%;">ASSIGNED</th>
-                        <th style="padding: 8px; text-align: left; font-weight: 700; width: 15%;">ROUTE</th>
-                        <th style="padding: 8px; text-align: left; font-weight: 700; width: 18%;">DISCRIPTION</th>
-                        <th style="padding: 8px; text-align: right; font-weight: 700; width: 12%;">CHARGES</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${tripRows}
-                    </tbody>
-                  </table>
-                </td>
-              </tr>
-            </table>
-            `
-                : ""
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          @media screen and (max-width: 600px) {
+            .email-container {
+              width: 100% !important;
+              max-width: 100% !important;
             }
+            .email-padding {
+              padding: 15px !important;
+            }
+            .email-header {
+              font-size: 20px !important;
+            }
+            .email-invoice-number {
+              font-size: 12px !important;
+            }
+            .email-greeting {
+              font-size: 13px !important;
+            }
+            .email-message {
+              font-size: 13px !important;
+            }
+            .trip-table {
+              font-size: 10px !important;
+            }
+            .trip-table th {
+              padding: 6px 4px !important;
+              font-size: 10px !important;
+            }
+            .trip-table td {
+              padding: 6px 4px !important;
+              font-size: 10px !important;
+            }
+            .summary-section {
+              width: 100% !important;
+              display: block !important;
+            }
+            .summary-spacer {
+              display: none !important;
+            }
+            .summary-box {
+              width: 100% !important;
+              display: block !important;
+            }
+            .footer-section {
+              width: 100% !important;
+              display: block !important;
+            }
+            .footer-left {
+              width: 100% !important;
+              display: block !important;
+              margin-bottom: 15px !important;
+            }
+            .footer-right {
+              width: 100% !important;
+              display: block !important;
+              text-align: left !important;
+            }
+            .footer-brand {
+              font-size: 18px !important;
+            }
+            .footer-tagline {
+              font-size: 9px !important;
+            }
+            .watermark {
+              font-size: 32px !important;
+            }
+          }
+        </style>
+      </head>
+      <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+        <div style="position: relative; width: 100%; max-width: 600px; margin: 0 auto; overflow: hidden;" class="email-container">
+          <div style="position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%) rotate(-35deg); font-family: Arial, sans-serif; font-size: 48px; font-weight: 900; color: rgba(148, 163, 184, 0.12); z-index: 0; pointer-events: none; white-space: nowrap; text-align: center; width: 100%;" class="watermark">
+            XCDGOC PVT LTD
+          </div>
 
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 20px;">
-              <tr>
-                <td width="40%"></td>
-                <td width="60%" style="background-color: #f8fafc; border-top: 3px solid #102a63; padding: 12px;">
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                    <tr>
-                      <td style="padding: 4px 0; font-size: 11px; font-weight: bold; color: #dc2626; text-transform: uppercase;">DISPATCH CHARGES</td>
-                      <td style="padding: 4px 0; font-size: 12px; font-weight: bold; text-align: right; color: #dc2626;">${dispatchTotal}</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid #e2e8f0;">
-                      <td style="padding: 4px 0; font-size: 11px; font-weight: bold; color: #dc2626; text-transform: uppercase;">GRAND TOTAL</td>
-                      <td style="padding: 4px 0; font-size: 14px; font-weight: bold; text-align: right; color: #1e293b; white-space: nowrap;">${grandTotal}</td>
-                    </tr>
-                    <tr>
-                      <td colspan="2" style="padding: 8px 0 2px 0; font-size: 11px; font-weight: bold; color: #dc2626; text-transform: uppercase;">DEPOSIT DETAILS</td>
-                    </tr>
-                    ${
-                      eTransferAddress
-                        ? `
-                    <tr>
-                      <td colspan="2" style="padding: 2px 0 2px 10px; font-size: 11px; color: #dc2626; text-transform: uppercase;">
-                        E-TRANSFER: <span style="color: #475569; font-weight: bold;">${eTransferAddress}</span>
-                      </td>
-                    </tr>
-                    `
-                        : ""
-                    }
-                    <tr>
-                      <td colspan="2" style="padding: 2px 0 2px 10px; font-size: 11px; color: #dc2626; text-transform: uppercase; line-height: 1.4;">
-                        VOID CHEQUE ${invoice.accountNumber ? `<br/><span style="color: #475569; font-weight: normal; font-size: 10px; text-transform: uppercase;">Institution: ${invoice.institutionNumber || "003"} | Transit: ${invoice.transitNumber || "115000"} | Acct: ${invoice.accountNumber}</span>` : ""}
-                      </td>
-                    </tr>
-                  </table>
-                </td>
-              </tr>
-            </table>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="position: relative; z-index: 1; font-family: Arial, sans-serif; color: #1e293b; background: transparent;">
+            <tr>
+              <td style="padding: 20px;" class="email-padding">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td style="text-align: left; padding-bottom: 15px; border-bottom: 2px solid #102a63;">
+                      <h1 class="email-header" style="margin: 0; font-size: 24px; font-weight: 900; color: #0f2962; text-transform: uppercase;">INVOICE</h1>
+                      <p class="email-invoice-number" style="margin: 4px 0 0 0; font-size: 13px; color: #64748b;">Num: <strong>#${invoiceNumber}</strong></p>
+                    </td>
+                  </tr>
+                </table>
 
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 20px; margin-top: 20px;">
-              <tr>
-                <td style="width: 55%; vertical-align: top;">
-                  <h2 style="margin: 0 0 4px 0; font-size: 22px; font-weight: 900; color: #475569; letter-spacing: 1px;">XCDGOC PVT LTD</h2>
-                  <p style="margin: 0; font-size: 12px; font-weight: bold; color: #475569; line-height: 1.3;">Extreme Canada Dispatch Group of Companies</p>
-                  <p style="margin: 4px 0 0 0; font-size: 10px; font-weight: bold; color: #0f2962;">WE ARE CANADA'S LEADING AND LARGEST DISPATCH SERVICES PROVIDEERS</p>
-                </td>
-                <td style="width: 45%; vertical-align: top; text-align: right;">
-                  <p style="margin: 0; font-size: 11px; line-height: 1.4; color: #64748b;">
-                    Open Board, Bision, Walmart, Load Link<br/>
-                    and Non Amazon Dispatch Solutions<br/><br/>
-                    <strong>Contact:</strong> xcdgoc@gmail.com<br/>
-                    +91 750 121 6555<br/>
-                    Shahid ul islam
-                  </p>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-      </table>
-    </div>
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 20px; margin-bottom: 20px;">
+                  <tr>
+                    <td style="padding: 15px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px;">
+                      <p class="email-greeting" style="margin: 0 0 10px 0; font-size: 14px; line-height: 1.5; color: #1e293b;">Hello ${customerName},</p>
+                      <p class="email-message" style="margin: 0; font-size: 14px; line-height: 1.5; color: #475569;">Please find attached your professional invoice as a PDF document.</p>
+                    </td>
+                  </tr>
+                </table>
+
+                ${
+                  invoice.trips && invoice.trips.length > 0
+                    ? `
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 20px;">
+                <tr>
+                  <td style="padding: 12px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px;">
+                    <h2 style="margin: 0 0 10px 0; font-size: 12px; font-weight: bold; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.5px;">Trip Details</h2>
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="trip-table" style="font-size: 11px;">
+                      <thead>
+                        <tr style="background-color: #102a63; color: #ffffff;">
+                          <th style="padding: 8px; text-align: left; font-weight: 700; width: 15%;">DATE</th>
+                          <th style="padding: 8px; text-align: left; font-weight: 700; width: 20%;">TRIP ID</th>
+                          <th style="padding: 8px; text-align: left; font-weight: 700; width: 20%;">ASSIGNED</th>
+                          <th style="padding: 8px; text-align: left; font-weight: 700; width: 15%;">ROUTE</th>
+                          <th style="padding: 8px; text-align: left; font-weight: 700; width: 18%;">DISCRIPTION</th>
+                          <th style="padding: 8px; text-align: right; font-weight: 700; width: 12%;">CHARGES</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        ${tripRows}
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+              `
+                    : ""
+                }
+
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 20px;">
+                  <tr>
+                    <td class="summary-spacer" width="40%"></td>
+                    <td class="summary-section" width="60%" style="background-color: #f8fafc; border-top: 3px solid #102a63; padding: 12px;">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="summary-box">
+                        <tr>
+                          <td style="padding: 4px 0; font-size: 11px; font-weight: bold; color: #dc2626; text-transform: uppercase;">DISPATCH CHARGES</td>
+                          <td style="padding: 4px 0; font-size: 12px; font-weight: bold; text-align: right; color: #dc2626;">${dispatchTotal}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e2e8f0;">
+                          <td style="padding: 4px 0; font-size: 11px; font-weight: bold; color: #dc2626; text-transform: uppercase;">GRAND TOTAL</td>
+                          <td style="padding: 4px 0; font-size: 14px; font-weight: bold; text-align: right; color: #1e293b; white-space: nowrap;">${grandTotal}</td>
+                        </tr>
+                        <tr>
+                          <td colspan="2" style="padding: 8px 0 2px 0; font-size: 11px; font-weight: bold; color: #dc2626; text-transform: uppercase;">DEPOSIT DETAILS</td>
+                        </tr>
+                        ${
+                          eTransferAddress
+                            ? `
+                      <tr>
+                        <td colspan="2" style="padding: 2px 0 2px 10px; font-size: 11px; color: #dc2626; text-transform: uppercase;">
+                          E-TRANSFER: <span style="color: #475569; font-weight: bold;">${eTransferAddress}</span>
+                        </td>
+                      </tr>
+                      `
+                            : ""
+                        }
+                        <tr>
+                          <td colspan="2" style="padding: 2px 0 2px 10px; font-size: 11px; color: #dc2626; text-transform: uppercase; line-height: 1.4;">
+                            VOID CHEQUE ${invoice.accountNumber ? `<br/><span style="color: #475569; font-weight: normal; font-size: 10px; text-transform: uppercase;">Institution: ${invoice.institutionNumber || "003"} | Transit: ${invoice.transitNumber || "115000"} | Acct: ${invoice.accountNumber}</span>` : ""}
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 20px; margin-top: 20px;">
+                  <tr>
+                    <td class="footer-left" style="width: 55%; vertical-align: top;">
+                      <h2 class="footer-brand" style="margin: 0 0 4px 0; font-size: 22px; font-weight: 900; color: #475569; letter-spacing: 1px;">XCDGOC PVT LTD</h2>
+                      <p style="margin: 0; font-size: 12px; font-weight: bold; color: #475569; line-height: 1.3;">Extreme Canada Dispatch Group of Companies</p>
+                      <p class="footer-tagline" style="margin: 4px 0 0 0; font-size: 10px; font-weight: bold; color: #0f2962;">WE ARE CANADA'S LEADING AND LARGEST DISPATCH SERVICES PROVIDEERS</p>
+                    </td>
+                    <td class="footer-right" style="width: 45%; vertical-align: top; text-align: right;">
+                      <p style="margin: 0; font-size: 11px; line-height: 1.4; color: #64748b;">
+                        Open Board, Bision, Walmart, Load Link<br/>
+                        and Non Amazon Dispatch Solutions<br/><br/>
+                        <strong>Contact:</strong> xcdgoc@gmail.com<br/>
+                        +91 750 121 6555<br/>
+                        Shahid ul islam
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </body>
+    </html>
   `;
 };

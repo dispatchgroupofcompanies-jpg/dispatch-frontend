@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import {
   DashboardOutlined,
@@ -9,6 +10,9 @@ import {
   GlobalOutlined,
   LockOutlined,
   LogoutOutlined,
+  SafetyCertificateOutlined,
+  MenuUnfoldOutlined,
+  MenuFoldOutlined,
 } from "@ant-design/icons";
 
 interface AdminSidebarProps {
@@ -26,6 +30,7 @@ export default function AdminSidebar({
 }: AdminSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const [showAllMenu, setShowAllMenu] = useState(false);
 
   const isActive = (path: string) => pathname === path;
 
@@ -49,6 +54,13 @@ export default function AdminSidebar({
       icon: <UserOutlined style={{ fontSize: 18, color: "#fff" }} />,
       label: "Add Users",
       path: "/admin/users",
+    },
+    {
+      icon: (
+        <SafetyCertificateOutlined style={{ fontSize: 18, color: "#fff" }} />
+      ),
+      label: "Device Approvals",
+      path: "/admin/device-requests",
     },
     {
       icon: <GlobalOutlined style={{ fontSize: 18, color: "#fff" }} />,
@@ -170,7 +182,8 @@ export default function AdminSidebar({
           overflowX: "hidden",
         }}
       >
-        {menuItems.map((item, index) => (
+        {/* Show first 3 items always */}
+        {menuItems.slice(0, 3).map((item, index) => (
           <div
             key={index}
             onClick={() => handleClick(item.path)}
@@ -217,6 +230,100 @@ export default function AdminSidebar({
             )}
           </div>
         ))}
+
+        {/* Show remaining items when expanded */}
+        {showAllMenu &&
+          menuItems.slice(3).map((item, index) => (
+            <div
+              key={index + 3}
+              onClick={() => handleClick(item.path)}
+              style={{
+                padding: "14px 16px",
+                cursor: "pointer",
+                backgroundColor: isActive(item.path)
+                  ? "rgba(255,255,255,0.15)"
+                  : "transparent",
+                display: "flex",
+                alignItems: "center",
+                gap: 14,
+                borderRadius: 8,
+                marginBottom: 6,
+                transition: "all 0.2s",
+                borderLeft: isActive(item.path)
+                  ? "3px solid #60a5fa"
+                  : "3px solid transparent",
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive(item.path)) {
+                  e.currentTarget.style.backgroundColor =
+                    "rgba(255,255,255,0.08)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive(item.path)) {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                }
+              }}
+            >
+              {item.icon}
+              {(!collapsed || isMobile) && (
+                <span
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 500,
+                    color: "#fff",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {item.label}
+                </span>
+              )}
+            </div>
+          ))}
+
+        {/* Toggle Menu Button */}
+        {(!collapsed || isMobile) && (
+          <div
+            onClick={() => setShowAllMenu(!showAllMenu)}
+            style={{
+              padding: "12px 16px",
+              cursor: "pointer",
+              backgroundColor: "rgba(255,255,255,0.05)",
+              display: "flex",
+              alignItems: "center",
+              gap: 14,
+              borderRadius: 8,
+              marginBottom: 6,
+              marginTop: 8,
+              transition: "all 0.2s",
+              borderLeft: "3px solid transparent",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.1)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.05)";
+            }}
+          >
+            {showAllMenu ? (
+              <MenuFoldOutlined style={{ fontSize: 18, color: "#fff" }} />
+            ) : (
+              <MenuUnfoldOutlined style={{ fontSize: 18, color: "#fff" }} />
+            )}
+            {(!collapsed || isMobile) && (
+              <span
+                style={{
+                  fontSize: 14,
+                  fontWeight: 500,
+                  color: "#fff",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {showAllMenu ? "Show Less" : "Show More"}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Integrated Logout Item */}
         {onLogout && (
