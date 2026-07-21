@@ -128,6 +128,12 @@ function DashboardComponent() {
     setViewOpen(true);
   };
 
+  // Calculate serial number for preview
+  const getSerialNumber = (invoiceId: string) => {
+    const index = invoices.findIndex((inv) => inv._id === invoiceId);
+    return index >= 0 ? index + 1 : undefined;
+  };
+
   const openEditModal = (record: InvoiceType) => {
     setEditingInvoice(record);
     setOpen(true);
@@ -159,24 +165,26 @@ function DashboardComponent() {
     () => [
       {
         title: "Invoice #",
-        dataIndex: "invoiceNumber",
         key: "invoiceNumber",
         width: 140,
-        render: (text: string) => (
-          <span
-            style={{
-              fontWeight: 700,
-              color: "#ffffff",
-              letterSpacing: "0.5px",
-              background: "#10b981",
-              padding: "4px 10px",
-              borderRadius: "6px",
-              display: "inline-block",
-            }}
-          >
-            #{text}
-          </span>
-        ),
+        render: (_: unknown, __: InvoiceType, index: number) => {
+          const serialNumber = index + 1;
+          return (
+            <span
+              style={{
+                fontWeight: 700,
+                color: "#ffffff",
+                letterSpacing: "0.5px",
+                background: "#10b981",
+                padding: "4px 10px",
+                borderRadius: "6px",
+                display: "inline-block",
+              }}
+            >
+              #{serialNumber}
+            </span>
+          );
+        },
       },
       {
         title: "Vendor",
@@ -529,7 +537,12 @@ function DashboardComponent() {
                 overflowY: "auto",
               }}
             >
-              <InvoicePreview invoice={selected} />
+              <InvoicePreview
+                invoice={selected}
+                serialNumber={
+                  selected ? getSerialNumber(selected._id) : undefined
+                }
+              />
             </div>
 
             {/* Seamless Outside UI Controls Floating Container */}

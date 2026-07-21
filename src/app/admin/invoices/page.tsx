@@ -163,6 +163,7 @@ export default function AdminInvoicesPage() {
           onUpdateStatus={handleUpdate}
           approveLoading={approveLoading}
           rejectLoading={rejectLoading}
+          allInvoices={invoices}
         />
       </div>
     </div>

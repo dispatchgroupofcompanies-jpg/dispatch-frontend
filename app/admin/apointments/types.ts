@@ -1,0 +1,47 @@
+export interface Appointment {
+  _id: string;
+  tripNumber: string;
+  loadConfirmationNumber: string;
+  shipmentNumber?: string;
+  appointmentDate?: string;
+  pickupDate?: string;
+  deliveryDate?: string;
+  pickupTimeStart?: string;
+  pickupTimeEnd?: string;
+  deliveryTime?: string;
+  status: string;
+  equipmentType: string;
+  carrierProNumber: string;
+  carrierName: string;
+  carrierPhone: string;
+  carrierEmail: string;
+  carrierAddress: string;
+  shipperName: string;
+  shipperAddress: string;
+  shipperCity: string;
+  shipperProvince: string;
+  shipperPostalCode: string;
+  pickupNumber: string;
+  commodityDescription: string;
+  weight?: number;
+  consigneeName: string;
+  consigneeAddress: string;
+  consigneeCity: string;
+  consigneeProvince: string;
+  consigneePostalCode: string;
+  dropOffNumber: string;
+  chargeDescription: string;
+  rateAmount?: number;
+  totalAmount: number;
+  currency: string;
+  signature?: string;
+  signatureDate?: string;
+  notesTerms?: string;
+  driverCellNumber: string;
+  createdAt: string;
+  updatedAt: string;
+  createdByUser?: {
+    name: string;
+    email: string;
+  };
+}

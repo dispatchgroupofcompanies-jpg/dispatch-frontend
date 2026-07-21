@@ -82,7 +82,6 @@ export default function LoginForm() {
         }
       }
       
-      console.log("Login attempt with device ID:", currentDeviceId);
       
       // Add deviceId and userAgent to login data
       const loginData = {

@@ -66,27 +66,29 @@ export default function InvoiceTable({
   const columns: ColumnsType<Invoice> = [
     {
       title: "Invoice #",
-      dataIndex: "invoiceNumber",
       key: "invoiceNumber",
       width: isMobile ? 75 : 100,
       fixed: isMobile ? "left" : undefined,
-      render: (text) => (
-        <Text
-          strong
-          style={{
-            color: "#ffffff",
-            background: "#10b981",
-            padding: isMobile ? "2px 5px" : "2px 8px",
-            borderRadius: "4px",
-            display: "inline-block",
-            fontSize: isMobile ? 9 : 11,
-            whiteSpace: "nowrap",
-            lineHeight: "16px",
-          }}
-        >
-          #{text}
-        </Text>
-      ),
+      render: (_, record, index) => {
+        const serialNumber = index + 1;
+        return (
+          <Text
+            strong
+            style={{
+              color: "#ffffff",
+              background: "#10b981",
+              padding: isMobile ? "2px 5px" : "2px 8px",
+              borderRadius: "4px",
+              display: "inline-block",
+              fontSize: isMobile ? 9 : 11,
+              whiteSpace: "nowrap",
+              lineHeight: "16px",
+            }}
+          >
+            #{serialNumber}
+          </Text>
+        );
+      },
     },
     {
       title: "VRID",

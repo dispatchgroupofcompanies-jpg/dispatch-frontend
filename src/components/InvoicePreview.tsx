@@ -4,8 +4,17 @@ import { useMemo } from "react";
 import type { Invoice } from "../types/invoice";
 import { getInvoiceTemplate } from "../templates/invoice-template";
 
-export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
-  const html = useMemo(() => getInvoiceTemplate(invoice), [invoice]);
+export default function InvoicePreview({
+  invoice,
+  serialNumber,
+}: {
+  invoice: Invoice;
+  serialNumber?: number;
+}) {
+  const html = useMemo(
+    () => getInvoiceTemplate(invoice, serialNumber),
+    [invoice, serialNumber],
+  );
 
   return (
     <div

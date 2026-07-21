@@ -12,7 +12,10 @@ type InvoiceTrip = {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const getInvoiceTemplate = (invoice: any): string => {
+export const getInvoiceTemplate = (
+  invoice: any,
+  serialNumber?: number,
+): string => {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-CA", {
       style: "currency",
@@ -38,7 +41,8 @@ export const getInvoiceTemplate = (invoice: any): string => {
   };
 
   const tripsCount = invoice.trips?.length || 0;
-  const dynamicInvoiceTitle = tripsCount > 1 ? "INVOICE - T" : "INVOICE - 1";
+  const displayNumber = serialNumber || invoice.invoiceNumber || "N/A";
+  const dynamicInvoiceTitle = `INVOICE - #${displayNumber}`;
   const eTransferAddress =
     invoice.customer?.eTransfer || invoice.payee?.eTransferAddress;
 
@@ -226,7 +230,6 @@ export const getInvoiceTemplate = (invoice: any): string => {
           <!-- Header Section -->
           <div class="header-section">
             <h1 class="invoice-title">${dynamicInvoiceTitle}</h1>
-            <span class="invoice-number">Num: <b>#${invoice.invoiceNumber || "N/A"}</b></span>
           </div>
 
           <!-- Company Details Section -->

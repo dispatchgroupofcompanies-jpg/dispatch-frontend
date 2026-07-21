@@ -21,6 +21,7 @@ interface Props {
   ) => Promise<void>;
   approveLoading: boolean;
   rejectLoading: boolean;
+  allInvoices?: Invoice[];
 }
 
 export default function InvoiceModal({
@@ -30,46 +31,16 @@ export default function InvoiceModal({
   onUpdateStatus,
   approveLoading,
   rejectLoading,
+  allInvoices = [],
 }: Props) {
   const screens = useBreakpoint();
   const isMobile = !screens.md;
 
   if (!invoice) return null;
 
-  const handleDownloadPDF = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(
-        `/api/user/invoice/${invoice._id}/download`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to download PDF");
-      }
-
-      // Get the blob
-      const blob = await response.blob();
-
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `Invoice-${invoice.invoiceNumber}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Error downloading PDF:", error);
-      alert("Failed to download PDF. Please try again.");
-    }
-  };
+  // Calculate serial number based on position in the list
+  const serialNumber =
+    allInvoices.findIndex((inv) => inv._id === invoice._id) + 1;
 
   return (
     <Modal
@@ -83,9 +54,6 @@ export default function InvoiceModal({
             paddingRight: "20px",
           }}
         >
-          <span style={{ fontSize: "14px", fontWeight: 600, color: "#1e293b" }}>
-            Invoice #{invoice.invoiceNumber}
-          </span>
           <Button
             type="text"
             onClick={onClose}
@@ -137,14 +105,6 @@ export default function InvoiceModal({
           size={isMobile ? "small" : "small"}
           direction={isMobile ? "vertical" : "horizontal"}
         >
-          <Button
-            icon={<DownloadOutlined />}
-            onClick={handleDownloadPDF}
-            size="small"
-            style={{ borderRadius: 6, minWidth: "120px" }}
-          >
-            {isMobile ? "PDF" : "Download"}
-          </Button>
           {(invoice.invoiceStatus === "pending" ||
             invoice.invoiceStatus === "draft") && (
             <>
@@ -195,7 +155,7 @@ export default function InvoiceModal({
             minHeight: "296mm",
           }}
         >
-          <InvoicePreview invoice={invoice} />
+          <InvoicePreview invoice={invoice} serialNumber={serialNumber} />
         </div>
       </div>
     </Modal>
