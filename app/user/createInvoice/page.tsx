@@ -33,6 +33,7 @@ import {
   downloadInvoicePDF,
 } from "../../../modules/invoice/route";
 import type { Invoice as InvoiceType } from "../../../src/types/invoice";
+import { getPayeeSerialNumbers } from "../../../src/utils/invoiceSerial";
 
 function DashboardComponent() {
   const [open, setOpen] = useState(false);
@@ -85,6 +86,11 @@ function DashboardComponent() {
     return { total, grossEarnings, draftCount };
   }, [invoices]);
 
+  const payeeSerialNumbers = useMemo(
+    () => getPayeeSerialNumbers(invoices),
+    [invoices],
+  );
+
   // -------------------------
   // SERVER-SIDE PDF DOWNLOAD HANDLER
   // -------------------------
@@ -102,7 +108,7 @@ function DashboardComponent() {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `Invoice-${record.invoiceNumber || "Statement"}.pdf`;
+      link.download = `Invoice-${payeeSerialNumbers.get(record._id) || "Statement"}.pdf`;
 
       // Trigger download
       document.body.appendChild(link);
@@ -128,10 +134,9 @@ function DashboardComponent() {
     setViewOpen(true);
   };
 
-  // Calculate serial number for preview
   const getSerialNumber = (invoiceId: string) => {
-    const index = invoices.findIndex((inv) => inv._id === invoiceId);
-    return index >= 0 ? index + 1 : undefined;
+    const invoice = invoices.find((inv) => inv._id === invoiceId);
+    return invoice ? payeeSerialNumbers.get(invoiceId) : undefined;
   };
 
   const openEditModal = (record: InvoiceType) => {
@@ -167,8 +172,8 @@ function DashboardComponent() {
         title: "Invoice #",
         key: "invoiceNumber",
         width: 140,
-        render: (_: unknown, __: InvoiceType, index: number) => {
-          const serialNumber = index + 1;
+        render: (_: unknown, record: InvoiceType) => {
+          const serialNumber = payeeSerialNumbers.get(record._id) || 1;
           return (
             <span
               style={{
@@ -309,7 +314,7 @@ function DashboardComponent() {
         },
       },
     ],
-    [selected, downloading],
+    [selected, downloading, payeeSerialNumbers],
   );
 
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;

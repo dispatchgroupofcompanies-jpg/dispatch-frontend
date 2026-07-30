@@ -14,6 +14,7 @@ import { EyeOutlined, DownloadOutlined } from "@ant-design/icons";
 import { downloadInvoicePDF } from "../../modules/invoice/route";
 import type { ColumnsType } from "antd/es/table";
 import type { Invoice } from "../types/invoice";
+import { getPayeeSerialNumbers } from "../utils/invoiceSerial";
 
 const { Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -62,6 +63,10 @@ export default function InvoiceTable({
 }: Props) {
   const screens = useBreakpoint();
   const isMobile = !screens.md;
+  const payeeSerialNumbers = React.useMemo(
+    () => getPayeeSerialNumbers(invoices),
+    [invoices],
+  );
 
   const columns: ColumnsType<Invoice> = [
     {
@@ -69,8 +74,8 @@ export default function InvoiceTable({
       key: "invoiceNumber",
       width: isMobile ? 75 : 100,
       fixed: isMobile ? "left" : undefined,
-      render: (_, record, index) => {
-        const serialNumber = index + 1;
+      render: (_, record) => {
+        const serialNumber = payeeSerialNumbers.get(record._id) || 1;
         return (
           <Text
             strong

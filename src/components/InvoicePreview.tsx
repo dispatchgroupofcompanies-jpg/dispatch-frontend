@@ -9,7 +9,7 @@ export default function InvoicePreview({
   serialNumber,
 }: {
   invoice: Invoice;
-  serialNumber?: number;
+  serialNumber?: number | string;
 }) {
   const html = useMemo(
     () => getInvoiceTemplate(invoice, serialNumber),

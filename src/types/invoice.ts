@@ -14,6 +14,7 @@ export interface Trip {
 
 export interface Party {
   companyName: string;
+  payeeSelectKey?: string;
   contactPerson?: string;
   customerName?: string;
   driverName?: string;
@@ -31,6 +32,7 @@ export interface Invoice {
   message?: string;
   _id: string;
   invoiceNumber: string;
+  payeeSerialNumber?: number;
   invoiceStatus: string;
   invoiceType?: string;
   currency?: string;

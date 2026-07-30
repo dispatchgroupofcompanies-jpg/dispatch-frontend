@@ -14,7 +14,7 @@ type InvoiceTrip = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getInvoiceTemplate = (
   invoice: any,
-  serialNumber?: number,
+  serialNumber?: number | string,
 ): string => {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-CA", {
@@ -41,7 +41,11 @@ export const getInvoiceTemplate = (
   };
 
   const tripsCount = invoice.trips?.length || 0;
-  const displayNumber = serialNumber || invoice.invoiceNumber || "N/A";
+  // The invoice list supplies the payee-scoped sequence for legacy invoices.
+  // It must take precedence over an old stored/global number so the list and
+  // the opened invoice always show the same serial.
+  const displayNumber =
+    serialNumber ?? invoice.payeeSerialNumber ?? invoice.invoiceNumber ?? "N/A";
   const dynamicInvoiceTitle = `INVOICE - #${displayNumber}`;
   const eTransferAddress =
     invoice.customer?.eTransfer || invoice.payee?.eTransferAddress;
@@ -371,7 +375,7 @@ export const getInvoiceEmailBody = (invoice: any): string => {
       .replace(/\//g, "-");
   };
 
-  const invoiceNumber = invoice.invoiceNumber || "N/A";
+  const invoiceNumber = invoice.payeeSerialNumber ?? invoice.invoiceNumber ?? "N/A";
   const grandTotal = formatCurrency(invoice.grandTotal);
   const dispatchTotal = formatCurrency(
     invoice.dispatchTotal ||

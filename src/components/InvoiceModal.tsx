@@ -8,6 +8,7 @@ import {
 } from "@ant-design/icons";
 import InvoicePreview from "./InvoicePreview";
 import type { Invoice } from "../types/invoice";
+import { getPayeeSerialNumbers } from "../utils/invoiceSerial";
 
 const { useBreakpoint } = Grid;
 
@@ -35,12 +36,16 @@ export default function InvoiceModal({
 }: Props) {
   const screens = useBreakpoint();
   const isMobile = !screens.md;
+  const payeeSerialNumbers = React.useMemo(
+    () => getPayeeSerialNumbers(allInvoices),
+    [allInvoices],
+  );
 
   if (!invoice) return null;
 
-  // Calculate serial number based on position in the list
-  const serialNumber =
-    allInvoices.findIndex((inv) => inv._id === invoice._id) + 1;
+  // Use the same map that drives the admin table—not a legacy value stored on
+  // the invoice—so “Invoice #” and “INVOICE - #” always match.
+  const serialNumber = payeeSerialNumbers.get(invoice._id) || 1;
 
   return (
     <Modal

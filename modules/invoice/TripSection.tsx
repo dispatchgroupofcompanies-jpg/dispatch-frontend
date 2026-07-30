@@ -174,11 +174,7 @@ export default function TripSection({ form }: Props) {
                           >
                             <Input
                               placeholder="e.g. T-115Z"
-                              style={{
-                                textTransform: "uppercase",
-                                borderRadius: 4,
-                                height: 32,
-                              }}
+                              style={{ borderRadius: 4, height: 32 }}
                             />
                           </Form.Item>
                         </Col>
@@ -263,9 +259,8 @@ export default function TripSection({ form }: Props) {
                             </Form.Item>
                           </Col>
 
-                          {/* Load IDs are conditionally rendered ONLY if VRID starts with 'T' or 't' */}
-                          {startsWithT && (
-                            <>
+                          {/* Load IDs accept any mixed text and are optional. */}
+                          <>
                               <Col xs={24} sm={12} md={8}>
                                 <span
                                   style={{ ...labelStyle, color: "#1e293b" }}
@@ -275,12 +270,6 @@ export default function TripSection({ form }: Props) {
                                 <Form.Item
                                   {...restField}
                                   name={[name, "loadId1"]}
-                                  rules={[
-                                    {
-                                      required: true,
-                                      message: "Load ID 1 is required",
-                                    },
-                                  ]}
                                   style={{ marginBottom: 0 }}
                                 >
                                   <Input
@@ -299,12 +288,6 @@ export default function TripSection({ form }: Props) {
                                 <Form.Item
                                   {...restField}
                                   name={[name, "loadId2"]}
-                                  rules={[
-                                    {
-                                      required: true,
-                                      message: "Load ID 2 is required",
-                                    },
-                                  ]}
                                   style={{ marginBottom: 0 }}
                                 >
                                   <Input
@@ -313,8 +296,7 @@ export default function TripSection({ form }: Props) {
                                   />
                                 </Form.Item>
                               </Col>
-                            </>
-                          )}
+                          </>
                         </Row>
                       </div>
 
