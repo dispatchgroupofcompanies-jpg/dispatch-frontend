@@ -79,7 +79,7 @@ export default function TripSection({ form }: Props) {
                 const dispatchAmount = (totalCharges * dispatchPercent) / 100;
 
                 // Checking condition if VRID starts with 'T' or 't'
-                const vridValue = String(trip?.vrid || "");
+                const vridValue = String(trip?.vrid || "").trim();
                 const startsWithT = vridValue.toLowerCase().startsWith("t");
 
                 return (
@@ -259,8 +259,9 @@ export default function TripSection({ form }: Props) {
                             </Form.Item>
                           </Col>
 
-                          {/* Load IDs accept any mixed text and are optional. */}
-                          <>
+                          {/* Load IDs condition add kar di hai */}
+                          {startsWithT && (
+                            <>
                               <Col xs={24} sm={12} md={8}>
                                 <span
                                   style={{ ...labelStyle, color: "#1e293b" }}
@@ -296,7 +297,8 @@ export default function TripSection({ form }: Props) {
                                   />
                                 </Form.Item>
                               </Col>
-                          </>
+                            </>
+                          )}
                         </Row>
                       </div>
 
