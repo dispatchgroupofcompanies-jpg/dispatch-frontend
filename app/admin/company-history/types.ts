@@ -26,6 +26,7 @@ export interface CompanyHistoryInvoice {
   };
   payee?: {
     companyName?: string;
+    payeeSelectKey?: string;
     contactPerson?: string;
     phone?: string;
     email?: string;

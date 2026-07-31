@@ -62,6 +62,10 @@ export const getInvoiceById = (invoiceId: string) => {
   return API.get(`/admin/invoices/${invoiceId}`);
 };
 
+export const getInvoicePdfLink = (invoiceId: string) => {
+  return API.get(`/user/invoices/${invoiceId}/pdf-link`);
+};
+
 export const updateInvoice = (
   invoiceId: string,
   data: Record<string, unknown>,

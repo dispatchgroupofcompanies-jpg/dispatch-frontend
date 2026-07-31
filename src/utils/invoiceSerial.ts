@@ -1,15 +1,24 @@
-import type { Invoice } from "../types/invoice";
+interface InvoiceSerialSource {
+  _id: string;
+  createdAt: string;
+  payee?: {
+    payeeSelectKey?: string;
+    companyName?: string;
+  };
+}
 
-const getPayeeKey = (invoice: Invoice) =>
+const getPayeeKey = (invoice: InvoiceSerialSource) =>
   (invoice.payee?.payeeSelectKey || invoice.payee?.companyName || "unknown")
     .trim()
     .toLocaleLowerCase()
     .replace(/\s+/g, " ");
 
 /** Builds a 1-based sequence for each payee, ordered by invoice creation. */
-export const getPayeeSerialNumbers = (invoices: Invoice[]) => {
+export const getPayeeSerialNumbers = <T extends InvoiceSerialSource>(
+  invoices: T[],
+) => {
   const serials = new Map<string, number>();
-  const grouped = new Map<string, Invoice[]>();
+  const grouped = new Map<string, T[]>();
 
   invoices.forEach((invoice) => {
     const payeeKey = getPayeeKey(invoice);

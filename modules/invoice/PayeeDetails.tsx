@@ -1,11 +1,12 @@
 "use client";
 
-import { Card, Col, Form, Input, Row, Select, Divider } from "antd";
+import { Card, Col, Form, Input, Row, Select } from "antd";
 import { FormInstance } from "antd";
+import type { CompanyProfile } from "../../src/types/company";
 
 interface PayeeProps {
   formInstance: FormInstance;
-  companiesList: any[];
+  companiesList: CompanyProfile[];
 }
 
 export default function PayeeDetails({

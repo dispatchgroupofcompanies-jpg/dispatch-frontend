@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   Card,
   Row,
@@ -15,16 +15,15 @@ import {
 } from "antd";
 import {
   FileTextOutlined,
-  ReloadOutlined,
   UpOutlined,
   DownOutlined,
 } from "@ant-design/icons";
 import { getInvoices } from "@/src/services/admin/invoice";
-import dayjs from "dayjs";
 import type { CompanyHistoryInvoice } from "./types";
 import CompanyHistoryFilters from "./components/CompanyHistoryFilters";
 import CompanyHistoryExpandedRow from "./components/CompanyHistoryExpandedRow";
 import CompanyHistoryExportModals from "./components/CompanyHistoryExportModals";
+import { getPayeeSerialNumbers } from "@/src/utils/invoiceSerial";
 
 const { Title, Text } = Typography;
 
@@ -36,18 +35,15 @@ export default function CompanyHistoryPage() {
   >([]);
   const [companies, setCompanies] = useState<string[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
-  const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(
-    null,
-  );
-  const [presetFilter, setPresetFilter] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
-  const [invoiceStatusFilter, setInvoiceStatusFilter] = useState<string | null>(
-    null,
-  );
   const [expandedRowKeys, setExpandedRowKeys] = useState<readonly React.Key[]>(
     [],
   );
   const mountedRef = useRef(true);
+  const payeeSerialNumbers = useMemo(
+    () => getPayeeSerialNumbers(invoices),
+    [invoices],
+  );
 
   const applyFilters = useCallback(() => {
     let filtered = [...invoices];
@@ -56,53 +52,6 @@ export default function CompanyHistoryPage() {
       filtered = filtered.filter(
         (inv) => inv.customer?.companyName === selectedCompany,
       );
-    }
-
-    if (invoiceStatusFilter) {
-      filtered = filtered.filter(
-        (inv) =>
-          inv.invoiceStatus?.toLowerCase() ===
-          invoiceStatusFilter.toLowerCase(),
-      );
-    }
-
-    if (dateRange && dateRange[0] && dateRange[1]) {
-      const startDate = dateRange[0].startOf("day");
-      const endDate = dateRange[1].endOf("day");
-      filtered = filtered.filter((inv) => {
-        const invDate = dayjs(inv.createdAt);
-        return (
-          (invDate.isAfter(startDate) || invDate.isSame(startDate, "day")) &&
-          (invDate.isBefore(endDate) || invDate.isSame(endDate, "day"))
-        );
-      });
-    }
-
-    if (presetFilter) {
-      const now = dayjs();
-      let startDate: dayjs.Dayjs;
-
-      switch (presetFilter) {
-        case "week":
-          startDate = now.subtract(7, "days");
-          break;
-        case "month":
-          startDate = now.subtract(1, "month");
-          break;
-        case "quarter":
-          startDate = now.subtract(3, "months");
-          break;
-        case "year":
-          startDate = now.subtract(1, "year");
-          break;
-        default:
-          startDate = now.subtract(7, "days");
-      }
-
-      filtered = filtered.filter((inv) => {
-        const invDate = dayjs(inv.createdAt);
-        return invDate.isAfter(startDate) || invDate.isSame(startDate, "day");
-      });
     }
 
     if (searchText.trim()) {
@@ -127,9 +76,6 @@ export default function CompanyHistoryPage() {
   }, [
     invoices,
     selectedCompany,
-    invoiceStatusFilter,
-    dateRange,
-    presetFilter,
     searchText,
   ]);
 
@@ -181,9 +127,6 @@ export default function CompanyHistoryPage() {
 
   const handleClearFilters = () => {
     setSelectedCompany(null);
-    setInvoiceStatusFilter(null);
-    setDateRange(null);
-    setPresetFilter(null);
     setSearchText("");
     setFilteredInvoices(invoices);
   };
@@ -230,9 +173,10 @@ export default function CompanyHistoryPage() {
   const columns = [
     {
       title: "Invoice #",
-      dataIndex: "invoiceNumber",
       key: "invoiceNumber",
-      render: (text: string) => <Text strong>{text}</Text>,
+      render: (_: unknown, record: CompanyHistoryInvoice) => (
+        <Text strong>#{payeeSerialNumbers.get(record._id) || 1}</Text>
+      ),
     },
     {
       title: "Amount",
@@ -332,25 +276,15 @@ export default function CompanyHistoryPage() {
           companies={companies}
           selectedCompany={selectedCompany}
           setSelectedCompany={setSelectedCompany}
-          dateRange={dateRange}
-          setDateRange={setDateRange}
-          presetFilter={presetFilter}
-          setPresetFilter={setPresetFilter}
           searchText={searchText}
           setSearchText={setSearchText}
-          invoiceStatusFilter={invoiceStatusFilter}
-          setInvoiceStatusFilter={setInvoiceStatusFilter}
           onClearFilters={handleClearFilters}
           isMobile={isMobile}
         />
       </Card>
 
       {/* Active Filters Summary */}
-      {(selectedCompany ||
-        dateRange ||
-        presetFilter ||
-        invoiceStatusFilter ||
-        searchText) && (
+      {(selectedCompany || searchText) && (
         <Row
           style={{
             marginTop: 16,
@@ -365,7 +299,7 @@ export default function CompanyHistoryPage() {
                 strong
                 style={{ color: "#64748b", marginRight: 4, fontSize: "12px" }}
               >
-                Active Pipelines:
+                Active filters:
               </Text>
 
               {selectedCompany && (
@@ -375,48 +309,6 @@ export default function CompanyHistoryPage() {
                   style={{ fontWeight: 600, borderRadius: "4px" }}
                 >
                   Company: {selectedCompany}
-                </Tag>
-              )}
-
-              {invoiceStatusFilter && (
-                <Tag
-                  color={invoiceStatusFilter === "paid" ? "success" : "warning"}
-                  bordered={false}
-                  style={{
-                    fontWeight: 700,
-                    borderRadius: "4px",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Status: {invoiceStatusFilter}
-                </Tag>
-              )}
-
-              {dateRange && dateRange[0] && dateRange[1] && (
-                <Tag
-                  color="green"
-                  bordered={false}
-                  style={{ fontWeight: 600, borderRadius: "4px" }}
-                >
-                  Timeline: {dateRange[0].format("YYYY-MM-DD")} -{" "}
-                  {dateRange[1].format("YYYY-MM-DD")}
-                </Tag>
-              )}
-
-              {presetFilter && (
-                <Tag
-                  color="purple"
-                  bordered={false}
-                  style={{ fontWeight: 600, borderRadius: "4px" }}
-                >
-                  Period:{" "}
-                  {presetFilter === "week"
-                    ? "Last 7 Days"
-                    : presetFilter === "month"
-                      ? "Last 1 Month"
-                      : presetFilter === "quarter"
-                        ? "Last 3 Months"
-                        : "Last 1 Year"}
                 </Tag>
               )}
 
@@ -450,6 +342,8 @@ export default function CompanyHistoryPage() {
         formatCurrency={formatCurrency}
         formatDate={formatDate}
         isMobile={isMobile}
+        selectedCompany={selectedCompany}
+        payeeSerialNumbers={payeeSerialNumbers}
       />
 
       {/* Invoices Table Card */}
@@ -533,15 +427,14 @@ export default function CompanyHistoryPage() {
               expandedRowKeys: expandedRowKeys,
               onExpandedRowsChange: handleExpandedRowsChange,
               expandIcon: ({ expanded, record }) => {
-                const isExpanded = expandedRowKeys.includes(record._id);
                 return (
                   <Button
                     type="link"
-                    icon={isExpanded ? <UpOutlined /> : <DownOutlined />}
+                    icon={expanded ? <UpOutlined /> : <DownOutlined />}
                     onClick={() => handleExpandRow(record)}
                     style={{ color: "#1890ff", padding: 0 }}
                   >
-                    {isExpanded ? "Hide Details" : "View Details"}
+                    {expanded ? "Hide Details" : "View Details"}
                   </Button>
                 );
               },

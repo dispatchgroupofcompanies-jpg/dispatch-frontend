@@ -9,8 +9,9 @@ import {
   Space,
   Tooltip,
   Grid,
+  message,
 } from "antd";
-import { EyeOutlined, DownloadOutlined } from "@ant-design/icons";
+import { EyeOutlined, DownloadOutlined, MessageOutlined } from "@ant-design/icons";
 import { downloadInvoicePDF } from "../../modules/invoice/route";
 import type { ColumnsType } from "antd/es/table";
 import type { Invoice } from "../types/invoice";
@@ -67,6 +68,26 @@ export default function InvoiceTable({
     () => getPayeeSerialNumbers(invoices),
     [invoices],
   );
+
+  const sendToWhatsApp = (record: Invoice) => {
+    const recipient = record.payee?.phone?.replace(/\D/g, "");
+    if (!recipient) {
+      message.warning("This invoice has no Payee Phone number.");
+      return;
+    }
+
+    const serialNumber = payeeSerialNumbers.get(record._id) || 1;
+    const amount = Number(record.grandTotal || 0).toLocaleString("en-CA", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    const text = `Hello,\n\nThis is an invoice from +91 9596523404.\nInvoice #${serialNumber}\nAmount: ${record.currency || "CAD"} $${amount}`;
+    window.open(
+      `https://wa.me/${recipient}?text=${encodeURIComponent(text)}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+  };
 
   const columns: ColumnsType<Invoice> = [
     {
@@ -215,10 +236,29 @@ export default function InvoiceTable({
     {
       title: "Actions",
       key: "action",
-      width: isMobile ? 70 : 100,
+      width: isMobile ? 110 : 330,
       align: "center" as const,
       render: (_, record) => (
         <Space size={isMobile ? "small" : "middle"}>
+          {isAdmin && (
+            <Tooltip title="Send invoice on WhatsApp" placement="top">
+              <Button
+                type="primary"
+                size={isMobile ? "small" : "middle"}
+                icon={<MessageOutlined />}
+                disabled={!record.payee?.phone}
+                onClick={() => sendToWhatsApp(record)}
+                style={{
+                  borderRadius: "6px",
+                  backgroundColor: "#16a34a",
+                  borderColor: "#16a34a",
+                  padding: isMobile ? "4px 8px" : "8px 16px",
+                }}
+              >
+                {isMobile ? "" : "WhatsApp"}
+              </Button>
+            </Tooltip>
+          )}
           <Tooltip title="Download PDF" placement="top">
             <Button
               type="primary"
