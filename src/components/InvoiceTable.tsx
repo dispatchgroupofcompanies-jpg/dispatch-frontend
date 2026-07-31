@@ -35,9 +35,16 @@ const handleDownload = async (
   try {
     const response = await downloadInvoicePDF(invoiceId, isAdmin);
 
-    // Handle both blob and JSON responses
-    if (response.data instanceof Blob) {
-      // Blob response - create download link
+    // Axios returns fallback JSON as a Blob too when responseType is "blob".
+    // Only save a response when it is a real PDF; otherwise extract the
+    // Cloudinary URL returned by the API and open that instead.
+    const contentType = String(response.headers?.["content-type"] ?? "");
+    const isPdf =
+      response.data instanceof Blob &&
+      (contentType.includes("application/pdf") ||
+        response.data.type.includes("application/pdf"));
+
+    if (isPdf) {
       const url = window.URL.createObjectURL(response.data);
       const link = document.createElement("a");
       link.href = url;
@@ -46,10 +53,23 @@ const handleDownload = async (
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-    } else if (response.data?.pdfUrl) {
-      // JSON response with URL - open in new tab
-      window.open(response.data.pdfUrl, "_blank");
+      return;
     }
+
+    const fallback =
+      response.data instanceof Blob
+        ? JSON.parse(await response.data.text())
+        : response.data;
+
+    if (fallback?.pdfUrl) {
+      // Do not use window.open here: browsers can block it because this runs
+      // after the asynchronous API request. Direct navigation is not blocked
+      // and Cloudinary serves the valid PDF to the browser.
+      window.location.assign(fallback.pdfUrl);
+      return;
+    }
+
+    throw new Error("The server did not return a PDF file.");
   } catch (error) {
     console.error("Error downloading invoice:", error);
     alert("Failed to download invoice. Please try again.");
