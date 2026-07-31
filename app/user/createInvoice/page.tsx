@@ -12,6 +12,8 @@ import {
   Tag,
   Tooltip,
   message,
+  Grid,
+  Select,
 } from "antd";
 import ResponsiveTable from "../../../modules/common/ResponsiveTable";
 import {
@@ -34,7 +36,11 @@ import {
 import type { Invoice as InvoiceType } from "../../../src/types/invoice";
 import { getPayeeSerialNumbers } from "../../../src/utils/invoiceSerial";
 
+const { useBreakpoint } = Grid;
+
 function DashboardComponent() {
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
   const [open, setOpen] = useState(false);
   const [invoices, setInvoices] = useState<InvoiceType[]>([]);
   const [loading, setLoading] = useState(false);
@@ -45,6 +51,7 @@ function DashboardComponent() {
     null,
   );
   const [downloading, setDownloading] = useState(false);
+  const [selectedPayee, setSelectedPayee] = useState("all");
 
   // -------------------------
   // FETCH DATA FROM SERVER
@@ -86,6 +93,42 @@ function DashboardComponent() {
   const payeeSerialNumbers = useMemo(
     () => getPayeeSerialNumbers(invoices),
     [invoices],
+  );
+
+  const payeeSummaries = useMemo(() => {
+    const summaries = new Map<
+      string,
+      { name: string; count: number; total: number; currency: string }
+    >();
+
+    invoices.forEach((invoice) => {
+      const name = invoice.payee?.companyName?.trim() || "Unassigned company";
+      const current = summaries.get(name) || {
+        name,
+        count: 0,
+        total: 0,
+        currency: invoice.currency || "CAD",
+      };
+      current.count += 1;
+      current.total += Number(invoice.grandTotal || 0);
+      summaries.set(name, current);
+    });
+
+    return Array.from(summaries.values()).sort((a, b) =>
+      a.name.localeCompare(b.name),
+    );
+  }, [invoices]);
+
+  const filteredInvoices = useMemo(
+    () =>
+      selectedPayee === "all"
+        ? invoices
+        : invoices.filter(
+            (invoice) =>
+              (invoice.payee?.companyName?.trim() || "Unassigned company") ===
+              selectedPayee,
+          ),
+    [invoices, selectedPayee],
   );
 
   // -------------------------
@@ -168,7 +211,7 @@ function DashboardComponent() {
       {
         title: "Invoice #",
         key: "invoiceNumber",
-        width: 140,
+        width: isMobile ? 54 : 140,
         render: (_: unknown, record: InvoiceType) => {
           const serialNumber = payeeSerialNumbers.get(record._id) || 1;
           return (
@@ -192,6 +235,7 @@ function DashboardComponent() {
         title: "Vendor",
         dataIndex: ["payee", "companyName"],
         key: "payeeCompany",
+        responsive: ["md"],
         render: (text: string) => (
           <span style={{ fontWeight: 500, color: "#334155" }}>
             {text || "N/A"}
@@ -202,7 +246,7 @@ function DashboardComponent() {
         title: "Amount",
         dataIndex: "grandTotal",
         key: "grandTotal",
-        width: 160,
+        width: isMobile ? 82 : 160,
         render: (val: number, record: InvoiceType) => (
           <span style={{ fontWeight: 700, color: "#0f172a" }}>
             {record.currency || "CAD"} $
@@ -218,6 +262,7 @@ function DashboardComponent() {
         dataIndex: "invoiceStatus",
         key: "invoiceStatus",
         width: 140,
+        responsive: ["md"],
         render: (status: string) => {
           const cleanStatus = status?.toLowerCase() || "draft";
           const colorMap: Record<string, string> = {
@@ -238,6 +283,7 @@ function DashboardComponent() {
         title: "Created",
         dataIndex: "createdAt",
         key: "createdAt",
+        responsive: ["lg"],
         render: (val: string) => (
           <span style={{ color: "#64748b", fontSize: "13px" }}>
             {val
@@ -253,18 +299,18 @@ function DashboardComponent() {
       {
         title: "Actions",
         key: "action",
-        width: 260,
+        width: isMobile ? 134 : 260,
         render: (_: unknown, record: InvoiceType) => {
           const isDraft =
             (record.invoiceStatus || "draft").toLowerCase() === "draft";
           return (
-            <Space size="small">
+            <Space size={isMobile ? 2 : "small"}>
               <Button
                 type="primary"
                 icon={<EyeOutlined />}
                 onClick={() => openView(record)}
               >
-                View
+                {!isMobile && "View"}
               </Button>
 
               <Tooltip title="Download Clean PDF">
@@ -311,10 +357,9 @@ function DashboardComponent() {
         },
       },
     ],
-    [selected, downloading, payeeSerialNumbers],
+    [selected, downloading, payeeSerialNumbers, isMobile],
   );
 
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
   const headerPadding = isMobile ? "20px 16px" : "24px 20px";
 
   return (
@@ -461,6 +506,48 @@ function DashboardComponent() {
       </Row>
 
       <Card
+        size="small"
+        style={{
+          marginBottom: 16,
+          borderRadius: 12,
+          border: "1px solid #dbeafe",
+          background: "#f8fbff",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: isMobile ? "stretch" : "center",
+            flexDirection: isMobile ? "column" : "row",
+            gap: 12,
+            marginBottom: 12,
+          }}
+        >
+          <div>
+            <div style={{ fontWeight: 700, color: "#0f2962" }}>
+              Company-wise invoice view
+            </div>
+            <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
+              Invoice numbering and totals are separated by payee company.
+            </div>
+          </div>
+          <Select
+            value={selectedPayee}
+            onChange={setSelectedPayee}
+            style={{ width: isMobile ? "100%" : 280 }}
+            options={[
+              { value: "all", label: `All companies (${invoices.length})` },
+              ...payeeSummaries.map((company) => ({
+                value: company.name,
+                label: `${company.name} (${company.count})`,
+              })),
+            ]}
+          />
+        </div>
+      </Card>
+
+      <Card
         style={{
           boxShadow:
             "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
@@ -472,7 +559,7 @@ function DashboardComponent() {
             borderRadius: "12px",
             boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
           }}
-          dataSource={invoices as unknown as Record<string, unknown>[]}
+          dataSource={filteredInvoices as unknown as Record<string, unknown>[]}
           columns={columns}
           rowKey={(record) => (record as unknown as InvoiceType)._id}
           loading={loading}
@@ -481,8 +568,7 @@ function DashboardComponent() {
             style: { marginTop: 12 },
           }}
           size="middle"
-          scroll={{ x: 900 }}
-          minScrollWidth={900}
+          enableHorizontalScroll={!isMobile}
         />
       </Card>
 
@@ -531,12 +617,13 @@ function DashboardComponent() {
               id="printable-invoice-modal-content"
               style={{
                 backgroundColor: "#ffffff",
-                padding: "24px",
+                padding: isMobile ? "6px" : "24px",
                 borderRadius: "8px",
                 boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
                 maxWidth: "100%",
                 maxHeight: "80vh",
-                overflowY: "auto",
+                // Keep a single scrollbar inside InvoicePreview's iframe.
+                overflow: "hidden",
               }}
             >
               <InvoicePreview
@@ -550,9 +637,9 @@ function DashboardComponent() {
             {/* Seamless Outside UI Controls Floating Container */}
             <div
               style={{
-                marginTop: "20px",
+                marginTop: isMobile ? "8px" : "20px",
                 display: "flex",
-                gap: "12px",
+                gap: isMobile ? "8px" : "12px",
                 width: "100%",
                 maxWidth: "600px",
                 justifyContent: "center",
@@ -561,7 +648,7 @@ function DashboardComponent() {
               <Button
                 key="close"
                 onClick={() => setViewOpen(false)}
-                size="large"
+                size={isMobile ? "middle" : "large"}
                 style={{
                   borderRadius: "8px",
                   fontWeight: 600,
@@ -577,7 +664,7 @@ function DashboardComponent() {
                 key="download"
                 type="primary"
                 icon={<DownloadOutlined />}
-                size="large"
+                size={isMobile ? "middle" : "large"}
                 loading={downloading}
                 disabled={!selected}
                 style={{

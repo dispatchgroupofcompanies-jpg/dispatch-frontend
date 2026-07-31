@@ -1,6 +1,6 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
-import { Card, Typography, Grid, message } from "antd";
+import React, { useEffect, useState, useRef, useMemo } from "react";
+import { Card, Typography, Grid, message, Select } from "antd";
 import InvoiceTable from "../../../components/InvoiceTable";
 import InvoiceModal from "../../../components/InvoiceModal";
 import {
@@ -21,7 +21,32 @@ export default function AdminInvoicesPage() {
   const [selected, setSelected] = useState<Invoice | null>(null);
   const [approveLoading, setApproveLoading] = useState(false);
   const [rejectLoading, setRejectLoading] = useState(false);
+  const [selectedPayee, setSelectedPayee] = useState("all");
   const mountedRef = useRef(true);
+
+  const payeeOptions = useMemo(() => {
+    const companies = new Map<string, number>();
+    invoices.forEach((invoice) => {
+      const name = invoice.payee?.companyName?.trim() || "Unassigned company";
+      companies.set(name, (companies.get(name) || 0) + 1);
+    });
+
+    return Array.from(companies.entries())
+      .sort(([first], [second]) => first.localeCompare(second))
+      .map(([name, count]) => ({ value: name, label: `${name} (${count})` }));
+  }, [invoices]);
+
+  const filteredInvoices = useMemo(
+    () =>
+      selectedPayee === "all"
+        ? invoices
+        : invoices.filter(
+            (invoice) =>
+              (invoice.payee?.companyName?.trim() || "Unassigned company") ===
+              selectedPayee,
+          ),
+    [invoices, selectedPayee],
+  );
 
   const fetch = async () => {
     if (!mountedRef.current) return;
@@ -87,7 +112,7 @@ export default function AdminInvoicesPage() {
   };
 
   const containerPadding = isMobile ? "12px" : "20px";
-  const headerPadding = isMobile ? "20px 16px" : "24px 20px";
+  const headerPadding = isMobile ? "16px 14px" : "24px 20px";
 
   return (
     <div
@@ -101,7 +126,7 @@ export default function AdminInvoicesPage() {
         style={{
           background: "linear-gradient(135deg, #065f46 0%, #10b981 100%)",
           padding: headerPadding,
-          marginBottom: isMobile ? 12 : 20,
+          marginBottom: isMobile ? 10 : 20,
           borderRadius: isMobile ? 12 : 16,
           boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
         }}
@@ -136,9 +161,47 @@ export default function AdminInvoicesPage() {
         style={{
           maxWidth: 1400,
           margin: "0 auto",
-          padding: `0 ${containerPadding} ${containerPadding}`,
+            padding: `0 ${containerPadding} ${containerPadding}`,
         }}
       >
+        <Card
+          size="small"
+          style={{
+            marginBottom: 12,
+            borderRadius: isMobile ? 10 : 12,
+            border: "1px solid #dbeafe",
+            background: "#f8fbff",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: isMobile ? "column" : "row",
+              alignItems: isMobile ? "stretch" : "center",
+              justifyContent: "space-between",
+              gap: 10,
+            }}
+          >
+            <div>
+              <div style={{ fontWeight: 700, color: "#0f2962" }}>
+                Filter by payee company
+              </div>
+              <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
+                Review invoices for one company at a time.
+              </div>
+            </div>
+            <Select
+              value={selectedPayee}
+              onChange={setSelectedPayee}
+              style={{ width: isMobile ? "100%" : 300 }}
+              options={[
+                { value: "all", label: `All companies (${invoices.length})` },
+                ...payeeOptions,
+              ]}
+            />
+          </div>
+        </Card>
+
         <Card
           style={{
             borderRadius: isMobile ? 10 : 12,
@@ -149,7 +212,7 @@ export default function AdminInvoicesPage() {
           bodyStyle={{ padding: isMobile ? "8px" : "12px" }}
         >
           <InvoiceTable
-            invoices={invoices}
+            invoices={filteredInvoices}
             loading={loading}
             onView={(inv) => setSelected(inv)}
             isAdmin={true}

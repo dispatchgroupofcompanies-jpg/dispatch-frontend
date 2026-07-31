@@ -81,6 +81,7 @@ export const getInvoiceTemplate = (
     <html>
       <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
           @page { 
             size: A4; 
@@ -96,6 +97,38 @@ export const getInvoiceTemplate = (
             width: 210mm;
             height: 296mm;
             overflow: hidden;
+          }
+
+          /* The iframe can be shorter than an A4 page. Let its document
+             scroll on screen so every invoice section remains reachable. */
+          @media screen {
+            body { overflow: auto; }
+          }
+
+          /* Screen-only rules keep the iframe preview usable on phones while
+             preserving the fixed A4 layout used for printed PDFs. */
+          @media screen and (max-width: 700px) {
+            body {
+              width: 100%;
+              height: auto;
+              min-height: 100vh;
+              overflow: visible;
+            }
+
+            .page-container {
+              width: 100%;
+              height: auto;
+              min-height: 100vh;
+              padding: 24px 16px 110px;
+              overflow: visible;
+            }
+
+            .header-section { margin-bottom: 24px; }
+            .invoice-title { font-size: 24px; }
+            .watermark { font-size: 32px; letter-spacing: 4px; }
+            .items-table { display: block; overflow-x: auto; }
+            .items-table th, .items-table td { padding: 8px 6px !important; font-size: 10px !important; }
+            .footer-band { position: static; height: auto; margin-top: 24px; padding: 18px 16px; }
           }
 
           .watermark {

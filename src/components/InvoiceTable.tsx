@@ -113,7 +113,7 @@ export default function InvoiceTable({
     {
       title: "Invoice #",
       key: "invoiceNumber",
-      width: isMobile ? 75 : 100,
+      width: isMobile ? 62 : 100,
       fixed: isMobile ? "left" : undefined,
       render: (_, record) => {
         const serialNumber = payeeSerialNumbers.get(record._id) || 1;
@@ -139,7 +139,7 @@ export default function InvoiceTable({
     {
       title: "VRID",
       key: "vrid",
-      width: isMobile ? 100 : 150,
+      width: isMobile ? 92 : 150,
       render: (_, record) => {
         const vrids = record.trips?.map((t) => t.vrid).filter(Boolean) || [];
         return (
@@ -173,6 +173,7 @@ export default function InvoiceTable({
       title: "Load ID",
       key: "loadId",
       width: isMobile ? 90 : 120,
+      responsive: ["md"],
       render: (_, record) => {
         const loadIds =
           record.trips
@@ -212,7 +213,7 @@ export default function InvoiceTable({
       title: "Amount",
       dataIndex: "grandTotal",
       key: "grandTotal",
-      width: isMobile ? 90 : 120,
+      width: isMobile ? 92 : 120,
       render: (amount, record) => (
         <Text
           strong
@@ -235,6 +236,7 @@ export default function InvoiceTable({
       dataIndex: "invoiceStatus",
       key: "invoiceStatus",
       width: isMobile ? 85 : 110,
+      responsive: ["md"],
       render: (status) => {
         const colorMap: Record<string, string> = {
           draft: "default",
@@ -256,11 +258,11 @@ export default function InvoiceTable({
     {
       title: "Actions",
       key: "action",
-      width: isMobile ? 110 : 330,
+      width: isMobile ? 80 : 330,
       align: "center" as const,
       render: (_, record) => (
         <Space size={isMobile ? "small" : "middle"}>
-          {isAdmin && (
+          {isAdmin && !isMobile && (
             <Tooltip title="Send invoice on WhatsApp" placement="top">
               <Button
                 type="primary"
@@ -291,7 +293,7 @@ export default function InvoiceTable({
                 borderRadius: "6px",
                 backgroundColor: "#102a63",
                 borderColor: "#102a63",
-                padding: isMobile ? "4px 8px" : "8px 16px",
+                padding: isMobile ? "4px 6px" : "8px 16px",
               }}
             >
               {isMobile ? "" : "Download"}
@@ -322,8 +324,8 @@ export default function InvoiceTable({
         style={{
           background: "#fff",
           borderRadius: isMobile ? 8 : 12,
-          padding: isMobile ? "8px" : "16px",
-          overflowX: isMobile ? "auto" : "visible",
+          padding: isMobile ? "4px" : "16px",
+          overflowX: "hidden",
           WebkitOverflowScrolling: "touch",
         }}
       >
@@ -339,10 +341,10 @@ export default function InvoiceTable({
               isMobile ? `${total} items` : `Total ${total} items`,
           }}
           size="small"
-          scroll={isMobile ? { x: 800 } : undefined}
+          scroll={undefined}
           style={{
             fontSize: isMobile ? 12 : 13,
-            minWidth: isMobile ? 800 : "100%",
+            minWidth: "100%",
           }}
         />
       </div>

@@ -1,17 +1,20 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Card, Typography, message, Spin } from "antd";
+import { Card, Typography, message, Spin, Grid } from "antd";
 import type { Invoice } from "../../../../src/types/invoice";
 import InvoicePreview from "../../../../src/components/InvoicePreview";
 
 const { Title, Text } = Typography;
+const { useBreakpoint } = Grid;
 
 export default function PublicInvoicePage({
   params,
 }: {
   params: { id: string };
 }) {
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +67,7 @@ export default function PublicInvoicePage({
           justifyContent: "center",
           alignItems: "center",
           backgroundColor: "#f8fafc",
-          padding: "20px",
+          padding: isMobile ? "12px" : "20px",
         }}
       >
         <Card style={{ maxWidth: 500, textAlign: "center", borderRadius: 12 }}>
@@ -85,7 +88,7 @@ export default function PublicInvoicePage({
       style={{
         minHeight: "100vh",
         backgroundColor: "#f8fafc",
-        padding: "20px",
+        padding: isMobile ? "8px" : "20px",
       }}
     >
       <div style={{ maxWidth: 1200, margin: "0 auto" }}>

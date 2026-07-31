@@ -1,8 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
+import { Grid } from "antd";
 import type { Invoice } from "../types/invoice";
 import { getInvoiceTemplate } from "../templates/invoice-template";
+
+const { useBreakpoint } = Grid;
 
 export default function InvoicePreview({
   invoice,
@@ -11,6 +14,8 @@ export default function InvoicePreview({
   invoice: Invoice;
   serialNumber?: number | string;
 }) {
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
   const html = useMemo(
     () => getInvoiceTemplate(invoice, serialNumber),
     [invoice, serialNumber],
@@ -21,8 +26,10 @@ export default function InvoicePreview({
       style={{
         width: "100%",
         backgroundColor: "#f1f5f9",
-        overflowX: "auto",
-        padding: 12,
+        // The iframe document owns horizontal/vertical scrolling. Keeping the
+        // wrapper clipped prevents a duplicate scrollbar around the preview.
+        overflow: "hidden",
+        padding: "clamp(4px, 2vw, 12px)",
       }}
     >
       <iframe
@@ -30,9 +37,15 @@ export default function InvoicePreview({
         srcDoc={html}
         style={{
           display: "block",
-          width: "210mm",
-          height: "296mm",
-          maxWidth: "100%",
+          // Desktop modals size themselves from this A4 preview. Only use a
+          // fluid width on phone/tablet screens where the page must fit.
+          width: isMobile ? "100%" : "210mm",
+          // The invoice remains A4 when printed, but the browser preview must
+          // fit inside a dialog viewport. This iframe is the only vertical
+          // scroll area for the preview.
+          height: "min(296mm, calc(100dvh - 220px))",
+          minHeight: "360px",
+          overflow: "auto",
           margin: "0 auto",
           border: "0",
           backgroundColor: "#ffffff",

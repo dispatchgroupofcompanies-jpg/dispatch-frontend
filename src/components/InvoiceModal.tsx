@@ -53,7 +53,7 @@ export default function InvoiceModal({
         <div
           style={{
             display: "flex",
-            justifyContent: "space-between",
+            justifyContent: "flex-end",
             alignItems: "center",
             width: "100%",
             paddingRight: "20px",
@@ -62,6 +62,8 @@ export default function InvoiceModal({
           <Button
             type="text"
             onClick={onClose}
+            aria-label="Close invoice preview"
+            title="Close invoice preview"
             style={{
               color: "#dc2626",
               fontSize: "20px",
@@ -87,7 +89,9 @@ export default function InvoiceModal({
         body: {
           padding: isMobile ? "8px" : "12px",
           maxHeight: "85vh",
-          overflowY: "auto",
+          // InvoicePreview owns vertical scrolling so the dialog does not
+          // show a second scrollbar beside the PDF/HTML preview.
+          overflow: "hidden",
         },
       }}
     >
