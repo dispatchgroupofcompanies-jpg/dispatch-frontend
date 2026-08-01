@@ -88,6 +88,7 @@ export default function InvoiceTable({
     () => getPayeeSerialNumbers(invoices),
     [invoices],
   );
+  const [downloadingInvoiceId, setDownloadingInvoiceId] = React.useState<string | null>(null);
 
   const sendToWhatsApp = (record: Invoice) => {
     const recipient = record.payee?.phone?.replace(/\D/g, "");
@@ -106,6 +107,56 @@ export default function InvoiceTable({
       `https://wa.me/${recipient}?text=${encodeURIComponent(text)}`,
       "_blank",
       "noopener,noreferrer",
+    );
+  };
+
+  const downloadInvoice = async (record: Invoice) => {
+    setDownloadingInvoiceId(record._id);
+    try {
+      await handleDownload(record._id, record.invoiceNumber, isAdmin);
+    } finally {
+      setDownloadingInvoiceId(null);
+    }
+  };
+
+  const renderIdSummary = (
+    values: Array<string | undefined>,
+    emptyLabel = "-",
+    tone: "neutral" | "blue" = "neutral",
+  ) => {
+    const uniqueValues = [...new Set(values.filter(Boolean) as string[])];
+    if (!uniqueValues.length) return <Text type="secondary">{emptyLabel}</Text>;
+
+    const firstValue = uniqueValues[0];
+    const remainingCount = uniqueValues.length - 1;
+    const palette = tone === "blue"
+      ? { background: "#dbeafe", color: "#2563eb" }
+      : { background: "#f1f5f9", color: "#334155" };
+
+    return (
+      <Tooltip title={uniqueValues.join(", ")} placement="top">
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 5, maxWidth: "100%" }}>
+          <span
+            style={{
+              ...palette,
+              padding: "3px 6px",
+              borderRadius: 4,
+              fontSize: isMobile ? 9 : 10,
+              maxWidth: isMobile ? 70 : 92,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {firstValue}
+          </span>
+          {remainingCount > 0 && (
+            <span style={{ color: "#64748b", fontSize: isMobile ? 9 : 10, whiteSpace: "nowrap" }}>
+              +{remainingCount}
+            </span>
+          )}
+        </div>
+      </Tooltip>
     );
   };
 
@@ -142,31 +193,7 @@ export default function InvoiceTable({
       width: isMobile ? 92 : 150,
       render: (_, record) => {
         const vrids = record.trips?.map((t) => t.vrid).filter(Boolean) || [];
-        return (
-          <div style={{ fontSize: isMobile ? 9 : 11, lineHeight: 1.3 }}>
-            {vrids.length > 0 ? (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
-                {vrids.map((vrid, idx) => (
-                  <span
-                    key={idx}
-                    style={{
-                      background: "#f1f5f9",
-                      padding: "1px 4px",
-                      borderRadius: 2,
-                      fontSize: isMobile ? 9 : 10,
-                      marginRight: 2,
-                      marginBottom: 2,
-                    }}
-                  >
-                    {vrid}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <Text type="secondary">-</Text>
-            )}
-          </div>
-        );
+        return renderIdSummary(vrids);
       },
     },
     {
@@ -181,32 +208,7 @@ export default function InvoiceTable({
               t.loadId2 ? `${t.loadId1 || ""}/${t.loadId2}` : t.loadId1,
             )
             .filter(Boolean) || [];
-        return (
-          <div style={{ fontSize: isMobile ? 9 : 11, lineHeight: 1.3 }}>
-            {loadIds.length > 0 ? (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
-                {loadIds.map((loadId, idx) => (
-                  <span
-                    key={idx}
-                    style={{
-                      background: "#dbeafe",
-                      color: "#2563eb",
-                      padding: "1px 4px",
-                      borderRadius: 2,
-                      fontSize: isMobile ? 9 : 10,
-                      marginRight: 2,
-                      marginBottom: 2,
-                    }}
-                  >
-                    {loadId}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <Text type="secondary">-</Text>
-            )}
-          </div>
-        );
+        return renderIdSummary(loadIds, "-", "blue");
       },
     },
     {
@@ -286,9 +288,9 @@ export default function InvoiceTable({
               type="primary"
               size={isMobile ? "small" : "middle"}
               icon={<DownloadOutlined />}
-              onClick={() =>
-                handleDownload(record._id, record.invoiceNumber, isAdmin)
-              }
+              loading={downloadingInvoiceId === record._id}
+              disabled={downloadingInvoiceId !== null && downloadingInvoiceId !== record._id}
+              onClick={() => downloadInvoice(record)}
               style={{
                 borderRadius: "6px",
                 backgroundColor: "#102a63",
@@ -296,7 +298,7 @@ export default function InvoiceTable({
                 padding: isMobile ? "4px 6px" : "8px 16px",
               }}
             >
-              {isMobile ? "" : "Download"}
+              {isMobile ? "" : downloadingInvoiceId === record._id ? "Downloading..." : "Download"}
             </Button>
           </Tooltip>
           <Tooltip title="View Invoice" placement="top">

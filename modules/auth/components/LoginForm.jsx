@@ -9,43 +9,59 @@ const { Text, Title } = Typography;
 
 export default function LoginForm() {
   const [form] = Form.useForm();
-  const savedEmail = typeof window !== "undefined" ? localStorage.getItem("rememberEmail") : null;
-  const savedDeviceId = typeof window !== "undefined" ? localStorage.getItem("deviceId") : null;
   const [loading, setLoading] = useState(false);
-  const [rememberMe, setRememberMe] = useState(() => !!savedEmail);
-  const [deviceId, setDeviceId] = useState(savedDeviceId);
-  const [deviceGenerated, setDeviceGenerated] = useState(!!savedDeviceId);
-  
+  const [rememberMe, setRememberMe] = useState(false);
+  const [deviceId, setDeviceId] = useState(null);
+  const [deviceGenerated, setDeviceGenerated] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const savedEmail = localStorage.getItem("rememberEmail");
+    const savedDeviceId = localStorage.getItem("deviceId");
+
+    if (savedEmail) {
+      setRememberMe(true);
+      form.setFieldsValue({ email: savedEmail, remember: true });
+    }
+
+    if (savedDeviceId) {
+      setDeviceId(savedDeviceId);
+      setDeviceGenerated(true);
+    }
+  }, [form]);
+
   // Auto-generate device ID on mount if not present
   useEffect(() => {
     const initDeviceId = async () => {
-      // If device ID already exists in state or localStorage, skip
-      if (deviceId || (typeof window !== "undefined" && localStorage.getItem("deviceId"))) {
+      if (typeof window === "undefined") {
         return;
       }
-      
-      // Auto-generate device ID
+
+      if (deviceId || localStorage.getItem("deviceId")) {
+        return;
+      }
+
       try {
         const FP = await import("@fingerprintjs/fingerprintjs");
         const fp = await FP.load();
         const result = await fp.get();
         const newDeviceId = result.visitorId;
-        
+
         setDeviceId(newDeviceId);
         setDeviceGenerated(true);
-        
-        if (typeof window !== "undefined") {
-          localStorage.setItem("deviceId", newDeviceId);
-        }
-        
+
+        localStorage.setItem("deviceId", newDeviceId);
         console.log("Device ID auto-generated on mount:", newDeviceId);
       } catch (error) {
-          console.error("Failed to auto-generate device ID:", error);
+        console.error("Failed to auto-generate device ID:", error);
       }
     };
-    
+
     initDeviceId();
-  }, []);
+  }, [deviceId]);
 
 
 
@@ -264,7 +280,7 @@ export default function LoginForm() {
                   form={form} 
                   layout="vertical" 
                   onFinish={handleFinish}
-                  initialValues={{ email: savedEmail || undefined, remember: rememberMe }}
+                  initialValues={{ remember: rememberMe }}
                   requiredMark="optional"
                   scrollToFirstError
                   className="space-y-4"
