@@ -8,8 +8,8 @@ export const createInvoice = (
   return res.then((r) => r.data as ApiResponse<Invoice>);
 };
 
-export const getInvoices = (): Promise<ApiResponse<Invoice[]>> => {
-  const res = API.get("/admin/invoices");
+export const getInvoices = (params: Record<string, any> = {}): Promise<ApiResponse<Invoice[]>> => {
+  const res = API.get("/admin/invoices", { params });
   return res.then((r) => r.data as ApiResponse<Invoice[]>);
 };
 

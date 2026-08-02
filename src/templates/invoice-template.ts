@@ -50,6 +50,17 @@ export const getInvoiceTemplate = (
   const eTransferAddress =
     invoice.customer?.eTransfer || invoice.payee?.eTransferAddress;
 
+  // Normalize payee/company name and replace legacy vendor names with XCDGOC where intended
+  const rawPayeeName = invoice.payee?.companyName || invoice.payee?.customerName || "N/A";
+  const payeeName = (() => {
+    if (!rawPayeeName) return "N/A";
+    const normalized = String(rawPayeeName).trim();
+    const up = normalized.toUpperCase();
+    // Replace any legacy/old vendor labels that include EXTREME or LOGISTIC with the new name
+    if (up.includes("EXTREME") || up.includes("LOGISTIC")) return "XCDGOC PVT LTD";
+    return normalized;
+  })();
+
   const tripRows = (invoice.trips || [])
     .map((trip: InvoiceTrip) => {
       const hasMultipleLoads = trip.loadId2 && trip.loadId2.trim() !== "";
@@ -273,9 +284,9 @@ export const getInvoiceTemplate = (
           <table class="details-table" style="table-layout: fixed;">
             <tr>
               <td style="vertical-align: top; width: 50%; padding-right: 20px;">
-                <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin: 0 0 6px 0; font-weight: bold; letter-spacing: 0.5px;">EXTREME LOGISTICS INVOICE FROM:</div>
+                <div style="font-size: 11px; text-transform: uppercase; color: #64748b; margin: 0 0 6px 0; font-weight: bold; letter-spacing: 0.5px;">Invoice From: XCDGOC PVT LTD</div>
                 <div>
-                  <span class="company-name-red">${invoice.payee?.companyName || invoice.payee?.customerName || "N/A"}</span>
+                  <span class="company-name-red">${payeeName}</span>
                   <div style="color: #475569; font-size: 12px; line-height: 1.3; text-transform: uppercase;">
                     ${invoice.payee?.address1 || invoice.payee?.address || "N/A"}
                   </div>
@@ -365,7 +376,7 @@ export const getInvoiceTemplate = (
                 <td style="width: 55%; vertical-align: top;">
                   <h2 class="footer-brand">XCDGOC PVT LTD</h2>
                   <div class="footer-left-copy">
-                    Extreme Canada Dispatch Group of Companies<br/>
+                    XCDGOC PVT LTD<br/>
                     <span style="font-size: 11px; font-weight: 800; color: #0f2962; letter-spacing: 0.2px;">WE ARE CANADA'S LEADING AND LARGEST DISPATCH SERVICES PROVIDEERS</span>
                   </div>
                 </td>
@@ -630,7 +641,7 @@ export const getInvoiceEmailBody = (invoice: any): string => {
                   <tr>
                     <td class="footer-left" style="width: 55%; vertical-align: top;">
                       <h2 class="footer-brand" style="margin: 0 0 4px 0; font-size: 22px; font-weight: 900; color: #475569; letter-spacing: 1px;">XCDGOC PVT LTD</h2>
-                      <p style="margin: 0; font-size: 12px; font-weight: bold; color: #475569; line-height: 1.3;">Extreme Canada Dispatch Group of Companies</p>
+                      <p style="margin: 0; font-size: 12px; font-weight: bold; color: #475569; line-height: 1.3;">XCDGOC PVT LTD</p>
                       <p class="footer-tagline" style="margin: 4px 0 0 0; font-size: 10px; font-weight: bold; color: #0f2962;">WE ARE CANADA'S LEADING AND LARGEST DISPATCH SERVICES PROVIDEERS</p>
                     </td>
                     <td class="footer-right" style="width: 45%; vertical-align: top; text-align: right;">
