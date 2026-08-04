@@ -6,7 +6,9 @@ import InvoiceModal from "../../../components/InvoiceModal";
 import {
   getInvoices,
   updateInvoiceStatus,
+  updatePaymentStatus,
 } from "../../../services/adminService";
+
 import type { Invoice } from "../../../types/invoice";
 
 const { Title, Text } = Typography;
@@ -77,13 +79,10 @@ export default function AdminInvoicesPage() {
   }, []);
 
   const handleUpdate = async (id: string, status: "approved" | "rejected") => {
-    console.log("🔔 PAGE - handleUpdate called:", { id, status });
     if (status === "approved") setApproveLoading(true);
     else setRejectLoading(true);
     try {
-      console.log("🔔 PAGE - Calling updateInvoiceStatus...");
       const response = await updateInvoiceStatus(id, status);
-      console.log("🔔 PAGE - updateInvoiceStatus completed:", response);
 
       // Show success/error message based on response
       const apiResponse = response as { message?: string };
@@ -111,7 +110,27 @@ export default function AdminInvoicesPage() {
     }
   };
 
+  const handlePaymentStatusUpdate = async (
+    invoice: Invoice,
+    status: "pending" | "paid",
+    proofFile?: File,
+  ): Promise<boolean> => {
+    try {
+      const res = await updatePaymentStatus(invoice._id, status, proofFile);
+      message.success(res.message || `Payment status updated to ${status}`);
+      await fetch();
+      return true;
+    } catch (error) {
+      const err = error as { response?: { data?: { message?: string } } };
+      message.error(
+        err?.response?.data?.message || "Failed to update payment status",
+      );
+      return false;
+    }
+  };
+
   const containerPadding = isMobile ? "12px" : "20px";
+
   const headerPadding = isMobile ? "16px 14px" : "24px 20px";
 
   return (
@@ -216,7 +235,9 @@ export default function AdminInvoicesPage() {
             loading={loading}
             onView={(inv) => setSelected(inv)}
             isAdmin={true}
+            onUpdatePaymentStatus={handlePaymentStatusUpdate}
           />
+
         </Card>
 
         <InvoiceModal
@@ -227,6 +248,7 @@ export default function AdminInvoicesPage() {
           approveLoading={approveLoading}
           rejectLoading={rejectLoading}
           allInvoices={invoices}
+          isAdmin={true}
         />
       </div>
     </div>

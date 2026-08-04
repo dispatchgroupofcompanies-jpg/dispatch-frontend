@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Grid } from "antd";
 import type { Invoice } from "../types/invoice";
 import { getInvoiceTemplate } from "../templates/invoice-template";
@@ -15,7 +15,9 @@ export default function InvoicePreview({
   serialNumber?: number | string;
 }) {
   const screens = useBreakpoint();
-  const isMobile = !screens.md;
+  const isTabletOrMobile = !screens.lg;
+  const [mobileHeight, setMobileHeight] = useState<number>();
+
   const html = useMemo(
     () => getInvoiceTemplate(invoice, serialNumber),
     [invoice, serialNumber],
@@ -25,11 +27,10 @@ export default function InvoicePreview({
     <div
       style={{
         width: "100%",
-        backgroundColor: "#f1f5f9",
-        // The iframe document owns horizontal/vertical scrolling. Keeping the
-        // wrapper clipped prevents a duplicate scrollbar around the preview.
+        backgroundColor: "#ffffff",
         overflow: "hidden",
-        padding: "clamp(4px, 2vw, 12px)",
+        padding: "0px",
+        margin: "0px",
       }}
     >
       <iframe
@@ -37,19 +38,23 @@ export default function InvoicePreview({
         srcDoc={html}
         style={{
           display: "block",
-          // Desktop modals size themselves from this A4 preview. Only use a
-          // fluid width on phone/tablet screens where the page must fit.
-          width: isMobile ? "100%" : "210mm",
-          // The invoice remains A4 when printed, but the browser preview must
-          // fit inside a dialog viewport. This iframe is the only vertical
-          // scroll area for the preview.
-          height: "min(296mm, calc(100dvh - 220px))",
-          minHeight: "360px",
+          width: "100%",
+          maxWidth: "100%",
+          height: isTabletOrMobile
+            ? mobileHeight || "85vh"
+            : "min(296mm, calc(100dvh - 180px))",
+          minHeight: "450px",
           overflow: "auto",
           margin: "0 auto",
           border: "0",
           backgroundColor: "#ffffff",
-          boxShadow: "0 10px 30px rgba(15, 23, 42, 0.14)",
+        }}
+        scrolling="auto"
+        onLoad={(event) => {
+          if (!isTabletOrMobile) return;
+          const height =
+            event.currentTarget.contentDocument?.documentElement.scrollHeight;
+          if (height) setMobileHeight(height + 20);
         }}
       />
     </div>

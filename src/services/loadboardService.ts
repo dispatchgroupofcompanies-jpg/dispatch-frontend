@@ -13,6 +13,10 @@ const getAuthHeaders = () => {
   };
 };
 
+const getMultipartAuthHeaders = () => ({
+  headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+});
+
 // Get all load board records
 export const getAllLoadBoardRecords = async () => {
   try {
@@ -29,13 +33,13 @@ export const getAllLoadBoardRecords = async () => {
 
 // Create new load board record
 export const createLoadBoardRecord = async (
-  recordData: Partial<LoadBoardRecord>,
+  recordData: Partial<LoadBoardRecord> | FormData,
 ) => {
   try {
     const response = await axios.post(
       `${API_URL}/user/loadboard`,
       recordData,
-      getAuthHeaders(),
+      recordData instanceof FormData ? getMultipartAuthHeaders() : getAuthHeaders(),
     );
     return response.data;
   } catch (error) {
@@ -47,13 +51,13 @@ export const createLoadBoardRecord = async (
 // Update load board record
 export const updateLoadBoardRecord = async (
   id: string,
-  recordData: Partial<LoadBoardRecord>,
+  recordData: Partial<LoadBoardRecord> | FormData,
 ) => {
   try {
     const response = await axios.put(
       `${API_URL}/user/loadboard/${id}`,
       recordData,
-      getAuthHeaders(),
+      recordData instanceof FormData ? getMultipartAuthHeaders() : getAuthHeaders(),
     );
     return response.data;
   } catch (error) {

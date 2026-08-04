@@ -10,8 +10,10 @@ import {
   Tooltip,
   Grid,
   message,
+  Modal,
+  Select,
 } from "antd";
-import { EyeOutlined, DownloadOutlined, MessageOutlined } from "@ant-design/icons";
+import { EyeOutlined, DownloadOutlined, UploadOutlined } from "@ant-design/icons";
 import { downloadInvoicePDF } from "../../modules/invoice/route";
 import type { ColumnsType } from "antd/es/table";
 import type { Invoice } from "../types/invoice";
@@ -25,6 +27,11 @@ interface Props {
   loading: boolean;
   onView: (inv: Invoice) => void;
   isAdmin?: boolean;
+  onUpdatePaymentStatus?: (
+    invoice: Invoice,
+    status: "pending" | "paid",
+    proofFile?: File,
+  ) => Promise<boolean>;
 }
 
 const handleDownload = async (
@@ -81,6 +88,7 @@ export default function InvoiceTable({
   loading,
   onView,
   isAdmin = false,
+  onUpdatePaymentStatus,
 }: Props) {
   const screens = useBreakpoint();
   const isMobile = !screens.md;
@@ -90,23 +98,119 @@ export default function InvoiceTable({
   );
   const [downloadingInvoiceId, setDownloadingInvoiceId] = React.useState<string | null>(null);
 
-  const sendToWhatsApp = (record: Invoice) => {
-    const recipient = record.payee?.phone?.replace(/\D/g, "");
-    if (!recipient) {
-      message.warning("This invoice has no Payee Phone number.");
+  // Payment proof modal state
+  const [paymentModalInvoice, setPaymentModalInvoice] = React.useState<Invoice | null>(null);
+  const [proofFile, setProofFile] = React.useState<File | null>(null);
+  const [proofPreview, setProofPreview] = React.useState<string | null>(null);
+  const [paymentSubmitting, setPaymentSubmitting] = React.useState(false);
+  const proofInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  const clearProofSelection = () => {
+    if (proofPreview) {
+      window.URL.revokeObjectURL(proofPreview);
+    }
+    setProofFile(null);
+    setProofPreview(null);
+    if (proofInputRef.current) {
+      proofInputRef.current.value = "";
+    }
+  };
+
+  const closePaymentModal = () => {
+    setPaymentModalInvoice(null);
+    clearProofSelection();
+  };
+
+  const handleProofFileChosen = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) {
+      message.error("Only JPG, PNG, and WebP images are allowed as payment proof.");
+      event.target.value = "";
       return;
     }
 
-    const serialNumber = payeeSerialNumbers.get(record._id) || 1;
-    const amount = Number(record.grandTotal || 0).toLocaleString("en-CA", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+    if (file.size > 5 * 1024 * 1024) {
+      message.error("Payment proof image must be smaller than 5 MB.");
+      event.target.value = "";
+      return;
+    }
+
+    if (proofPreview) {
+      window.URL.revokeObjectURL(proofPreview);
+    }
+    setProofFile(file);
+    setProofPreview(window.URL.createObjectURL(file));
+  };
+
+  const submitPaymentProof = async () => {
+    if (!paymentModalInvoice || !proofFile || !onUpdatePaymentStatus) return;
+    setPaymentSubmitting(true);
+    try {
+      const succeeded = await onUpdatePaymentStatus(paymentModalInvoice, "paid", proofFile);
+      if (succeeded) {
+        closePaymentModal();
+      }
+    } finally {
+      setPaymentSubmitting(false);
+    }
+  };
+
+  const handlePaymentSelect = (record: Invoice, value: "pending" | "paid") => {
+    const current = (record.paymentStatus || "pending") as "pending" | "paid";
+    if (value === current || !onUpdatePaymentStatus) return;
+
+    if (value === "paid") {
+      // Open the payment proof modal - proof image is required to mark as paid.
+      clearProofSelection();
+      setPaymentModalInvoice(record);
+      return;
+    }
+
+    Modal.confirm({
+      title: "Mark payment as Pending?",
+      content: "This will remove the stored payment proof for this invoice.",
+      okText: "Yes, mark Pending",
+      cancelText: "Cancel",
+      onOk: () => onUpdatePaymentStatus(record, "pending"),
     });
-    const text = `Hello,\n\nThis is an invoice from +91 9596523404.\nInvoice #${serialNumber}\nAmount: ${record.currency || "CAD"} $${amount}`;
-    window.open(
-      `https://wa.me/${recipient}?text=${encodeURIComponent(text)}`,
-      "_blank",
-      "noopener,noreferrer",
+  };
+
+  const renderPaymentControl = (record: Invoice) => {
+    const current = (record.paymentStatus || "pending") as "pending" | "paid";
+
+    if (!isAdmin || !onUpdatePaymentStatus) {
+      return (
+        <Tag color={current === "paid" ? "success" : "warning"} style={{ margin: 0 }}>
+          {current.toUpperCase()}
+        </Tag>
+      );
+    }
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-start" }}>
+        <Select
+          size="small"
+          value={current}
+          style={{ width: 115 }}
+          onChange={(value) => handlePaymentSelect(record, value as "pending" | "paid")}
+          options={[
+            { value: "pending", label: "🕐 Pending" },
+            { value: "paid", label: "✅ Paid" },
+          ]}
+        />
+        {current === "paid" && record.paymentProofUrl && (
+          <a
+            href={record.paymentProofUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ fontSize: 11, color: "#2563eb" }}
+          >
+            View proof
+          </a>
+        )}
+      </div>
     );
   };
 
@@ -257,32 +361,24 @@ export default function InvoiceTable({
         );
       },
     },
+    ...(isAdmin
+      ? [
+          {
+            title: "Payment",
+            key: "paymentStatus",
+            width: 130,
+            responsive: ["md" as const],
+            render: (_: unknown, record: Invoice) => renderPaymentControl(record),
+          },
+        ]
+      : []),
     {
       title: "Actions",
       key: "action",
-      width: isMobile ? 80 : 330,
+      width: isMobile ? 80 : 240,
       align: "center" as const,
       render: (_, record) => (
         <Space size={isMobile ? "small" : "middle"}>
-          {isAdmin && !isMobile && (
-            <Tooltip title="Send invoice on WhatsApp" placement="top">
-              <Button
-                type="primary"
-                size={isMobile ? "small" : "middle"}
-                icon={<MessageOutlined />}
-                disabled={!record.payee?.phone}
-                onClick={() => sendToWhatsApp(record)}
-                style={{
-                  borderRadius: "6px",
-                  backgroundColor: "#16a34a",
-                  borderColor: "#16a34a",
-                  padding: isMobile ? "4px 8px" : "8px 16px",
-                }}
-              >
-                {isMobile ? "" : "WhatsApp"}
-              </Button>
-            </Tooltip>
-          )}
           <Tooltip title="Download PDF" placement="top">
             <Button
               type="primary"
@@ -331,7 +427,36 @@ export default function InvoiceTable({
           WebkitOverflowScrolling: "touch",
         }}
       >
-        <Table
+        {isMobile ? (
+          <div style={{ display: "grid", gap: 12, padding: 8 }}>
+            {invoices.map((record) => {
+              const serialNumber = payeeSerialNumbers.get(record._id) || 1;
+              const vrids = record.trips?.map((trip) => trip.vrid).filter(Boolean) || [];
+              const status = record.invoiceStatus || "draft";
+              const statusColors: Record<string, string> = { draft: "default", pending: "warning", approved: "success", paid: "processing", rejected: "error" };
+              return <div key={record._id} style={{ display: "grid", gap: 12, padding: 14, border: "1px solid #e2e8f0", borderRadius: 12, background: "#fff", boxShadow: "0 2px 6px rgba(15,23,42,.05)" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "auto minmax(0, 1fr)", alignItems: "center", gap: 10, paddingBottom: 10, borderBottom: "1px solid #e2e8f0" }}>
+                  <span style={{ fontWeight: 700, color: "#fff", background: "#10b981", padding: "4px 9px", borderRadius: 6 }}>#{serialNumber}</span>
+                  <span style={{ color: "#1e40af", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{vrids.join(", ") || "No VRID"}</span>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <div><div style={{ fontSize: 11, color: "#64748b", marginBottom: 3 }}>Amount</div><div style={{ fontWeight: 700, color: "#0f172a" }}>{record.currency || "CAD"} ${Number(record.grandTotal || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div></div>
+                  <div><div style={{ fontSize: 11, color: "#64748b", marginBottom: 3 }}>Status</div><Tag color={statusColors[status] || "default"} style={{ margin: 0 }}>{status.toUpperCase()}</Tag></div>
+                </div>
+                {isAdmin && (
+                  <div>
+                    <div style={{ fontSize: 11, color: "#64748b", marginBottom: 3 }}>Payment</div>
+                    {renderPaymentControl(record)}
+                  </div>
+                )}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8 }}>
+                  <Button size="small" icon={<DownloadOutlined />} loading={downloadingInvoiceId === record._id} onClick={() => downloadInvoice(record)}>PDF</Button>
+                  <Button size="small" type="primary" icon={<EyeOutlined />} onClick={() => onView(record)}>View</Button>
+                </div>
+              </div>;
+            })}
+          </div>
+        ) : <Table
           columns={columns}
           dataSource={invoices}
           rowKey={(r) => r._id}
@@ -348,8 +473,70 @@ export default function InvoiceTable({
             fontSize: isMobile ? 12 : 13,
             minWidth: "100%",
           }}
-        />
+        />}
       </div>
+
+      <Modal
+        title="Upload Payment Proof"
+        open={!!paymentModalInvoice}
+        onCancel={closePaymentModal}
+        onOk={submitPaymentProof}
+        okText="Mark as Paid"
+        cancelText="Cancel"
+        confirmLoading={paymentSubmitting}
+        okButtonProps={{ disabled: !proofFile }}
+        destroyOnHidden
+      >
+        <div style={{ display: "grid", gap: 12, paddingTop: 8 }}>
+          <Text style={{ fontSize: 13 }}>
+            Upload a payment proof image to mark invoice{" "}
+            <Tag color="success" style={{ margin: 0 }}>PAID</Tag>
+          </Text>
+
+          <input
+            ref={proofInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            style={{ display: "none" }}
+            onChange={handleProofFileChosen}
+          />
+
+          <Button
+            icon={<UploadOutlined />}
+            onClick={() => proofInputRef.current?.click()}
+            style={{ width: "fit-content" }}
+          >
+            {proofFile ? "Change Image" : "Choose Image"}
+          </Button>
+
+          {proofFile && (
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              {proofFile.name} ({(proofFile.size / 1024).toFixed(0)} KB)
+            </Text>
+          )}
+
+          {proofPreview && (
+            <img
+              src={proofPreview}
+              alt="Payment proof preview"
+              style={{
+                maxWidth: "100%",
+                maxHeight: 240,
+                objectFit: "contain",
+                borderRadius: 8,
+                border: "1px solid #e2e8f0",
+                background: "#f8fafc",
+              }}
+            />
+          )}
+
+          {!proofFile && (
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              Accepted formats: JPG, PNG, WebP. Max size: 5 MB.
+            </Text>
+          )}
+        </div>
+      </Modal>
     </Spin>
   );
 }

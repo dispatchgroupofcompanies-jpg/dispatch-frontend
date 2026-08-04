@@ -11,11 +11,13 @@ import {
 import type { LoadBoardRecord } from "./types";
 import LoadBoardModal from "./components/LoadBoardModal";
 import LoadBoardTable from "./components/LoadBoardTable";
+import LoadBoardDetailsModal from "./components/LoadBoardDetailsModal";
 import {
   getAllLoadBoardRecords,
   createLoadBoardRecord,
   updateLoadBoardRecord,
   searchLoadBoardRecords,
+  deleteLoadBoardRecord,
 } from "../../../src/services/loadboardService";
 
 const { useBreakpoint } = Grid;
@@ -29,6 +31,7 @@ export default function LoadBoardPage() {
   const [selectedRecord, setSelectedRecord] = useState<LoadBoardRecord | null>(
     null,
   );
+  const [detailsRecord, setDetailsRecord] = useState<LoadBoardRecord | null>(null);
   const [searchText, setSearchText] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -106,6 +109,11 @@ export default function LoadBoardPage() {
   };
 
   const handleViewRecord = (record: LoadBoardRecord) => {
+    setDetailsRecord(record);
+  };
+
+  // ✅ New Handler for Editing
+  const handleEditRecord = (record: LoadBoardRecord) => {
     setSelectedRecord(record);
     setModalOpen(true);
   };
@@ -114,29 +122,56 @@ export default function LoadBoardPage() {
     setIsCollapsed(!isCollapsed);
   };
 
-  const handleSave = async (record: LoadBoardRecord) => {
+  const handleSave = async (record: LoadBoardRecord, screenshot?: File) => {
     try {
+      const payload = new FormData();
+      Object.entries(record).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && key !== "_id" && key !== "screenshotUrl" && key !== "screenshotPublicId") payload.append(key, typeof value === "object" ? JSON.stringify(value) : String(value));
+      });
+      if (screenshot) payload.append("screenshot", screenshot);
       if (selectedRecord && record._id && !record._id.startsWith("temp-")) {
         // Update existing record
-        await updateLoadBoardRecord(record._id, record);
-        setRecords(records.map((r) => (r._id === record._id ? record : r)));
+        const response = await updateLoadBoardRecord(record._id, payload);
+        setRecords((current) => current.map((r) => (r._id === record._id ? response.data : r)));
         message.success("Record updated successfully");
       } else {
         // Create new record
-        const response = await createLoadBoardRecord(record);
+        const response = await createLoadBoardRecord(payload);
         if (response.success) {
-          setRecords([...records, response.data]);
+          setRecords((current) => [response.data, ...current]);
           message.success("Record added successfully");
         }
       }
       setModalOpen(false);
+      setSelectedRecord(null);
     } catch (error) {
       message.error("Failed to save record");
       console.error(error);
     }
   };
 
-  // Table columns are now defined in LoadBoardTable component
+  const handleDeleteRecord = async (record: LoadBoardRecord) => {
+    if (!record._id) return;
+    try {
+      await deleteLoadBoardRecord(record._id);
+      setRecords((current) => current.filter((item) => item._id !== record._id));
+      message.success("Dispatch record deleted");
+    } catch { message.error("Failed to delete dispatch record"); }
+  };
+
+  const handleStatusChange = async (record: LoadBoardRecord, field: "invoiceStatus" | "paymentStatus", value: "generated" | "paid" | "pending") => {
+    if (!record._id) return;
+    const updated = { ...record, [field]: value } as LoadBoardRecord;
+    setRecords((current) => current.map((item) => item._id === record._id ? updated : item));
+    try {
+      const response = await updateLoadBoardRecord(record._id, { [field]: value });
+      setRecords((current) => current.map((item) => item._id === record._id ? response.data : item));
+      message.success("Status updated");
+    } catch {
+      setRecords((current) => current.map((item) => item._id === record._id ? record : item));
+      message.error("Failed to update status");
+    }
+  };
 
   return (
     <div
@@ -399,15 +434,26 @@ export default function LoadBoardPage() {
           records={filteredRecords}
           loading={loading}
           onViewRecord={handleViewRecord}
+          onEditRecord={handleEditRecord} /* 👈 Updated to handleEditRecord */
+          onDeleteRecord={handleDeleteRecord}
+          onStatusChange={handleStatusChange}
         />
       </Card>
 
       {/* Modal */}
       <LoadBoardModal
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={() => {
+          setModalOpen(false);
+          setSelectedRecord(null);
+        }}
         onSave={handleSave}
         record={selectedRecord}
+      />
+      <LoadBoardDetailsModal
+        open={Boolean(detailsRecord)}
+        record={detailsRecord}
+        onClose={() => setDetailsRecord(null)}
       />
 
       <style jsx global>{`

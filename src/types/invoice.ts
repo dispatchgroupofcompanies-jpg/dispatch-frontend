@@ -41,6 +41,10 @@ export interface Invoice {
   grandTotal: number;
   createdAt: string;
   pdfUrl?: string;
+  paymentStatus?: string;
+  paymentProofUrl?: string;
+  paidAt?: string;
+
   invoicePeriod?: {
     startDate: string;
     endDate: string;

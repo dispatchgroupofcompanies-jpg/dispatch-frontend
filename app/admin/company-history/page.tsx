@@ -409,6 +409,24 @@ export default function CompanyHistoryPage() {
                 : "Invoices created by users will appear here"}
             </Text>
           </div>
+        ) : isMobile ? (
+          <div style={{ display: "grid", gap: 12 }}>
+            {filteredInvoices.map((invoice) => {
+              const expanded = expandedRowKeys.includes(invoice._id);
+              return <div key={invoice._id} style={{ display: "grid", gap: 12, padding: 14, border: "1px solid #e2e8f0", borderRadius: 12, background: "#fff" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "auto minmax(0, 1fr)", gap: 10, alignItems: "center" }}>
+                  <span style={{ fontWeight: 700, color: "#fff", background: "#10b981", padding: "4px 9px", borderRadius: 6 }}>#{payeeSerialNumbers.get(invoice._id) || 1}</span>
+                  <span style={{ fontWeight: 700, color: "#1e293b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{formatDate(invoice.createdAt)}</span>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <div><div style={{ fontSize: 11, color: "#64748b", marginBottom: 3 }}>Amount</div><div style={{ fontWeight: 700, color: "#16a34a" }}>{formatCurrency(invoice.grandTotal)}</div></div>
+                  <div><div style={{ fontSize: 11, color: "#64748b", marginBottom: 3 }}>Status</div><Tag color={getStatusColor(invoice.invoiceStatus)} style={{ margin: 0, fontWeight: 600 }}>{invoice.invoiceStatus.toUpperCase()}</Tag></div>
+                </div>
+                <Button type="primary" size="small" onClick={() => handleExpandRow(invoice)}>{expanded ? "Hide Details" : "View Details"}</Button>
+                {expanded && <CompanyHistoryExpandedRow record={invoice} isMobile formatCurrency={formatCurrency} formatDate={formatDate} getStatusColor={getStatusColor} />}
+              </div>;
+            })}
+          </div>
         ) : (
           <Table
             dataSource={filteredInvoices}
@@ -446,7 +464,6 @@ export default function CompanyHistoryPage() {
                 `${range[0]}-${range[1]} of ${total} invoices`,
             }}
             size="middle"
-            scroll={{ x: 800 }}
             style={{ borderRadius: "8px", overflow: "hidden" }}
           />
         )}

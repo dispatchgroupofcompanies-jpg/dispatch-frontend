@@ -332,8 +332,8 @@ export default function CreateInvoiceModal({
                 ? "Saving..."
                 : "Sending..."
               : isEditMode
-                ? "Compile"
-                : "Send"}
+                ? "Update"
+                : "Save"}
           </Button>
         </div>
       </Form>

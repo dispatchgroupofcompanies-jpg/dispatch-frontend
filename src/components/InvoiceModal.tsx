@@ -4,7 +4,6 @@ import { Modal, Button, Space, Grid } from "antd";
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
-  DownloadOutlined,
 } from "@ant-design/icons";
 import InvoicePreview from "./InvoicePreview";
 import type { Invoice } from "../types/invoice";
@@ -16,13 +15,15 @@ interface Props {
   invoice: Invoice | null;
   open: boolean;
   onClose: () => void;
-  onUpdateStatus: (
+  onUpdateStatus?: (
     id: string,
     status: "approved" | "rejected",
   ) => Promise<void>;
-  approveLoading: boolean;
-  rejectLoading: boolean;
+  approveLoading?: boolean;
+  rejectLoading?: boolean;
   allInvoices?: Invoice[];
+  /** Only admins can approve/reject invoices. Defaults to false. */
+  isAdmin?: boolean;
 }
 
 export default function InvoiceModal({
@@ -30,9 +31,10 @@ export default function InvoiceModal({
   open,
   onClose,
   onUpdateStatus,
-  approveLoading,
-  rejectLoading,
+  approveLoading = false,
+  rejectLoading = false,
   allInvoices = [],
+  isAdmin = false,
 }: Props) {
   const screens = useBreakpoint();
   const isMobile = !screens.md;
@@ -43,9 +45,13 @@ export default function InvoiceModal({
 
   if (!invoice) return null;
 
-  // Use the same map that drives the admin table—not a legacy value stored on
-  // the invoice—so “Invoice #” and “INVOICE - #” always match.
   const serialNumber = payeeSerialNumbers.get(invoice._id) || 1;
+  // Approve/reject is an admin-only action. Regular users must never see it.
+  const canModerate =
+    isAdmin &&
+    typeof onUpdateStatus === "function" &&
+    (invoice.invoiceStatus === "pending" ||
+      invoice.invoiceStatus === "draft");
 
   return (
     <Modal
@@ -56,7 +62,7 @@ export default function InvoiceModal({
             justifyContent: "flex-end",
             alignItems: "center",
             width: "100%",
-            paddingRight: "20px",
+            paddingRight: isMobile ? "8px" : "20px",
           }}
         >
           <Button
@@ -81,91 +87,82 @@ export default function InvoiceModal({
       }
       open={open}
       onCancel={onClose}
-      width={isMobile ? "95vw" : 900}
-      style={{ top: isMobile ? 5 : 20 }}
+      width={isMobile ? "100vw" : 900} // Full screen width on mobile
+      style={{
+        top: isMobile ? 0 : 20,
+        margin: isMobile ? 0 : undefined,
+        padding: 0,
+        maxWidth: "100vw",
+      }}
       footer={[]}
       closeIcon={null}
       styles={{
         body: {
-          padding: isMobile ? "8px" : "12px",
-          maxHeight: "85vh",
-          // InvoicePreview owns vertical scrolling so the dialog does not
-          // show a second scrollbar beside the PDF/HTML preview.
+          padding: 0, // Zero padding to remove side whitespace
+          maxHeight: isMobile ? "100vh" : "85vh",
           overflow: "hidden",
         },
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          gap: isMobile ? 8 : 12,
-          flexWrap: "wrap",
-          justifyContent: isMobile ? "center" : "flex-end",
-          backgroundColor: "#f8fafc",
-          padding: isMobile ? "10px 12px" : "12px 16px",
-          borderBottom: "1px solid #e2e8f0",
-          marginBottom: isMobile ? 8 : 12,
-          position: "sticky",
-          top: 0,
-          zIndex: 10,
-        }}
-      >
-        <Space
-          size={isMobile ? "small" : "small"}
-          direction={isMobile ? "vertical" : "horizontal"}
+      {canModerate && (
+        <div
+          style={{
+            display: "flex",
+            gap: isMobile ? 8 : 12,
+            flexWrap: "wrap",
+            justifyContent: isMobile ? "center" : "flex-end",
+            backgroundColor: "#f8fafc",
+            padding: isMobile ? "6px 8px" : "12px 16px",
+            borderBottom: "1px solid #e2e8f0",
+            marginBottom: 0,
+            position: "sticky",
+            top: 0,
+            zIndex: 10,
+          }}
         >
-          {(invoice.invoiceStatus === "pending" ||
-            invoice.invoiceStatus === "draft") && (
-            <>
-              <Button
-                type="primary"
-                icon={<CheckCircleOutlined />}
-                onClick={() => onUpdateStatus(invoice._id, "approved")}
-                loading={approveLoading}
-                disabled={rejectLoading}
-                size="small"
-                style={{
-                  background: "#10b981",
-                  borderRadius: 6,
-                  minWidth: "100px",
-                }}
-              >
-                {isMobile ? "✓" : "Approve"}
-              </Button>
-              <Button
-                type="primary"
-                danger
-                icon={<CloseCircleOutlined />}
-                onClick={() => onUpdateStatus(invoice._id, "rejected")}
-                loading={rejectLoading}
-                disabled={approveLoading}
-                size="small"
-                style={{ borderRadius: 6, minWidth: "100px" }}
-              >
-                {isMobile ? "✗" : "Reject"}
-              </Button>
-            </>
-          )}
-        </Space>
-      </div>
+          <Space
+            size="small"
+            direction={isMobile ? "horizontal" : "horizontal"}
+          >
+            <Button
+              type="primary"
+              icon={<CheckCircleOutlined />}
+              onClick={() => onUpdateStatus?.(invoice._id, "approved")}
+              loading={approveLoading}
+              disabled={rejectLoading}
+              size="small"
+              style={{
+                background: "#10b981",
+                borderRadius: 6,
+                minWidth: "90px",
+              }}
+            >
+              {isMobile ? "✓ Approve" : "Approve"}
+            </Button>
+            <Button
+              type="primary"
+              danger
+              icon={<CloseCircleOutlined />}
+              onClick={() => onUpdateStatus?.(invoice._id, "rejected")}
+              loading={rejectLoading}
+              disabled={approveLoading}
+              size="small"
+              style={{ borderRadius: 6, minWidth: "90px" }}
+            >
+              {isMobile ? "✗ Reject" : "Reject"}
+            </Button>
+          </Space>
+        </div>
+      )}
 
       <div
         style={{
-          padding: isMobile ? "8px" : "12px",
-          overflowX: "auto",
-          display: "flex",
-          justifyContent: "center",
+          padding: 0,
+          width: "100%",
+          overflowX: "hidden",
         }}
       >
-        <div
-          style={{
-            width: "100%",
-            maxWidth: "210mm",
-            minHeight: "296mm",
-          }}
-        >
-          <InvoicePreview invoice={invoice} serialNumber={serialNumber} />
-        </div>
+        <InvoicePreview invoice={invoice} serialNumber={serialNumber} />
       </div>
     </Modal>
   );

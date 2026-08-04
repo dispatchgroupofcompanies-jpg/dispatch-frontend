@@ -230,11 +230,13 @@ export default function AdminDashboardPage() {
   ];
 
   const [isMobile, setIsMobile] = useState(false);
+  const [isCompact, setIsCompact] = useState(false);
   const headerPadding = isMobile ? "20px 16px" : "24px 20px";
 
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
+      setIsCompact(window.innerWidth < 1024);
     };
     checkMobile();
     window.addEventListener("resize", checkMobile);
@@ -507,13 +509,18 @@ export default function AdminDashboardPage() {
               boxShadow: "0 1px 3px rgba(0,0,0,0.01)",
             }}
           >
-            <Table
-              columns={invoiceColumns}
-              dataSource={recentInvoices}
-              rowKey="_id"
-              pagination={false}
-              scroll={{ x: 800 }}
-            />
+            {isCompact ? (
+              <div style={{ display: "grid", gap: 10 }}>
+                {recentInvoices.map((invoice) => {
+                  const status = invoice.invoiceStatus || "draft";
+                  const colors: Record<string, string> = { draft: "default", pending: "warning", approved: "success", paid: "processing", rejected: "error" };
+                  return <div key={invoice._id} style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", gap: 10, padding: 12, border: "1px solid #e2e8f0", borderRadius: 10 }}>
+                    <div style={{ minWidth: 0 }}><div style={{ fontWeight: 700, color: "#1e293b", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>{invoice.payee?.companyName || "Unassigned company"}</div><div style={{ fontSize: 12, color: "#64748b", marginTop: 3 }}>{invoice.invoiceNumber || "Invoice"}</div></div>
+                    <div style={{ textAlign: "right" }}><div style={{ fontWeight: 700, color: "#0f172a" }}>${Number(invoice.grandTotal || 0).toFixed(2)} {invoice.currency || "CAD"}</div><Tag color={colors[status] || "default"} style={{ margin: "4px 0 0" }}>{status.toUpperCase()}</Tag></div>
+                  </div>;
+                })}
+              </div>
+            ) : <Table columns={invoiceColumns} dataSource={recentInvoices} rowKey="_id" pagination={false} />}
           </Card>
         </Spin>
       </div>

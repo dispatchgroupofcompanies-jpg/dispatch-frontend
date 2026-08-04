@@ -29,6 +29,10 @@ export interface LoadBoardRecord {
   driverName: string;
   tonu: boolean;
   status: "active" | "cancelled";
+  invoiceStatus: "generated" | "pending";
+  paymentStatus: "paid" | "pending";
+  screenshotUrl?: string;
+  screenshotPublicId?: string;
   createdAt?: string;
   loads?: Load[];
 }

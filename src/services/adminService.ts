@@ -18,7 +18,24 @@ export const updateInvoiceStatus = async (
   return res.data as ApiResponse<Invoice>;
 };
 
+export const updatePaymentStatus = async (
+  id: string,
+  status: "pending" | "paid",
+  proofFile?: File,
+): Promise<ApiResponse<Invoice>> => {
+  const formData = new FormData();
+  formData.append("status", status);
+  if (proofFile) {
+    formData.append("paymentProof", proofFile);
+  }
+  const res = await API.patch(`/admin/invoices/${id}/payment-status`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res.data as ApiResponse<Invoice>;
+};
+
 export const getAllAppointments = async (): Promise<
+
   ApiResponse<Appointment[]>
 > => {
   const res = await API.get("/admin/appointments");

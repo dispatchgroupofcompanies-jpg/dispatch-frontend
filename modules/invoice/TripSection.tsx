@@ -41,6 +41,17 @@ export default function TripSection({ form }: Props) {
     marginBottom: "4px",
   };
 
+  // Shared style for Uppercase Inputs
+  const inputUppercaseStyle = {
+    borderRadius: 4,
+    height: 32,
+    textTransform: "uppercase" as const,
+  };
+
+  // Helper function to force value to UPPERCASE in Form store
+  const handleUppercase = (e: React.ChangeEvent<HTMLInputElement>) =>
+    e.target.value.toUpperCase();
+
   return (
     <div style={{ width: "100%" }}>
       <Card
@@ -68,7 +79,7 @@ export default function TripSection({ form }: Props) {
       >
         <Form.List
           name="trips"
-          initialValue={[{ dispatchPercent: 10, totalCharges: 0 }]}
+          initialValue={[{ dispatchPercent: 0, totalCharges: 0 }]}
         >
           {(fields, { add, remove }) => (
             <>
@@ -169,12 +180,13 @@ export default function TripSection({ form }: Props) {
                           <Form.Item
                             {...restField}
                             name={[name, "vrid"]}
+                            getValueFromEvent={handleUppercase}
                             rules={[{ required: true, message: "Required" }]}
                             style={{ marginBottom: 0 }}
                           >
                             <Input
                               placeholder="e.g. T-115Z"
-                              style={{ borderRadius: 4, height: 32 }}
+                              style={inputUppercaseStyle}
                             />
                           </Form.Item>
                         </Col>
@@ -185,11 +197,12 @@ export default function TripSection({ form }: Props) {
                           <Form.Item
                             {...restField}
                             name={[name, "route"]}
+                            getValueFromEvent={handleUppercase}
                             style={{ marginBottom: 0 }}
                           >
                             <Input
                               placeholder="e.g. ROUNDER"
-                              style={{ borderRadius: 4, height: 32 }}
+                              style={inputUppercaseStyle}
                             />
                           </Form.Item>
                         </Col>
@@ -200,11 +213,12 @@ export default function TripSection({ form }: Props) {
                           <Form.Item
                             {...restField}
                             name={[name, "pickup"]}
+                            getValueFromEvent={handleUppercase}
                             style={{ marginBottom: 0 }}
                           >
                             <Input
                               placeholder="Pickup Location"
-                              style={{ borderRadius: 4, height: 32 }}
+                              style={inputUppercaseStyle}
                             />
                           </Form.Item>
                         </Col>
@@ -215,11 +229,12 @@ export default function TripSection({ form }: Props) {
                           <Form.Item
                             {...restField}
                             name={[name, "drop"]}
+                            getValueFromEvent={handleUppercase}
                             style={{ marginBottom: 0 }}
                           >
                             <Input
                               placeholder="Drop Location"
-                              style={{ borderRadius: 4, height: 32 }}
+                              style={inputUppercaseStyle}
                             />
                           </Form.Item>
                         </Col>
@@ -236,7 +251,6 @@ export default function TripSection({ form }: Props) {
                         }}
                       >
                         <Row gutter={[12, 12]}>
-                          {/* Driver Name - Expands to full-width (24) if not starting with T */}
                           <Col xs={24} sm={12} md={startsWithT ? 8 : 24}>
                             <span style={{ ...labelStyle, color: "#1e293b" }}>
                               👤 Driver Name
@@ -244,6 +258,7 @@ export default function TripSection({ form }: Props) {
                             <Form.Item
                               {...restField}
                               name={[name, "driverName"]}
+                              getValueFromEvent={handleUppercase}
                               rules={[
                                 {
                                   required: true,
@@ -254,12 +269,11 @@ export default function TripSection({ form }: Props) {
                             >
                               <Input
                                 placeholder="Enter driver name"
-                                style={{ borderRadius: 4, height: 32 }}
+                                style={inputUppercaseStyle}
                               />
                             </Form.Item>
                           </Col>
 
-                          {/* Load IDs condition add kar di hai */}
                           {startsWithT && (
                             <>
                               <Col xs={24} sm={12} md={8}>
@@ -271,11 +285,12 @@ export default function TripSection({ form }: Props) {
                                 <Form.Item
                                   {...restField}
                                   name={[name, "loadId1"]}
+                                  getValueFromEvent={handleUppercase}
                                   style={{ marginBottom: 0 }}
                                 >
                                   <Input
                                     placeholder="Enter Load ID 1"
-                                    style={{ borderRadius: 4, height: 32 }}
+                                    style={inputUppercaseStyle}
                                   />
                                 </Form.Item>
                               </Col>
@@ -289,11 +304,12 @@ export default function TripSection({ form }: Props) {
                                 <Form.Item
                                   {...restField}
                                   name={[name, "loadId2"]}
+                                  getValueFromEvent={handleUppercase}
                                   style={{ marginBottom: 0 }}
                                 >
                                   <Input
                                     placeholder="Enter Load ID 2"
-                                    style={{ borderRadius: 4, height: 32 }}
+                                    style={inputUppercaseStyle}
                                   />
                                 </Form.Item>
                               </Col>
@@ -316,6 +332,7 @@ export default function TripSection({ form }: Props) {
                           <Form.Item
                             {...restField}
                             name={[name, "totalCharges"]}
+                            initialValue={0}
                             style={{ marginBottom: 0 }}
                           >
                             <InputNumber
@@ -347,6 +364,7 @@ export default function TripSection({ form }: Props) {
                           <Form.Item
                             {...restField}
                             name={[name, "dispatchPercent"]}
+                            initialValue={0} // Forcefully default 0
                             style={{ marginBottom: 0 }}
                           >
                             <InputNumber
@@ -408,7 +426,7 @@ export default function TripSection({ form }: Props) {
                 <Button
                   icon={<PlusOutlined />}
                   type="dashed"
-                  onClick={() => add({ dispatchPercent: 10, totalCharges: 0 })}
+                  onClick={() => add({ dispatchPercent: 0, totalCharges: 0 })}
                   style={{
                     borderRadius: 4,
                     fontWeight: 600,
