@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { Modal, Button, message } from "antd";
 import { ExportOutlined } from "@ant-design/icons";
-import * as XLSX from "xlsx";
 import dayjs from "dayjs";
+import ExcelJS from "exceljs";
 import type { CompanyHistoryInvoice } from "../types";
 
 interface ExportModalsProps {
@@ -31,7 +31,7 @@ export default function CompanyHistoryExportModals({
     setExportModalOpen(true);
   };
 
-  const handleExportConfirm = () => {
+  const handleExportConfirm = async () => {
     setExportModalOpen(false);
 
     const now = dayjs();
@@ -59,71 +59,109 @@ export default function CompanyHistoryExportModals({
       return;
     }
 
-    const excelData = invoicesToExport.map((invoice, index) => {
-      let carrierNeedToPay = 0;
+    // Create ExcelJS Workbook
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Invoices");
 
-      if (invoice.trips && invoice.trips.length > 0) {
-        invoice.trips.forEach((trip) => {
-          const totalCharges = Number(trip.totalCharges || 0);
-          const dispatchPercentage = Number(trip.dispatchPercentage || 10);
-          const dispatchAmount = (totalCharges * dispatchPercentage) / 100;
+    // Configure Page Setup for A4 Printing
+    worksheet.pageSetup = {
+      paperSize: 9, // 9 = A4 Paper Size
+      orientation: "portrait",
+      fitToPage: true,
+      fitToWidth: 1, // Fit all columns into 1 page wide
+      fitToHeight: 0, // Automatic vertical pages
+    };
 
-          carrierNeedToPay += dispatchAmount;
-        });
-      }
+    // Define Columns (DISPATCH REMOVED)
+    worksheet.columns = [
+      { header: "S.NO", key: "sNo", width: 6 },
+      { header: "INVOICE NUMBER", key: "invoiceNumber", width: 16 },
+      { header: "INVOICE DATE", key: "invoiceDate", width: 14 },
+      { header: "PAYEE COMPANY", key: "payeeCompany", width: 22 },
+      { header: "RECEIVE COMPANY", key: "receiveCompany", width: 22 },
+      { header: "DRIVER NAME", key: "driverName", width: 20 },
+      { header: "VRID / TRIPS", key: "vrids", width: 22 },
+      { header: "TOTAL", key: "total", width: 14 },
+      { header: "STATUS", key: "status", width: 12 },
+    ];
 
+    // Style Header Row (10pt Font)
+    const headerRow = worksheet.getRow(1);
+    headerRow.height = 26;
+    headerRow.eachCell((cell) => {
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "1E293B" }, // Dark Slate
+      };
+      cell.font = {
+        name: "Arial",
+        size: 10, // Set Header Font to 10pt
+        bold: true,
+        color: { argb: "FFFFFF" },
+      };
+      cell.alignment = {
+        vertical: "middle",
+        horizontal: "center",
+      };
+    });
+
+    // Add Data Rows (10pt Font)
+    invoicesToExport.forEach((invoice, index) => {
       const driverNames =
         invoice.trips
           ?.map((t) => t.driverName)
           .filter(Boolean)
-          .join(", ") || "-";
+          .join("\n") || "-";
+
       const vrids =
         invoice.trips
           ?.map((t) => t.vrid)
           .filter(Boolean)
-          .join(", ") || "-";
+          .join("\n") || "-";
 
-      return {
-        "S.NO": index + 1,
-        "INVOICE NUMBER": `#${payeeSerialNumbers.get(invoice._id) || 1}`,
-        "INVOICE DATE": invoice.invoiceDate
-          ? formatDate(invoice.invoiceDate)
-          : "-",
-        "PAYEE COMPANY": invoice.payee?.companyName || "-",
-        "RECEIVE COMPANY": invoice.customer?.companyName || "-",
-        DISPATCH: carrierNeedToPay > 0 ? formatCurrency(carrierNeedToPay) : "-",
-        "DRIVER NAME": driverNames,
-        VRID: vrids,
-        TOTAL: formatCurrency(invoice.grandTotal),
-        STATUS: invoice.invoiceStatus
-          ? invoice.invoiceStatus.toUpperCase()
-          : "-",
-      };
-    });
+      const row = worksheet.addRow({
+        sNo: index + 1,
+        invoiceNumber: `#${payeeSerialNumbers.get(invoice._id) || 1}`,
+        invoiceDate: invoice.invoiceDate ? formatDate(invoice.invoiceDate) : "-",
+        payeeCompany: invoice.payee?.companyName || "-",
+        receiveCompany: invoice.customer?.companyName || "-",
+        driverName: driverNames,
+        vrids: vrids,
+        total: formatCurrency(invoice.grandTotal || 0),
+        status: invoice.invoiceStatus ? invoice.invoiceStatus.toUpperCase() : "-",
+      });
 
-    const ws = XLSX.utils.json_to_sheet(excelData);
+      // Alignments & Word Wrap for Multi-line VRID / Driver Name
+      row.getCell("vrids").alignment = { wrapText: true, vertical: "top" };
+      row.getCell("driverName").alignment = { wrapText: true, vertical: "top" };
+      row.getCell("sNo").alignment = { horizontal: "center", vertical: "top" };
+      row.getCell("invoiceNumber").alignment = { vertical: "top" };
+      row.getCell("invoiceDate").alignment = { vertical: "top" };
+      row.getCell("payeeCompany").alignment = { vertical: "top" };
+      row.getCell("receiveCompany").alignment = { vertical: "top" };
+      row.getCell("total").alignment = { vertical: "top", horizontal: "right" };
+      row.getCell("status").alignment = { vertical: "top", horizontal: "center" };
 
-    const objectMaxLength: { width: number }[] = [];
-    excelData.forEach((row) => {
-      Object.keys(row).forEach((key, ind) => {
-        const val = row[key as keyof typeof row];
-        const valueLength = val ? val.toString().length : 10;
-        const headerLength = key.length;
-        const maxLen = Math.max(valueLength, headerLength) + 3;
-
-        if (!objectMaxLength[ind]) {
-          objectMaxLength[ind] = { width: maxLen };
-        } else {
-          if (maxLen > objectMaxLength[ind].width) {
-            objectMaxLength[ind].width = maxLen;
-          }
-        }
+      // Apply 10pt Font to all data cells & Red color for Total
+      row.eachCell((cell, colNumber) => {
+        cell.font = {
+          name: "Arial",
+          size: 10, // Set Data Cells Font to 10pt
+          bold: colNumber === 8, // Total Amount in bold
+          color: colNumber === 8 ? { argb: "DC2626" } : { argb: "0F172A" },
+        };
+        cell.border = {
+          bottom: { style: "thin", color: { argb: "E2E8F0" } },
+        };
       });
     });
-    ws["!cols"] = objectMaxLength;
 
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Invoices");
+    // Generate Excel file buffer and download
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
 
     const companyFileName = selectedCompany
       ? `_${selectedCompany.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "")}`
@@ -131,8 +169,15 @@ export default function CompanyHistoryExportModals({
     const periodFileName = startDate
       ? `${startDate.format("YYYY-MM-DD")}_to_${endDate.format("YYYY-MM-DD")}`
       : "all-dates";
-    const filename = `Invoices${companyFileName}_${periodFileName}`;
-    XLSX.writeFile(wb, `${filename}.xlsx`);
+    const filename = `Invoices${companyFileName}_${periodFileName}.xlsx`;
+
+    const url = window.URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.click();
+    window.URL.revokeObjectURL(url);
+
     message.success(
       `Exported ${invoicesToExport.length} invoices successfully!`,
     );
@@ -158,7 +203,6 @@ export default function CompanyHistoryExportModals({
         Export to Excel
       </Button>
 
-      {/* Export Modal */}
       <Modal
         title="Export to Excel"
         open={exportModalOpen}
@@ -239,7 +283,6 @@ export default function CompanyHistoryExportModals({
           </p>
         </div>
       </Modal>
-
     </>
   );
 }
