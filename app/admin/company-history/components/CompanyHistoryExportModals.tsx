@@ -63,50 +63,51 @@ export default function CompanyHistoryExportModals({
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Invoices");
 
-    // Configure Page Setup for A4 Printing
+    // Configure Page Setup for A4 Landscape Printing
     worksheet.pageSetup = {
-      paperSize: 9, // 9 = A4 Paper Size
-      orientation: "portrait",
+      paperSize: 9, // A4 Paper Size
+      orientation: "landscape",
       fitToPage: true,
-      fitToWidth: 1, // Fit all columns into 1 page wide
+      fitToWidth: 1, // Fit all columns into 1 page width
       fitToHeight: 0, // Automatic vertical pages
     };
 
-    // Define Columns (DISPATCH REMOVED)
+    // Define Columns with width adjustments
     worksheet.columns = [
-      { header: "S.NO", key: "sNo", width: 6 },
-      { header: "INVOICE NUMBER", key: "invoiceNumber", width: 16 },
-      { header: "INVOICE DATE", key: "invoiceDate", width: 14 },
-      { header: "PAYEE COMPANY", key: "payeeCompany", width: 22 },
-      { header: "RECEIVE COMPANY", key: "receiveCompany", width: 22 },
-      { header: "DRIVER NAME", key: "driverName", width: 20 },
-      { header: "VRID / TRIPS", key: "vrids", width: 22 },
-      { header: "TOTAL", key: "total", width: 14 },
-      { header: "STATUS", key: "status", width: 12 },
+      { header: "S.NO", key: "sNo", width: 8 },
+      { header: "INVOICE NUMBER", key: "invoiceNumber", width: 18 },
+      { header: "INVOICE DATE", key: "invoiceDate", width: 16 },
+      { header: "PAYEE COMPANY", key: "payeeCompany", width: 26 },
+      { header: "RECEIVE COMPANY", key: "receiveCompany", width: 26 },
+      { header: "DRIVER NAME", key: "driverName", width: 22 },
+      { header: "VRID", key: "vrids", width: 25 },
+      { header: "TOTAL", key: "total", width: 16 },
+      { header: "STATUS", key: "status", width: 14 },
     ];
 
-    // Style Header Row (10pt Font)
+    // Style Header Row (Centered & 10pt Font)
     const headerRow = worksheet.getRow(1);
-    headerRow.height = 26;
+    headerRow.height = 28;
     headerRow.eachCell((cell) => {
       cell.fill = {
         type: "pattern",
         pattern: "solid",
-        fgColor: { argb: "1E293B" }, // Dark Slate
+        fgColor: { argb: "1E293B" }, // Dark Slate Header
       };
       cell.font = {
         name: "Arial",
-        size: 10, // Set Header Font to 10pt
+        size: 10,
         bold: true,
         color: { argb: "FFFFFF" },
       };
       cell.alignment = {
         vertical: "middle",
         horizontal: "center",
+        wrapText: true,
       };
     });
 
-    // Add Data Rows (10pt Font)
+    // Add Data Rows
     invoicesToExport.forEach((invoice, index) => {
       const driverNames =
         invoice.trips
@@ -132,23 +133,25 @@ export default function CompanyHistoryExportModals({
         status: invoice.invoiceStatus ? invoice.invoiceStatus.toUpperCase() : "-",
       });
 
-      // Alignments & Word Wrap for Multi-line VRID / Driver Name
-      row.getCell("vrids").alignment = { wrapText: true, vertical: "top" };
-      row.getCell("driverName").alignment = { wrapText: true, vertical: "top" };
-      row.getCell("sNo").alignment = { horizontal: "center", vertical: "top" };
-      row.getCell("invoiceNumber").alignment = { vertical: "top" };
-      row.getCell("invoiceDate").alignment = { vertical: "top" };
-      row.getCell("payeeCompany").alignment = { vertical: "top" };
-      row.getCell("receiveCompany").alignment = { vertical: "top" };
-      row.getCell("total").alignment = { vertical: "top", horizontal: "right" };
-      row.getCell("status").alignment = { vertical: "top", horizontal: "center" };
+      // Alignment and Text Wrapping for cells
+      row.getCell("sNo").alignment = { horizontal: "center", vertical: "middle" };
+      row.getCell("invoiceNumber").alignment = { horizontal: "center", vertical: "middle" };
+      row.getCell("invoiceDate").alignment = { horizontal: "center", vertical: "middle" };
+      
+      row.getCell("payeeCompany").alignment = { horizontal: "left", vertical: "middle", wrapText: true };
+      row.getCell("receiveCompany").alignment = { horizontal: "left", vertical: "middle", wrapText: true };
+      row.getCell("driverName").alignment = { horizontal: "left", vertical: "middle", wrapText: true };
+      row.getCell("vrids").alignment = { horizontal: "left", vertical: "middle", wrapText: true };
+      
+      row.getCell("total").alignment = { horizontal: "center", vertical: "middle" };
+      row.getCell("status").alignment = { horizontal: "center", vertical: "middle" };
 
-      // Apply 10pt Font to all data cells & Red color for Total
+      // Apply 10pt Font to data cells & Red bold styling for Total
       row.eachCell((cell, colNumber) => {
         cell.font = {
           name: "Arial",
-          size: 10, // Set Data Cells Font to 10pt
-          bold: colNumber === 8, // Total Amount in bold
+          size: 10,
+          bold: colNumber === 8, // Total Amount bold
           color: colNumber === 8 ? { argb: "DC2626" } : { argb: "0F172A" },
         };
         cell.border = {
@@ -157,19 +160,47 @@ export default function CompanyHistoryExportModals({
       });
     });
 
-    // Generate Excel file buffer and download
+    // Build Dynamic Filename (e.g. Invoices_Payee_TO_Receiver_Date.xlsx)
+    const sanitize = (text: string) => text.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "");
+
+    const payeeNames = Array.from(
+      new Set(
+        invoicesToExport
+          .map((inv) => inv.payee?.companyName)
+          .filter((name): name is string => !!name)
+      )
+    );
+    const receiveNames = Array.from(
+      new Set(
+        invoicesToExport
+          .map((inv) => inv.customer?.companyName)
+          .filter((name): name is string => !!name)
+      )
+    );
+
+    let companyFileNamePart = "";
+
+    if (payeeNames.length === 1 && receiveNames.length === 1) {
+      companyFileNamePart = `_${sanitize(payeeNames[0])}_TO_${sanitize(receiveNames[0])}`;
+    } else if (selectedCompany) {
+      companyFileNamePart = `_${sanitize(selectedCompany)}`;
+    } else if (payeeNames.length === 1) {
+      companyFileNamePart = `_PAYEE_${sanitize(payeeNames[0])}`;
+    } else if (receiveNames.length === 1) {
+      companyFileNamePart = `_TO_${sanitize(receiveNames[0])}`;
+    }
+
+    const periodFileName = startDate
+      ? `${startDate.format("YYYY-MM-DD")}_to_${endDate.format("YYYY-MM-DD")}`
+      : "All-Dates";
+
+    const filename = `Invoices${companyFileNamePart}_${periodFileName}.xlsx`;
+
+    // Generate and Download Excel File
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
-
-    const companyFileName = selectedCompany
-      ? `_${selectedCompany.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "")}`
-      : "";
-    const periodFileName = startDate
-      ? `${startDate.format("YYYY-MM-DD")}_to_${endDate.format("YYYY-MM-DD")}`
-      : "all-dates";
-    const filename = `Invoices${companyFileName}_${periodFileName}.xlsx`;
 
     const url = window.URL.createObjectURL(blob);
     const anchor = document.createElement("a");
