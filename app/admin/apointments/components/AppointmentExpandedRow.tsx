@@ -1,8 +1,6 @@
 "use client";
-
-import { Card, Typography, Grid } from "antd";
+import {  Typography, Grid } from "antd";
 import type { Appointment } from "../types";
-
 const { Text } = Typography;
 const { useBreakpoint } = Grid;
 

@@ -13,6 +13,7 @@ export interface Trip {
 }
 
 export interface Party {
+  name: string;
   companyName: string;
   payeeSelectKey?: string;
   contactPerson?: string;
@@ -29,6 +30,8 @@ export interface Party {
 }
 
 export interface Invoice {
+  payeeName: string | undefined;
+  companyName: any;
   message?: string;
   _id: string;
   invoiceNumber: string;

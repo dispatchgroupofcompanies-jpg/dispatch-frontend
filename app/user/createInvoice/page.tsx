@@ -25,8 +25,8 @@ import {
   CheckCircleOutlined,
   DownloadOutlined,
 } from "@ant-design/icons";
-import CreateInvoiceModal from "../../../modules/invoice/InvoiceModal"; // Form modal for creating/editing
-import InvoiceModal from "../../../src/components/InvoiceModal"; // Dedicated preview & approval modal
+import CreateInvoiceModal from "../../../modules/invoice/InvoiceModal";
+import InvoiceModal from "../../../src/components/InvoiceModal";
 import {
   getInvoices,
   deleteInvoice,
@@ -180,15 +180,44 @@ function DashboardComponent() {
     }
   };
 
+  // Helper function to safely extract displayable string names
+  const getPartyDisplayName = (party: unknown): string => {
+    if (typeof party === "string") return party;
+    if (typeof party === "object" && party !== null) {
+      const p = party as Record<string, unknown>;
+      if (typeof p.companyName === "string") return p.companyName;
+      if (typeof p.name === "string") return p.name;
+    }
+    return "-";
+  };
+
   // -------------------------
   // TABLE MASTER COLUMNS
   // -------------------------
   const columns = useMemo(
     () => [
       {
+        title: "S No",
+        key: "sNo",
+        width: isMobile ? 50 : 70,
+        fixed: isMobile ? ("left" as const) : undefined,
+        render: (_: unknown, __: unknown, index: number) => (
+          <span
+            style={{
+              color: "#0f172a",
+              fontSize: isMobile ? "11px" : "13px",
+              fontWeight: 500,
+            }}
+          >
+            {index + 1}
+          </span>
+        ),
+      },
+      {
         title: "Invoice #",
         key: "invoiceNumber",
-        width: isMobile ? 54 : 140,
+        width: isMobile ? 62 : 100,
+        fixed: isMobile ? ("left" as const) : undefined,
         render: (_: unknown, record: InvoiceType) => {
           const serialNumber = payeeSerialNumbers.get(record._id) || 1;
           return (
@@ -198,9 +227,12 @@ function DashboardComponent() {
                 color: "#ffffff",
                 letterSpacing: "0.5px",
                 background: "#10b981",
-                padding: "4px 10px",
-                borderRadius: "6px",
+                padding: isMobile ? "2px 5px" : "2px 8px",
+                borderRadius: "4px",
                 display: "inline-block",
+                fontSize: isMobile ? "9px" : "11px",
+                whiteSpace: "nowrap",
+                lineHeight: "16px",
               }}
             >
               #{serialNumber}
@@ -209,23 +241,72 @@ function DashboardComponent() {
         },
       },
       {
-        title: "Vendor",
-        dataIndex: ["payee", "companyName"],
-        key: "payeeCompany",
-        responsive: ["md"],
-        render: (text: string) => (
-          <span style={{ fontWeight: 500, color: "#334155" }}>
-            {text || "N/A"}
-          </span>
-        ),
+        title: "Payee",
+        key: "payee",
+        width: isMobile ? 120 : 160,
+        render: (_: unknown, record: InvoiceType) => {
+          const companyName = getPartyDisplayName(record.payee) !== "-" 
+            ? getPartyDisplayName(record.payee) 
+            : record.payeeName || "-";
+
+          return (
+            <Tooltip title={companyName !== "-" ? companyName : undefined}>
+              <span
+                style={{
+                  color: "#0f172a",
+                  fontSize: isMobile ? "11px" : "13px",
+                  fontWeight: 500,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  display: "inline-block",
+                  maxWidth: "100%",
+                }}
+              >
+                {companyName}
+              </span>
+            </Tooltip>
+          );
+        },
+      },
+      {
+        title: "Pay To",
+        key: "payTo",
+        width: isMobile ? 120 : 160,
+        render: (_: unknown, record: InvoiceType) => {
+          const payToName = getPartyDisplayName(record.customer) !== "-"
+            ? getPartyDisplayName(record.customer)
+            : typeof record.companyName === "string"
+            ? record.companyName
+            : "-";
+
+          return (
+            <Tooltip title={payToName !== "-" ? payToName : undefined}>
+              <span
+                style={{
+                  color: "#0f172a",
+                  fontSize: isMobile ? "11px" : "13px",
+                  fontWeight: 500,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  display: "inline-block",
+                  maxWidth: "100%",
+                }}
+              >
+                {payToName}
+              </span>
+            </Tooltip>
+          );
+        },
       },
       {
         title: "Amount",
         dataIndex: "grandTotal",
         key: "grandTotal",
-        width: isMobile ? 82 : 160,
+        width: isMobile ? 82 : 140,
         render: (val: number, record: InvoiceType) => (
-          <span style={{ fontWeight: 700, color: "#0f172a" }}>
+          <span style={{ fontWeight: 700, color: "#0f172a", whiteSpace: "nowrap" }}>
             {record.currency || "CAD"} $
             {val?.toLocaleString(undefined, {
               minimumFractionDigits: 2,
@@ -238,8 +319,8 @@ function DashboardComponent() {
         title: "Status",
         dataIndex: "invoiceStatus",
         key: "invoiceStatus",
-        width: 140,
-        responsive: ["md"],
+        width: 120,
+        responsive: ["md" as const],
         render: (status: string) => {
           const cleanStatus = status?.toLowerCase() || "draft";
           const colorMap: Record<string, string> = {
@@ -257,26 +338,10 @@ function DashboardComponent() {
         },
       },
       {
-        title: "Created",
-        dataIndex: "createdAt",
-        key: "createdAt",
-        responsive: ["lg"],
-        render: (val: string) => (
-          <span style={{ color: "#64748b", fontSize: "13px" }}>
-            {val
-              ? new Date(val).toLocaleDateString("en-CA", {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                })
-              : "-"}
-          </span>
-        ),
-      },
-      {
         title: "Actions",
         key: "action",
         width: isMobile ? 134 : 260,
+        align: "center" as const,
         render: (_: unknown, record: InvoiceType) => {
           const isDraft =
             (record.invoiceStatus || "draft").toLowerCase() === "draft";
@@ -495,7 +560,7 @@ function DashboardComponent() {
           boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.06)",
           borderRadius: "16px",
         }}
-        bodyStyle={isCompact ? { padding: 12 } : undefined}
+        styles={{ body: isCompact ? { padding: 12 } : undefined }}
       >
         {isCompact ? (
           <div style={{ display: "grid", gap: 12 }}>
@@ -551,7 +616,7 @@ function DashboardComponent() {
         editData={editingInvoice || undefined}
       />
 
-      {/* Preview modal — approve/reject is admin-only, so no status props here */}
+      {/* Preview modal */}
       <InvoiceModal
         open={viewOpen}
         invoice={selected}

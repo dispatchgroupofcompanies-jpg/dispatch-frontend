@@ -1,6 +1,4 @@
 "use client";
-
-/* eslint-disable react-hooks/rules-of-hooks */
 import { useState, useEffect, useCallback } from "react";
 import {
   Card,
@@ -749,7 +747,6 @@ export default function DeviceRequestsPage() {
                   )}
                 />
               ) : (
-                /* Sleek Desktop view */
                 <Table
                   columns={columns}
                   dataSource={deviceRequests}

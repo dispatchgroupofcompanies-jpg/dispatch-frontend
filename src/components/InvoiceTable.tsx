@@ -42,9 +42,6 @@ const handleDownload = async (
   try {
     const response = await downloadInvoicePDF(invoiceId, isAdmin);
 
-    // Axios returns fallback JSON as a Blob too when responseType is "blob".
-    // Only save a response when it is a real PDF; otherwise extract the
-    // Cloudinary URL returned by the API and open that instead.
     const contentType = String(response.headers?.["content-type"] ?? "");
     const isPdf =
       response.data instanceof Blob &&
@@ -69,9 +66,6 @@ const handleDownload = async (
         : response.data;
 
     if (fallback?.pdfUrl) {
-      // Do not use window.open here: browsers can block it because this runs
-      // after the asynchronous API request. Direct navigation is not blocked
-      // and Cloudinary serves the valid PDF to the browser.
       window.location.assign(fallback.pdfUrl);
       return;
     }
@@ -104,6 +98,8 @@ export default function InvoiceTable({
   const [proofPreview, setProofPreview] = React.useState<string | null>(null);
   const [paymentSubmitting, setPaymentSubmitting] = React.useState(false);
   const proofInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  console.log("InvoiceTable invoices:", invoices);
 
   const clearProofSelection = () => {
     if (proofPreview) {
@@ -162,7 +158,6 @@ export default function InvoiceTable({
     if (value === current || !onUpdatePaymentStatus) return;
 
     if (value === "paid") {
-      // Open the payment proof modal - proof image is required to mark as paid.
       clearProofSelection();
       setPaymentModalInvoice(record);
       return;
@@ -223,48 +218,24 @@ export default function InvoiceTable({
     }
   };
 
-  const renderIdSummary = (
-    values: Array<string | undefined>,
-    emptyLabel = "-",
-    tone: "neutral" | "blue" = "neutral",
-  ) => {
-    const uniqueValues = [...new Set(values.filter(Boolean) as string[])];
-    if (!uniqueValues.length) return <Text type="secondary">{emptyLabel}</Text>;
-
-    const firstValue = uniqueValues[0];
-    const remainingCount = uniqueValues.length - 1;
-    const palette = tone === "blue"
-      ? { background: "#dbeafe", color: "#2563eb" }
-      : { background: "#f1f5f9", color: "#334155" };
-
-    return (
-      <Tooltip title={uniqueValues.join(", ")} placement="top">
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 5, maxWidth: "100%" }}>
-          <span
-            style={{
-              ...palette,
-              padding: "3px 6px",
-              borderRadius: 4,
-              fontSize: isMobile ? 9 : 10,
-              maxWidth: isMobile ? 70 : 92,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {firstValue}
-          </span>
-          {remainingCount > 0 && (
-            <span style={{ color: "#64748b", fontSize: isMobile ? 9 : 10, whiteSpace: "nowrap" }}>
-              +{remainingCount}
-            </span>
-          )}
-        </div>
-      </Tooltip>
-    );
-  };
-
   const columns: ColumnsType<Invoice> = [
+    {
+      title: "S No",
+      key: "sNo",
+      width: isMobile ? 50 : 70,
+      fixed: isMobile ? "left" : undefined,
+      render: (_, __, index) => (
+        <Text
+          style={{
+            color: "#0f172a",
+            fontSize: isMobile ? 11 : 13,
+            fontWeight: 500,
+          }}
+        >
+          {index + 1}
+        </Text>
+      ),
+    },
     {
       title: "Invoice #",
       key: "invoiceNumber",
@@ -292,27 +263,61 @@ export default function InvoiceTable({
       },
     },
     {
-      title: "VRID",
-      key: "vrid",
-      width: isMobile ? 92 : 150,
+      title: "Payee",
+      key: "payee",
+      width: isMobile ? 120 : 160,
       render: (_, record) => {
-        const vrids = record.trips?.map((t) => t.vrid).filter(Boolean) || [];
-        return renderIdSummary(vrids);
+        const companyName =
+          (typeof record.payee === "object" && record.payee?.companyName) ||
+          record.payeeName ||
+          (typeof record.payee === "string" ? record.payee : "-");
+
+        return (
+          <Tooltip title={companyName !== "-" ? companyName : undefined}>
+            <Text
+              style={{
+                color: "#0f172a",
+                fontSize: isMobile ? 11 : 13,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                display: "inline-block",
+                maxWidth: "100%",
+              }}
+            >
+              {companyName}
+            </Text>
+          </Tooltip>
+        );
       },
     },
     {
-      title: "Load ID",
-      key: "loadId",
-      width: isMobile ? 90 : 120,
-      responsive: ["md"],
+      title: "Pay To",
+      key: "payTo",
+      width: isMobile ? 120 : 160,
       render: (_, record) => {
-        const loadIds =
-          record.trips
-            ?.map((t) =>
-              t.loadId2 ? `${t.loadId1 || ""}/${t.loadId2}` : t.loadId1,
-            )
-            .filter(Boolean) || [];
-        return renderIdSummary(loadIds, "-", "blue");
+        const payToName =
+          (typeof record.customer === "object" && (record.customer?.companyName || record.customer?.name)) ||
+          (typeof record.customer === "string" ? record.customer : null) ||
+          (typeof record.companyName === "string" ? record.companyName : "-");
+
+        return (
+          <Tooltip title={payToName !== "-" ? payToName : undefined}>
+            <Text
+              style={{
+                color: "#0f172a",
+                fontSize: isMobile ? 11 : 13,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                display: "inline-block",
+                maxWidth: "100%",
+              }}
+            >
+              {payToName}
+            </Text>
+          </Tooltip>
+        );
       },
     },
     {
@@ -423,7 +428,7 @@ export default function InvoiceTable({
           background: "#fff",
           borderRadius: isMobile ? 8 : 12,
           padding: isMobile ? "4px" : "16px",
-          overflowX: "hidden",
+          overflowX: "auto",
           WebkitOverflowScrolling: "touch",
         }}
       >
@@ -434,46 +439,52 @@ export default function InvoiceTable({
               const vrids = record.trips?.map((trip) => trip.vrid).filter(Boolean) || [];
               const status = record.invoiceStatus || "draft";
               const statusColors: Record<string, string> = { draft: "default", pending: "warning", approved: "success", paid: "processing", rejected: "error" };
-              return <div key={record._id} style={{ display: "grid", gap: 12, padding: 14, border: "1px solid #e2e8f0", borderRadius: 12, background: "#fff", boxShadow: "0 2px 6px rgba(15,23,42,.05)" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "auto minmax(0, 1fr)", alignItems: "center", gap: 10, paddingBottom: 10, borderBottom: "1px solid #e2e8f0" }}>
-                  <span style={{ fontWeight: 700, color: "#fff", background: "#10b981", padding: "4px 9px", borderRadius: 6 }}>#{serialNumber}</span>
-                  <span style={{ color: "#1e40af", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{vrids.join(", ") || "No VRID"}</span>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                  <div><div style={{ fontSize: 11, color: "#64748b", marginBottom: 3 }}>Amount</div><div style={{ fontWeight: 700, color: "#0f172a" }}>{record.currency || "CAD"} ${Number(record.grandTotal || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div></div>
-                  <div><div style={{ fontSize: 11, color: "#64748b", marginBottom: 3 }}>Status</div><Tag color={statusColors[status] || "default"} style={{ margin: 0 }}>{status.toUpperCase()}</Tag></div>
-                </div>
-                {isAdmin && (
-                  <div>
-                    <div style={{ fontSize: 11, color: "#64748b", marginBottom: 3 }}>Payment</div>
-                    {renderPaymentControl(record)}
+              return (
+                <div key={record._id} style={{ display: "grid", gap: 12, padding: 14, border: "1px solid #e2e8f0", borderRadius: 12, background: "#fff", boxShadow: "0 2px 6px rgba(15,23,42,.05)" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "auto minmax(0, 1fr)", alignItems: "center", gap: 10, paddingBottom: 10, borderBottom: "1px solid #e2e8f0" }}>
+                    <span style={{ fontWeight: 700, color: "#fff", background: "#10b981", padding: "4px 9px", borderRadius: 6 }}>#{serialNumber}</span>
+                    <span style={{ color: "#1e40af", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{vrids.join(", ") || "No VRID"}</span>
                   </div>
-                )}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8 }}>
-                  <Button size="small" icon={<DownloadOutlined />} loading={downloadingInvoiceId === record._id} onClick={() => downloadInvoice(record)}>PDF</Button>
-                  <Button size="small" type="primary" icon={<EyeOutlined />} onClick={() => onView(record)}>View</Button>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                    <div><div style={{ fontSize: 11, color: "#64748b", marginBottom: 3 }}>Amount</div><div style={{ fontWeight: 700, color: "#0f172a" }}>{record.currency || "CAD"} ${Number(record.grandTotal || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div></div>
+                    <div><div style={{ fontSize: 11, color: "#64748b", marginBottom: 3 }}>Status</div><Tag color={statusColors[status] || "default"} style={{ margin: 0 }}>{status.toUpperCase()}</Tag></div>
+                  </div>
+                  {isAdmin && (
+                    <div>
+                      <div style={{ fontSize: 11, color: "#64748b", marginBottom: 3 }}>Payment</div>
+                      {renderPaymentControl(record)}
+                    </div>
+                  )}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8 }}>
+                    <Button size="small" icon={<DownloadOutlined />} loading={downloadingInvoiceId === record._id} onClick={() => downloadInvoice(record)}>PDF</Button>
+                    <Button size="small" type="primary" icon={<EyeOutlined />} onClick={() => onView(record)}>View</Button>
+                  </div>
                 </div>
-              </div>;
+              );
             })}
           </div>
-        ) : <Table
-          columns={columns}
-          dataSource={invoices}
-          rowKey={(r) => r._id}
-          pagination={{
-            pageSize: isMobile ? 5 : 10,
-            size: "small",
-            showSizeChanger: !isMobile,
-            showTotal: (total) =>
-              isMobile ? `${total} items` : `Total ${total} items`,
-          }}
-          size="small"
-          scroll={undefined}
-          style={{
-            fontSize: isMobile ? 12 : 13,
-            minWidth: "100%",
-          }}
-        />}
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <Table
+              columns={columns}
+              dataSource={invoices}
+              rowKey={(r) => r._id}
+              pagination={{
+                pageSize: isMobile ? 5 : 10,
+                size: "small",
+                showSizeChanger: !isMobile,
+                showTotal: (total) =>
+                  isMobile ? `${total} items` : `Total ${total} items`,
+              }}
+              size="small"
+              scroll={{ x: "max-content" }}
+              style={{
+                fontSize: isMobile ? 12 : 13,
+                minWidth: "100%",
+              }}
+            />
+          </div>
+        )}
       </div>
 
       <Modal
