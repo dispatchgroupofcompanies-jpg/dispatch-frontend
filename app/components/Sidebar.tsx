@@ -15,22 +15,28 @@ import { useState } from "react";
 const { Sider } = Layout;
 
 export const SIDEBAR_WIDTH = 260;
+export const COLLAPSED_WIDTH = 80;
 
 type SidebarProps = {
   isMobile: boolean;
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
 };
 
-// --- Optimized Brand Component ---
 const Brand = ({
   compact = false,
   mobile = false,
   onClose,
+  onToggleCollapse,
 }: {
   compact?: boolean;
   mobile?: boolean;
   onClose?: () => void;
+  onToggleCollapse?: () => void;
 }) => (
   <div
+    onClick={!mobile ? onToggleCollapse : undefined}
+    title={!mobile ? (compact ? "Expand Sidebar" : "Collapse Sidebar") : undefined}
     style={{
       display: "flex",
       alignItems: "center",
@@ -39,6 +45,8 @@ const Brand = ({
       borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
       background:
         "linear-gradient(180deg, rgba(15, 23, 42, 0.6) 0%, rgba(15, 23, 42, 0) 100%)",
+      cursor: !mobile ? "pointer" : "default",
+      userSelect: "none",
     }}
   >
     <div
@@ -48,9 +56,9 @@ const Brand = ({
         gap: 12,
         flex: 1,
         minWidth: 0,
+        justifyContent: compact && !mobile ? "center" : "flex-start",
       }}
     >
-      {/* Logo Container */}
       <div
         style={{
           width: compact ? 44 : 48,
@@ -70,49 +78,54 @@ const Brand = ({
           src="/logo.jpeg"
           alt="XCDGOC Logo"
           style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
             background: "transparent",
-            borderRight: 0,
-            padding: "16px 12px 4px 12px",
           }}
         />
       </div>
 
-      {/* Text Info */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-          style={{
-            color: "#ffffff",
-            fontSize: compact ? "14px" : "15px",
-            fontWeight: 700,
-            letterSpacing: "0.5px",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          XCDGOC PVT LTD
-        </div>
+      {(!compact || mobile) && (
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div
+            style={{
+              color: "#ffffff",
+              fontSize: compact ? "14px" : "15px",
+              fontWeight: 700,
+              letterSpacing: "0.5px",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            XCDGOC PVT LTD
+          </div>
 
-        <div
-          style={{
-            color: "#64748b",
-            fontSize: "10px",
-            fontWeight: 600,
-            marginTop: 2,
-            letterSpacing: "0.3px",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          COMPLETE DISPATCH SOLUTIONS
+          <div
+            style={{
+              color: "#64748b",
+              fontSize: "10px",
+              fontWeight: 600,
+              marginTop: 2,
+              letterSpacing: "0.3px",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            COMPLETE DISPATCH SOLUTIONS
+          </div>
         </div>
-      </div>
+      )}
     </div>
 
     {mobile && onClose && (
       <button
-        onClick={onClose}
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
         style={{
           background: "rgba(255, 255, 255, 0.05)",
           border: "none",
@@ -127,8 +140,6 @@ const Brand = ({
           marginLeft: 8,
           transition: "all 0.2s ease",
         }}
-        onMouseEnter={(e) => (e.currentTarget.style.color = "#fff")}
-        onMouseLeave={(e) => (e.currentTarget.style.color = "#94a3b8")}
       >
         <CloseOutlined style={{ fontSize: 16 }} />
       </button>
@@ -136,7 +147,11 @@ const Brand = ({
   </div>
 );
 
-export default function Sidebar({ isMobile }: SidebarProps) {
+export default function Sidebar({
+  isMobile,
+  collapsed = false,
+  onToggleCollapse,
+}: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -186,9 +201,7 @@ export default function Sidebar({ isMobile }: SidebarProps) {
       key: item.key,
       icon: item.icon,
       label: (
-        <span
-          style={{ fontWeight: 600, letterSpacing: "0.4px", fontSize: "13px" }}
-        >
+        <span style={{ fontWeight: 600, letterSpacing: "0.4px", fontSize: "13px" }}>
           {item.label}
         </span>
       ),
@@ -202,9 +215,7 @@ export default function Sidebar({ isMobile }: SidebarProps) {
       danger: true,
       icon: <LogoutOutlined style={{ fontSize: "16px" }} />,
       label: (
-        <span
-          style={{ fontWeight: 600, letterSpacing: "0.3px", fontSize: "13px" }}
-        >
+        <span style={{ fontWeight: 600, letterSpacing: "0.3px", fontSize: "13px" }}>
           LOGOUT
         </span>
       ),
@@ -259,25 +270,14 @@ export default function Sidebar({ isMobile }: SidebarProps) {
             },
           }}
         >
-          <div
-            style={{
-              background: "#0F172A",
-              height: "100vh",
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
+          <div style={{ background: "#0F172A", height: "100vh", display: "flex", flexDirection: "column" }}>
             <Brand compact mobile onClose={() => setDrawerOpen(false)} />
             <Menu
               theme="dark"
               mode="inline"
               selectedKeys={[getSelectedKey()]}
               inlineIndent={12}
-              style={{
-                background: "transparent",
-                borderRight: 0,
-                padding: "16px 12px 4px 12px",
-              }}
+              style={{ background: "transparent", borderRight: 0, padding: "16px 12px 4px 12px" }}
               items={buildItems(true)}
             />
           </div>
@@ -288,7 +288,11 @@ export default function Sidebar({ isMobile }: SidebarProps) {
 
   return (
     <Sider
+      collapsible
+      collapsed={collapsed}
+      trigger={null}
       width={SIDEBAR_WIDTH}
+      collapsedWidth={COLLAPSED_WIDTH}
       style={{
         background: "#0F172A",
         height: "100vh",
@@ -302,14 +306,16 @@ export default function Sidebar({ isMobile }: SidebarProps) {
         borderRight: "1px solid rgba(255, 255, 255, 0.04)",
         boxShadow: "6px 0 30px rgba(0, 0, 0, 0.2)",
         zIndex: 1000,
+        transition: "all 0.2s cubic-bezier(0.2, 0, 0, 1)",
       }}
     >
       <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-        <Brand />
+        <Brand compact={collapsed} onToggleCollapse={onToggleCollapse} />
 
         <Menu
           theme="dark"
           mode="inline"
+          inlineCollapsed={collapsed}
           selectedKeys={[getSelectedKey()]}
           inlineIndent={12}
           style={{

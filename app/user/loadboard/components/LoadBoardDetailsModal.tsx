@@ -1,8 +1,10 @@
 "use client";
 
 import React from "react";
-import { Descriptions, Image, Modal, Tag } from "antd";
+import { Descriptions, Image, Modal, Tag, Typography } from "antd";
 import type { LoadBoardRecord } from "../types";
+
+const { Text } = Typography;
 
 interface Props {
   open: boolean;
@@ -71,7 +73,13 @@ export default function LoadBoardDetailsModal({ open, record, onClose }: Props) 
             CAD ${Number(record.tripCharges || 0).toLocaleString()}
           </Descriptions.Item>
           <Descriptions.Item label="Payment ID">
-            {record.driverName || "—"}
+            {record.driverName ? (
+              <Text copyable={{ tooltips: ["Copy", "Copied!"] }}>
+                {record.driverName}
+              </Text>
+            ) : (
+              "—"
+            )}
           </Descriptions.Item>
           <Descriptions.Item label="Invoice Status">
             {statusTag(record.invoiceStatus, "invoice")}

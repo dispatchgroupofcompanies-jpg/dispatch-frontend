@@ -203,7 +203,7 @@ export default function AdminInvoicesPage() {
           >
             <div>
               <div style={{ fontWeight: 700, color: "#0f2962" }}>
-                Filter by payee company
+                Filter By Payee Company
               </div>
               <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
                 Review invoices for one company at a time.

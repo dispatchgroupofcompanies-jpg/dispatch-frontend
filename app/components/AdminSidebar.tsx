@@ -20,6 +20,7 @@ interface AdminSidebarProps {
   isMobile: boolean;
   onClose?: () => void;
   onLogout?: () => void;
+  onToggleCollapse?: () => void;
 }
 
 export default function AdminSidebar({
@@ -27,6 +28,7 @@ export default function AdminSidebar({
   isMobile,
   onClose,
   onLogout,
+  onToggleCollapse,
 }: AdminSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -95,6 +97,12 @@ export default function AdminSidebar({
     }
   };
 
+  const handleTopLogoClick = () => {
+    if (!isMobile && onToggleCollapse) {
+      onToggleCollapse();
+    }
+  };
+
   return (
     <div
       style={{
@@ -114,15 +122,19 @@ export default function AdminSidebar({
         boxShadow: "2px 0 8px rgba(0,0,0,0.15)",
       }}
     >
-      {/* Logo Section */}
+      {/* Top Section with Clickable Icon to Toggle Sidebar */}
       <div
+        onClick={handleTopLogoClick}
+        title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
         style={{
           padding: "16px 20px",
           borderBottom: "1px solid rgba(255,255,255,0.1)",
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
+          justifyContent: collapsed && !isMobile ? "center" : "space-between",
           minHeight: 64,
+          cursor: !isMobile ? "pointer" : "default",
+          userSelect: "none",
         }}
       >
         {(!collapsed || isMobile) && (
@@ -137,6 +149,7 @@ export default function AdminSidebar({
                 alignItems: "center",
                 justifyContent: "center",
                 fontSize: 20,
+                transition: "transform 0.2s",
               }}
             >
               ⚡
@@ -154,6 +167,8 @@ export default function AdminSidebar({
             </h2>
           </div>
         )}
+
+        {/* Center Icon when Collapsed */}
         {collapsed && !isMobile && (
           <div
             style={{

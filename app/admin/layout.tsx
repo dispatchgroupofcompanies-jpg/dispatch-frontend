@@ -3,11 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Drawer, Button, message } from "antd";
 import { useRouter, usePathname } from "next/navigation";
-import {
-  MenuOutlined,
-  MenuUnfoldOutlined,
-  MenuFoldOutlined,
-} from "@ant-design/icons";
+import { MenuOutlined } from "@ant-design/icons";
 import AdminSidebar from "../components/AdminSidebar";
 
 export default function AdminLayout({
@@ -17,7 +13,7 @@ export default function AdminLayout({
 }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(
-    typeof window !== "undefined" ? window.innerWidth < 992 : true,
+    typeof window !== "undefined" ? window.innerWidth < 992 : true
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
   const router = useRouter();
@@ -25,26 +21,46 @@ export default function AdminLayout({
   const previousPathnameRef = useRef(pathname);
 
   useEffect(() => {
+    // Basic Auth Check
     const token = localStorage.getItem("token");
-    if (!token && pathname !== "/login") {
-      router.push("/login");
+    if (!token && pathname !== "/admin/login") {
+      router.push("/admin/login");
     }
-    const check = () =>
-      setIsMobile(
-        typeof window !== "undefined" ? window.innerWidth < 992 : false,
-      );
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
+
+    // Responsive Handlers
+    const checkResponsive = () => {
+      const mobile = window.innerWidth < 992;
+      setIsMobile(mobile);
+      // Auto-collapse sidebar if screen gets small, but not yet mobile
+      if (window.innerWidth < 1200 && window.innerWidth >= 992) {
+        setSidebarCollapsed(true);
+      } else if (window.innerWidth >= 1200) {
+        setSidebarCollapsed(false);
+      }
+    };
+
+    // Initial check
+    if (typeof window !== "undefined") {
+      checkResponsive();
+      window.addEventListener("resize", checkResponsive);
+    }
+
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("resize", checkResponsive);
+      }
+    };
   }, [router, pathname]);
 
-  // Close drawer when route changes
+  // Close drawer when route changes on mobile
   useEffect(() => {
     if (previousPathnameRef.current !== pathname) {
-      setDrawerOpen(false);
+      if (isMobile) {
+        setDrawerOpen(false);
+      }
       previousPathnameRef.current = pathname;
     }
-  }, [pathname]);
+  }, [pathname, isMobile]);
 
   const getResponsivePadding = (): number => {
     if (typeof window === "undefined") return 12;
@@ -68,8 +84,12 @@ export default function AdminLayout({
     }
   };
 
-  const isActive = (path: string) => pathname === path;
+  // 🔥 NEW: Function to toggle sidebar on desktop
+  const handleToggleSidebar = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
+  };
 
+  // bypass layout for login page
   if (pathname === "/admin/login") {
     return <>{children}</>;
   }
@@ -83,6 +103,7 @@ export default function AdminLayout({
         overflow: "hidden",
       }}
     >
+      {/* Global Style Overrides for scrollbars */}
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -97,6 +118,10 @@ export default function AdminLayout({
           scrollbar-width: none !important;
           -ms-overflow-style: none !important;
         }
+        /* Smooth transition for main content margin */
+        .main-content-wrapper {
+          transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease;
+        }
       `,
         }}
       />
@@ -107,6 +132,7 @@ export default function AdminLayout({
           collapsed={sidebarCollapsed}
           isMobile={isMobile}
           onLogout={handleSidebarLogout}
+          onToggleCollapse={handleToggleSidebar} // 🔥 Passing the toggle function here
         />
       )}
 
@@ -135,17 +161,10 @@ export default function AdminLayout({
 
       {/* Main Content Area */}
       <div
+        className="main-content-wrapper"
         style={{
-          marginLeft:
-            typeof window === "undefined"
-              ? 0
-              : isMobile
-                ? 0
-                : sidebarCollapsed
-                  ? 80
-                  : 260,
+          marginLeft: isMobile ? 0 : sidebarCollapsed ? 80 : 260,
           flex: 1,
-          transition: "margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
           padding: getResponsivePadding(),
           paddingTop: isMobile ? 68 : getResponsivePadding(),
           overflowX: "hidden",
@@ -166,6 +185,7 @@ export default function AdminLayout({
             padding: 0,
             margin: 0,
             background: "linear-gradient(180deg, #1e3a8a 0%, #2563eb 100%)",
+            overflow: "hidden",
           },
           mask: { backgroundColor: "rgba(0,0,0,0.5)" },
         }}
@@ -179,6 +199,7 @@ export default function AdminLayout({
           isMobile={true}
           onClose={() => setDrawerOpen(false)}
           onLogout={handleSidebarLogout}
+          // onToggleCollapse is not needed for mobile drawer
         />
       </Drawer>
     </div>

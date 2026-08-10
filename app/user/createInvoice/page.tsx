@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, SetStateAction } from "react";
 import {
   Button,
   Card,
@@ -41,7 +41,7 @@ function DashboardComponent() {
   const screens = useBreakpoint();
   const isMobile = !screens.md;
   const isCompact = !screens.lg;
-  
+
   const [open, setOpen] = useState(false);
   const [invoices, setInvoices] = useState<InvoiceType[]>([]);
   const [loading, setLoading] = useState(false);
@@ -51,6 +51,12 @@ function DashboardComponent() {
   const [editingInvoice, setEditingInvoice] = useState<InvoiceType | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [selectedPayee, setSelectedPayee] = useState("all");
+
+  // -------------------------
+  // PAGINATION STATE (Fixed continuous S No)
+  // -------------------------
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(8);
 
   // -------------------------
   // FETCH DATA FROM SERVER
@@ -70,6 +76,11 @@ function DashboardComponent() {
   useEffect(() => {
     loadInvoices();
   }, []);
+
+  // Reset page to 1 when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedPayee]);
 
   // -------------------------
   // RUNTIME ANALYTICS METRICS
@@ -201,41 +212,18 @@ function DashboardComponent() {
         key: "sNo",
         width: isMobile ? 50 : 70,
         fixed: isMobile ? ("left" as const) : undefined,
-        render: (_: unknown, __: unknown, index: number) => (
-          <span
-            style={{
-              color: "#0f172a",
-              fontSize: isMobile ? "11px" : "13px",
-              fontWeight: 500,
-            }}
-          >
-            {index + 1}
-          </span>
-        ),
-      },
-      {
-        title: "Invoice #",
-        key: "invoiceNumber",
-        width: isMobile ? 62 : 100,
-        fixed: isMobile ? ("left" as const) : undefined,
-        render: (_: unknown, record: InvoiceType) => {
-          const serialNumber = payeeSerialNumbers.get(record._id) || 1;
+        render: (_: unknown, __: unknown, index: number) => {
+          // Continuous Serial Number calculation
+          const serialNumber = (currentPage - 1) * pageSize + index + 1;
           return (
             <span
               style={{
-                fontWeight: 700,
-                color: "#ffffff",
-                letterSpacing: "0.5px",
-                background: "#10b981",
-                padding: isMobile ? "2px 5px" : "2px 8px",
-                borderRadius: "4px",
-                display: "inline-block",
-                fontSize: isMobile ? "9px" : "11px",
-                whiteSpace: "nowrap",
-                lineHeight: "16px",
+                color: "#0f172a",
+                fontSize: isMobile ? "11px" : "13px",
+                fontWeight: 500,
               }}
             >
-              #{serialNumber}
+              {serialNumber}
             </span>
           );
         },
@@ -245,9 +233,10 @@ function DashboardComponent() {
         key: "payee",
         width: isMobile ? 120 : 160,
         render: (_: unknown, record: InvoiceType) => {
-          const companyName = getPartyDisplayName(record.payee) !== "-" 
-            ? getPartyDisplayName(record.payee) 
-            : record.payeeName || "-";
+          const companyName =
+            getPartyDisplayName(record.payee) !== "-"
+              ? getPartyDisplayName(record.payee)
+              : record.payeeName || "-";
 
           return (
             <Tooltip title={companyName !== "-" ? companyName : undefined}>
@@ -274,11 +263,12 @@ function DashboardComponent() {
         key: "payTo",
         width: isMobile ? 120 : 160,
         render: (_: unknown, record: InvoiceType) => {
-          const payToName = getPartyDisplayName(record.customer) !== "-"
-            ? getPartyDisplayName(record.customer)
-            : typeof record.companyName === "string"
-            ? record.companyName
-            : "-";
+          const payToName =
+            getPartyDisplayName(record.customer) !== "-"
+              ? getPartyDisplayName(record.customer)
+              : typeof record.companyName === "string"
+              ? record.companyName
+              : "-";
 
           return (
             <Tooltip title={payToName !== "-" ? payToName : undefined}>
@@ -399,7 +389,7 @@ function DashboardComponent() {
         },
       },
     ],
-    [selected, downloading, payeeSerialNumbers, isMobile],
+    [selected, downloading, isMobile, currentPage, pageSize],
   );
 
   const headerPadding = isMobile ? "20px 16px" : "24px 20px";
@@ -566,8 +556,8 @@ function DashboardComponent() {
           <div style={{ display: "grid", gap: 12 }}>
             {loading && <div style={{ textAlign: "center", padding: 24, color: "#64748b" }}>Loading invoices...</div>}
             {!loading && filteredInvoices.length === 0 && <div style={{ textAlign: "center", padding: 24, color: "#64748b" }}>No invoices found.</div>}
-            {filteredInvoices.map((invoice) => {
-              const serialNumber = payeeSerialNumbers.get(invoice._id) || 1;
+            {filteredInvoices.map((invoice, index) => {
+              const serialNumber = (currentPage - 1) * pageSize + index + 1;
               const invoiceStatus = (invoice.invoiceStatus || "draft").toLowerCase();
               const isDraft = invoiceStatus === "draft";
               const statusColor: Record<string, string> = { draft: "default", pending: "warning", approved: "success", paid: "processing", rejected: "error" };
@@ -598,7 +588,15 @@ function DashboardComponent() {
             columns={columns}
             rowKey={(record) => (record as unknown as InvoiceType)._id}
             loading={loading}
-            pagination={{ pageSize: 8, style: { marginTop: 12 } }}
+            pagination={{
+              current: currentPage,
+              pageSize: pageSize,
+              style: { marginTop: 12 },
+              onChange: (page: SetStateAction<number>, size: SetStateAction<number>) => {
+                setCurrentPage(page);
+                if (size) setPageSize(size);
+              },
+            }}
             size="middle"
             enableHorizontalScroll
           />
