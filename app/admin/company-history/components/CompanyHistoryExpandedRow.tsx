@@ -42,11 +42,6 @@ export default function CompanyHistoryExpandedRow({
           >
             <Row gutter={[16, 16]}>
               <Col xs={24} sm={12} md={8} lg={6}>
-                <Text strong>Invoice Number:</Text>
-                <br />
-                <Text>{record.invoiceNumber}</Text>
-              </Col>
-              <Col xs={24} sm={12} md={8} lg={6}>
                 <Text strong>Invoice Date:</Text>
                 <br />
                 <Text>
@@ -65,20 +60,6 @@ export default function CompanyHistoryExpandedRow({
                 <br />
                 <Text strong style={{ color: "#52c41a", fontSize: 16 }}>
                   {formatCurrency(record.grandTotal)}
-                </Text>
-              </Col>
-              <Col xs={24} sm={12} md={8} lg={6}>
-                <Text strong>Carrier Need to Pay:</Text>
-                <br />
-                <Text strong style={{ color: "#f5222d" }}>
-                  {formatCurrency(record.carrierNeedToPay || 0)}
-                </Text>
-              </Col>
-              <Col xs={24} sm={12} md={8} lg={6}>
-                <Text strong>Carrier Need to Receive:</Text>
-                <br />
-                <Text strong style={{ color: "#52c41a" }}>
-                  {formatCurrency(record.carrierNeedsToReceive || 0)}
                 </Text>
               </Col>
             </Row>

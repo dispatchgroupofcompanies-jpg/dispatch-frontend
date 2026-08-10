@@ -78,7 +78,7 @@ export default function CompanyHistoryExportModals({
       { header: "INVOICE NUMBER", key: "invoiceNumber", width: 18 },
       { header: "INVOICE DATE", key: "invoiceDate", width: 16 },
       { header: "PAYEE COMPANY", key: "payeeCompany", width: 26 },
-      { header: "RECEIVE COMPANY", key: "receiveCompany", width: 26 },
+      { header: "RECEIVER COMPANY", key: "receiverCompany", width: 26 },
       { header: "DRIVER NAME", key: "driverName", width: 22 },
       { header: "VRID", key: "vrids", width: 25 },
       { header: "TOTAL", key: "total", width: 16 },
@@ -126,7 +126,7 @@ export default function CompanyHistoryExportModals({
         invoiceNumber: `#${payeeSerialNumbers.get(invoice._id) || 1}`,
         invoiceDate: invoice.invoiceDate ? formatDate(invoice.invoiceDate) : "-",
         payeeCompany: invoice.payee?.companyName || "-",
-        receiveCompany: invoice.customer?.companyName || "-",
+        receiverCompany: invoice.customer?.companyName || "-",
         driverName: driverNames,
         vrids: vrids,
         total: formatCurrency(invoice.grandTotal || 0),
@@ -139,7 +139,7 @@ export default function CompanyHistoryExportModals({
       row.getCell("invoiceDate").alignment = { horizontal: "center", vertical: "middle" };
       
       row.getCell("payeeCompany").alignment = { horizontal: "left", vertical: "middle", wrapText: true };
-      row.getCell("receiveCompany").alignment = { horizontal: "left", vertical: "middle", wrapText: true };
+      row.getCell("receiverCompany").alignment = { horizontal: "left", vertical: "middle", wrapText: true };
       row.getCell("driverName").alignment = { horizontal: "left", vertical: "middle", wrapText: true };
       row.getCell("vrids").alignment = { horizontal: "left", vertical: "middle", wrapText: true };
       
