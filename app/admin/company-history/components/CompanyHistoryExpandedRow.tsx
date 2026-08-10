@@ -167,22 +167,8 @@ export default function CompanyHistoryExpandedRow({
                       <Text strong>{formatCurrency(amount || 0)}</Text>
                     ),
                   },
-                  {
-                    title: "Dispatch %",
-                    dataIndex: "dispatchPercentage",
-                    key: "dispatchPercentage",
-                    render: (value: number) => `${value || 10}%`,
-                  },
-                  {
-                    title: "Dispatch Amount",
-                    dataIndex: "dispatchAmount",
-                    key: "dispatchAmount",
-                    render: (amount: number) => (
-                      <Text strong style={{ color: "#f5222d" }}>
-                        {formatCurrency(amount || 0)}
-                      </Text>
-                    ),
-                  },
+                 
+               
                 ]}
               />
             </Card>
