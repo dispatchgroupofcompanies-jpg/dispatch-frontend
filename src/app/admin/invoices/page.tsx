@@ -26,6 +26,9 @@ export default function AdminInvoicesPage() {
   const [rejectLoading, setRejectLoading] = useState(false);
   const [selectedPayee, setSelectedPayee] = useState("all");
 
+  // NEW: State for Payment Status Filter ("all", "pending", "paid")
+  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState("all");
+
   // Search Query State
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -43,7 +46,19 @@ export default function AdminInvoicesPage() {
       .map(([name, count]) => ({ value: name, label: `${name} (${count})` }));
   }, [invoices]);
 
-  // Updated filtering logic including loadId1, loadId2, VRID, Driver Name & Company Name
+  // NEW: Dynamic counts for Payment Statuses
+  const paymentCounts = useMemo(() => {
+    let pending = 0;
+    let paid = 0;
+    invoices.forEach((inv) => {
+      const status = (inv.paymentStatus || "pending").toLowerCase();
+      if (status === "paid") paid++;
+      else pending++;
+    });
+    return { pending, paid };
+  }, [invoices]);
+
+  // Updated filtering logic including Payment Status (Pending / Paid)
   const filteredInvoices = useMemo(() => {
     return invoices.filter((invoice) => {
       // 1. Payee Company Filter
@@ -52,7 +67,16 @@ export default function AdminInvoicesPage() {
 
       if (!matchesPayee) return false;
 
-      // 2. Search Query Filtering
+      // 2. NEW: Payment Status Filter (Pending / Paid)
+      const currentPaymentStatus = (invoice.paymentStatus || "pending").toLowerCase();
+      if (
+        selectedPaymentStatus !== "all" &&
+        currentPaymentStatus !== selectedPaymentStatus
+      ) {
+        return false;
+      }
+
+      // 3. Search Query Filtering
       if (!searchQuery.trim()) return true;
 
       const query = searchQuery.toLowerCase().trim();
@@ -79,7 +103,7 @@ export default function AdminInvoicesPage() {
 
       return matchesCompany || matchesInvoiceId || matchesTrips;
     });
-  }, [invoices, selectedPayee, searchQuery]);
+  }, [invoices, selectedPayee, selectedPaymentStatus, searchQuery]);
 
   const fetch = async () => {
     if (!mountedRef.current) return;
@@ -90,7 +114,7 @@ export default function AdminInvoicesPage() {
         setInvoices(res.data || []);
       }
     } catch (e) {
-      // noop - errors handled in service layer or UI message
+      // noop
     } finally {
       if (mountedRef.current) {
         setLoading(false);
@@ -212,7 +236,7 @@ export default function AdminInvoicesPage() {
           padding: `0 ${containerPadding} ${containerPadding}`,
         }}
       >
-        {/* Controls Card (Search Bar + Payee Dropdown) */}
+        {/* Controls Card (Search Bar + Dropdowns) */}
         <Card
           size="small"
           style={{
@@ -232,7 +256,7 @@ export default function AdminInvoicesPage() {
             }}
           >
             {/* Search Input Field */}
-            <div style={{ flex: 1, maxWidth: isMobile ? "100%" : 420 }}>
+            <div style={{ flex: 1, maxWidth: isMobile ? "100%" : 380 }}>
               <Input
                 placeholder="Search by Load ID, VRID, Driver, Company..."
                 prefix={<SearchOutlined style={{ color: "#94a3b8" }} />}
@@ -244,7 +268,7 @@ export default function AdminInvoicesPage() {
               />
             </div>
 
-            {/* Payee Company Select */}
+            {/* Dropdown Filters (Payment Status + Payee Company) */}
             <div
               style={{
                 display: "flex",
@@ -253,10 +277,23 @@ export default function AdminInvoicesPage() {
                 gap: 8,
               }}
             >
+              {/* Payment Status Dropdown */}
+              <Select
+                value={selectedPaymentStatus}
+                onChange={setSelectedPaymentStatus}
+                style={{ width: isMobile ? "100%" : 200 }}
+                options={[
+                  { value: "all", label: `All Payments (${invoices.length})` },
+                  { value: "pending", label: `🕐 Pending (${paymentCounts.pending})` },
+                  { value: "paid", label: `✅ Paid (${paymentCounts.paid})` },
+                ]}
+              />
+
+              {/* Payee Company Select */}
               <Select
                 value={selectedPayee}
                 onChange={setSelectedPayee}
-                style={{ width: isMobile ? "100%" : 280 }}
+                style={{ width: isMobile ? "100%" : 240 }}
                 options={[
                   { value: "all", label: `All companies (${invoices.length})` },
                   ...payeeOptions,
