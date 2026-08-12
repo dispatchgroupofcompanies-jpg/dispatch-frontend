@@ -1,9 +1,9 @@
 "use client";
 
-import { Form, Input, Button, message, Spin, Checkbox, Typography, Alert, Card } from "antd";
+import { Form, Input, Button, message, Spin, Checkbox, Typography} from "antd";
 import { useState, useEffect } from "react";
 import { signin } from "../route";
-import { EyeInvisibleOutlined, EyeTwoTone, LockOutlined, MailOutlined, SafetyCertificateOutlined, CheckCircleOutlined, LoadingOutlined } from "@ant-design/icons";
+import { EyeInvisibleOutlined, EyeTwoTone, LockOutlined, MailOutlined, LoadingOutlined } from "@ant-design/icons";
 
 const { Text, Title } = Typography;
 

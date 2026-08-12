@@ -23,7 +23,6 @@ import {
 import dynamic from "next/dynamic";
 import { getAdminDashboardStats } from "@/src/services/admin/dashboard";
 
-// Next.js hydration error fix karne ke liye ApexCharts ko dynamically client-side par load kiya hai
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 const { Title, Text } = Typography;
 
@@ -57,33 +56,33 @@ export default function AdminDashboardPage() {
   const [recentInvoices, setRecentInvoices] = useState<Invoice[]>([]);
   const mountedRef = useRef(false);
 
-  const fetchDashboardData = useCallback(async () => {
-    if (!mountedRef.current) return;
+  // const fetchDashboardData = useCallback(async () => {
+  //   if (!mountedRef.current) return;
 
-    try {
-      setLoading(true);
-      const response = await getAdminDashboardStats();
+  //   try {
+  //     setLoading(true);
+  //     const response = await getAdminDashboardStats();
 
-      if (response.success) {
-        setStats(
-          response.data.stats || {
-            totalInvoices: 0,
-            pendingInvoices: 0,
-            approvedInvoices: 0,
-            totalRevenue: 0,
-          },
-        );
-        setRecentInvoices(response.data.recentInvoices || []);
-      }
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-      message.error("Failed to load real-time dashboard data");
-    } finally {
-      if (mountedRef.current) {
-        setLoading(false);
-      }
-    }
-  }, []);
+  //     if (response.success) {
+  //       setStats(
+  //         response.data.stats || {
+  //           totalInvoices: 0,
+  //           pendingInvoices: 0,
+  //           approvedInvoices: 0,
+  //           totalRevenue: 0,
+  //         },
+  //       );
+  //       setRecentInvoices(response.data.recentInvoices || []);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching dashboard data:", error);
+  //     message.error("Failed to load real-time dashboard data");
+  //   } finally {
+  //     if (mountedRef.current) {
+  //       setLoading(false);
+  //     }
+  //   }
+  // }, []);
 
   useEffect(() => {
     mountedRef.current = true;

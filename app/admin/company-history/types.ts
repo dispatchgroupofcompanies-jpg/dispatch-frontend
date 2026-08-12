@@ -31,6 +31,8 @@ export interface CompanyHistoryInvoice {
     phone?: string;
     email?: string;
   };
+  paymentStatus?: string;
+  isPaid?: boolean;
   createdAt: string;
   invoiceDate?: string;
   trips?: CompanyHistoryInvoiceTrip[];

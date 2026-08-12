@@ -91,7 +91,7 @@ export default function InvoiceDetails() {
         </Col>
 
         {/* Field 3 */}
-        <Col xs={24} sm={12}>
+        {/* <Col xs={24} sm={12}>
           <Form.Item
             label="Invoice Date"
             name="invoiceDate"
@@ -117,7 +117,7 @@ export default function InvoiceDetails() {
               placeholder="YYYY-MM-DD"
             />
           </Form.Item>
-        </Col>
+        </Col> */}
 
         {/* Field 4 */}
         <Col xs={24} sm={12}>

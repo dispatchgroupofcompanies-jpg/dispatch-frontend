@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState, useRef, useMemo } from "react";
-import { Card, Typography, Grid, message, Select } from "antd";
+import { Card, Typography, Grid, message, Select, Input } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
 import InvoiceTable from "../../../components/InvoiceTable";
 import InvoiceModal from "../../../components/InvoiceModal";
 import {
@@ -24,6 +25,10 @@ export default function AdminInvoicesPage() {
   const [approveLoading, setApproveLoading] = useState(false);
   const [rejectLoading, setRejectLoading] = useState(false);
   const [selectedPayee, setSelectedPayee] = useState("all");
+
+  // Search Query State
+  const [searchQuery, setSearchQuery] = useState("");
+
   const mountedRef = useRef(true);
 
   const payeeOptions = useMemo(() => {
@@ -38,17 +43,43 @@ export default function AdminInvoicesPage() {
       .map(([name, count]) => ({ value: name, label: `${name} (${count})` }));
   }, [invoices]);
 
-  const filteredInvoices = useMemo(
-    () =>
-      selectedPayee === "all"
-        ? invoices
-        : invoices.filter(
-            (invoice) =>
-              (invoice.payee?.companyName?.trim() || "Unassigned company") ===
-              selectedPayee,
-          ),
-    [invoices, selectedPayee],
-  );
+  // Updated filtering logic including loadId1, loadId2, VRID, Driver Name & Company Name
+  const filteredInvoices = useMemo(() => {
+    return invoices.filter((invoice) => {
+      // 1. Payee Company Filter
+      const payeeName = invoice.payee?.companyName?.trim() || "Unassigned company";
+      const matchesPayee = selectedPayee === "all" || payeeName === selectedPayee;
+
+      if (!matchesPayee) return false;
+
+      // 2. Search Query Filtering
+      if (!searchQuery.trim()) return true;
+
+      const query = searchQuery.toLowerCase().trim();
+
+      // Search in Company Names (Payee or Receiver/Customer)
+      const matchesCompany =
+        invoice.payee?.companyName?.toLowerCase().includes(query) ||
+        invoice.customer?.companyName?.toLowerCase().includes(query);
+
+      // Search in Invoice Level Fields
+      const matchesInvoiceId =
+        invoice._id?.toLowerCase().includes(query) ||
+        invoice.invoiceNumber?.toLowerCase().includes(query);
+
+      // Search inside Trips Array (loadId1, loadId2, vrid, driverName)
+      const matchesTrips = invoice.trips?.some((trip: any) => {
+        const matchVrid = trip.vrid?.toLowerCase().includes(query);
+        const matchLoadId1 = trip.loadId1?.toLowerCase().includes(query);
+        const matchLoadId2 = trip.loadId2?.toLowerCase().includes(query);
+        const matchDriver = trip.driverName?.toLowerCase().includes(query);
+
+        return matchVrid || matchLoadId1 || matchLoadId2 || matchDriver;
+      });
+
+      return matchesCompany || matchesInvoiceId || matchesTrips;
+    });
+  }, [invoices, selectedPayee, searchQuery]);
 
   const fetch = async () => {
     if (!mountedRef.current) return;
@@ -84,7 +115,6 @@ export default function AdminInvoicesPage() {
     try {
       const response = await updateInvoiceStatus(id, status);
 
-      // Show success/error message based on response
       const apiResponse = response as { message?: string };
       if (apiResponse.message) {
         if (apiResponse.message.includes("email notification failed")) {
@@ -130,7 +160,6 @@ export default function AdminInvoicesPage() {
   };
 
   const containerPadding = isMobile ? "12px" : "20px";
-
   const headerPadding = isMobile ? "16px 14px" : "24px 20px";
 
   return (
@@ -180,9 +209,10 @@ export default function AdminInvoicesPage() {
         style={{
           maxWidth: 1400,
           margin: "0 auto",
-            padding: `0 ${containerPadding} ${containerPadding}`,
+          padding: `0 ${containerPadding} ${containerPadding}`,
         }}
       >
+        {/* Controls Card (Search Bar + Payee Dropdown) */}
         <Card
           size="small"
           style={{
@@ -198,29 +228,45 @@ export default function AdminInvoicesPage() {
               flexDirection: isMobile ? "column" : "row",
               alignItems: isMobile ? "stretch" : "center",
               justifyContent: "space-between",
-              gap: 10,
+              gap: 12,
             }}
           >
-            <div>
-              <div style={{ fontWeight: 700, color: "#0f2962" }}>
-                Filter By Payee Company
-              </div>
-              <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
-                Review invoices for one company at a time.
-              </div>
+            {/* Search Input Field */}
+            <div style={{ flex: 1, maxWidth: isMobile ? "100%" : 420 }}>
+              <Input
+                placeholder="Search by Load ID, VRID, Driver, Company..."
+                prefix={<SearchOutlined style={{ color: "#94a3b8" }} />}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                allowClear
+                size="middle"
+                style={{ borderRadius: 6 }}
+              />
             </div>
-            <Select
-              value={selectedPayee}
-              onChange={setSelectedPayee}
-              style={{ width: isMobile ? "100%" : 300 }}
-              options={[
-                { value: "all", label: `All companies (${invoices.length})` },
-                ...payeeOptions,
-              ]}
-            />
+
+            {/* Payee Company Select */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: isMobile ? "column" : "row",
+                alignItems: isMobile ? "stretch" : "center",
+                gap: 8,
+              }}
+            >
+              <Select
+                value={selectedPayee}
+                onChange={setSelectedPayee}
+                style={{ width: isMobile ? "100%" : 280 }}
+                options={[
+                  { value: "all", label: `All companies (${invoices.length})` },
+                  ...payeeOptions,
+                ]}
+              />
+            </div>
           </div>
         </Card>
 
+        {/* Invoice Table Container */}
         <Card
           style={{
             borderRadius: isMobile ? 10 : 12,
@@ -237,7 +283,6 @@ export default function AdminInvoicesPage() {
             isAdmin={true}
             onUpdatePaymentStatus={handlePaymentStatusUpdate}
           />
-
         </Card>
 
         <InvoiceModal

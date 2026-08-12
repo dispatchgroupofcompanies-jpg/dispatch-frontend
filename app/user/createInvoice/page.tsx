@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, SetStateAction } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Button,
   Card,
@@ -592,7 +592,7 @@ function DashboardComponent() {
               current: currentPage,
               pageSize: pageSize,
               style: { marginTop: 12 },
-              onChange: (page: SetStateAction<number>, size: SetStateAction<number>) => {
+              onChange: (page: number, size?: number) => {
                 setCurrentPage(page);
                 if (size) setPageSize(size);
               },

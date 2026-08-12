@@ -72,7 +72,7 @@ export default function CompanyHistoryExportModals({
       fitToHeight: 0, // Automatic vertical pages
     };
 
-    // Define Columns with width adjustments
+    // 1. UPDATED COLUMNS: Added PAYMENT STATUS column
     worksheet.columns = [
       { header: "S.NO", key: "sNo", width: 8 },
       { header: "INVOICE NUMBER", key: "invoiceNumber", width: 18 },
@@ -82,7 +82,8 @@ export default function CompanyHistoryExportModals({
       { header: "DRIVER NAME", key: "driverName", width: 22 },
       { header: "VRID", key: "vrids", width: 25 },
       { header: "TOTAL", key: "total", width: 16 },
-      { header: "STATUS", key: "status", width: 14 },
+      { header: "INVOICE STATUS", key: "status", width: 16 },
+      { header: "PAYMENT", key: "paymentStatus", width: 16 }, 
     ];
 
     // Style Header Row (Centered & 10pt Font)
@@ -121,6 +122,11 @@ export default function CompanyHistoryExportModals({
           .filter(Boolean)
           .join("\n") || "-";
 
+      // 2. DYNAMIC PAYMENT STATUS EXTRACTION
+      // Checks `invoice.paymentStatus` or falls back to custom logic/field name
+      const rawPaymentStatus = invoice.paymentStatus ?? (invoice.isPaid ? "PAID" : "PENDING");
+      const formattedPaymentStatus = String(rawPaymentStatus).toUpperCase();
+
       const row = worksheet.addRow({
         sNo: index + 1,
         invoiceNumber: `#${payeeSerialNumbers.get(invoice._id) || 1}`,
@@ -131,6 +137,7 @@ export default function CompanyHistoryExportModals({
         vrids: vrids,
         total: formatCurrency(invoice.grandTotal || 0),
         status: invoice.invoiceStatus ? invoice.invoiceStatus.toUpperCase() : "-",
+        paymentStatus: formattedPaymentStatus, // Value mapped here
       });
 
       // Alignment and Text Wrapping for cells
@@ -145,14 +152,26 @@ export default function CompanyHistoryExportModals({
       
       row.getCell("total").alignment = { horizontal: "center", vertical: "middle" };
       row.getCell("status").alignment = { horizontal: "center", vertical: "middle" };
+      row.getCell("paymentStatus").alignment = { horizontal: "center", vertical: "middle" };
 
-      // Apply 10pt Font to data cells & Red bold styling for Total
+      // 3. APPLY CONDITIONAL STYLING FOR PAYMENT STATUS & TOTAL
       row.eachCell((cell, colNumber) => {
+        let fontColor = "0F172A"; // Default dark color
+        let isBold = colNumber === 8; // Column 8 is Total Amount
+
+        if (colNumber === 8) {
+          fontColor = "DC2626"; // Red color for Total
+        } else if (colNumber === 10) {
+          // Column 10 is Payment Status: Green if PAID, Amber/Red if PENDING
+          isBold = true;
+          fontColor = formattedPaymentStatus === "PAID" ? "16A34A" : "D97706";
+        }
+
         cell.font = {
           name: "Arial",
           size: 10,
-          bold: colNumber === 8, // Total Amount bold
-          color: colNumber === 8 ? { argb: "DC2626" } : { argb: "0F172A" },
+          bold: isBold,
+          color: { argb: fontColor },
         };
         cell.border = {
           bottom: { style: "thin", color: { argb: "E2E8F0" } },
@@ -160,7 +179,7 @@ export default function CompanyHistoryExportModals({
       });
     });
 
-    // Build Dynamic Filename (e.g. Invoices_Payee_TO_Receiver_Date.xlsx)
+    // Build Dynamic Filename
     const sanitize = (text: string) => text.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "");
 
     const payeeNames = Array.from(
