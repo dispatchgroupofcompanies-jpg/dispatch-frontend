@@ -77,7 +77,7 @@ const handleDownload = async (
 };
 
 export default function InvoiceTable({
-  invoices,
+  invoices = [],
   loading,
   onView,
   isAdmin = false,
@@ -86,6 +86,9 @@ export default function InvoiceTable({
   const screens = useBreakpoint();
   const isMobile = !screens.md;
   const [downloadingInvoiceId, setDownloadingInvoiceId] = React.useState<string | null>(null);
+
+  // Dynamic calculation for Total Invoices
+  const totalInvoices = invoices.length;
 
   // Pagination state to track global continuous index
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -217,12 +220,18 @@ export default function InvoiceTable({
     }
   };
 
- const columns: ColumnsType<Invoice> = [
-  {
-    title: "S No",
-    key: "sNo",
-    width: 60,
-    render: (_, __, index) => (
+  const columns: ColumnsType<Invoice> = [
+   {
+  title: "S No",
+  key: "sNo",
+  width: 60,
+  render: (_, __, index) => {
+    // REVERSE SERIAL NUMBER FORMULA:
+    // Page 1, Row 1 = Total Count (e.g., 100)
+    // Page 1, Row 2 = Total Count - 1 (e.g., 99)
+    const serialNumber = totalInvoices - ((currentPage - 1) * pageSize + index);
+
+    return (
       <Text
         style={{
           color: "#0f172a",
@@ -230,186 +239,187 @@ export default function InvoiceTable({
           fontWeight: 500,
         }}
       >
-        {(currentPage - 1) * pageSize + index + 1}
+        {serialNumber}
       </Text>
-    ),
+    );
   },
-  {
-    title: "Created At",
-    dataIndex: "createdAt",
-    key: "createdAt",
-    width: 110,
-    responsive: ["md"],
-    render: (date) => {
-      if (!date) return "-";
-      const formattedDate = new Date(date).toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      }); // Output: DD/MM/YYYY
+},
+    {
+      title: "Created At",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      width: 110,
+      responsive: ["md"],
+      render: (date) => {
+        if (!date) return "-";
+        const formattedDate = new Date(date).toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        });
 
-      return (
+        return (
+          <Text
+            style={{
+              color: "#0f172a",
+              fontSize: isMobile ? 11 : 13,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {formattedDate}
+          </Text>
+        );
+      },
+    },
+    {
+      title: "Payee",
+      key: "payee",
+      render: (_, record) => {
+        const companyName =
+          (typeof record.payee === "object" && record.payee?.companyName) ||
+          record.payeeName ||
+          (typeof record.payee === "string" ? record.payee : "-");
+
+        return (
+          <Tooltip title={companyName !== "-" ? companyName : undefined}>
+            <Text
+              style={{
+                color: "#0f172a",
+                fontSize: isMobile ? 11 : 13,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                display: "inline-block",
+                maxWidth: "100%",
+              }}
+            >
+              {companyName}
+            </Text>
+          </Tooltip>
+        );
+      },
+    },
+    {
+      title: "Pay To",
+      key: "payTo",
+      render: (_, record) => {
+        const payToName =
+          (typeof record.customer === "object" && (record.customer?.companyName || record.customer?.name)) ||
+          (typeof record.customer === "string" ? record.customer : null) ||
+          (typeof record.companyName === "string" ? record.companyName : "-");
+
+        return (
+          <Tooltip title={payToName !== "-" ? payToName : undefined}>
+            <Text
+              style={{
+                color: "#0f172a",
+                fontSize: isMobile ? 11 : 13,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                display: "inline-block",
+                maxWidth: "100%",
+              }}
+            >
+              {payToName}
+            </Text>
+          </Tooltip>
+        );
+      },
+    },
+    {
+      title: "Amount",
+      dataIndex: "grandTotal",
+      key: "grandTotal",
+      width: 120,
+      render: (amount) => (
         <Text
+          strong
           style={{
             color: "#0f172a",
             fontSize: isMobile ? 11 : 13,
             whiteSpace: "nowrap",
           }}
         >
-          {formattedDate}
+          ${amount?.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
         </Text>
-      );
+      ),
     },
-  },
-  {
-    title: "Payee",
-    key: "payee",
-    render: (_, record) => {
-      const companyName =
-        (typeof record.payee === "object" && record.payee?.companyName) ||
-        record.payeeName ||
-        (typeof record.payee === "string" ? record.payee : "-");
-
-      return (
-        <Tooltip title={companyName !== "-" ? companyName : undefined}>
-          <Text
-            style={{
-              color: "#0f172a",
-              fontSize: isMobile ? 11 : 13,
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              display: "inline-block",
-              maxWidth: "100%",
-            }}
+    {
+      title: "Status",
+      dataIndex: "invoiceStatus",
+      key: "invoiceStatus",
+      width: 110,
+      responsive: ["md"],
+      render: (status) => {
+        const colorMap: Record<string, string> = {
+          draft: "default",
+          pending: "warning",
+          approved: "success",
+          paid: "processing",
+          rejected: "error",
+        };
+        return (
+          <Tag
+            color={colorMap[status] || "default"}
+            style={{ fontSize: isMobile ? 10 : 12 }}
           >
-            {companyName}
-          </Text>
-        </Tooltip>
-      );
+            {status?.toUpperCase()}
+          </Tag>
+        );
+      },
     },
-  },
-  {
-    title: "Pay To",
-    key: "payTo",
-    render: (_, record) => {
-      const payToName =
-        (typeof record.customer === "object" && (record.customer?.companyName || record.customer?.name)) ||
-        (typeof record.customer === "string" ? record.customer : null) ||
-        (typeof record.companyName === "string" ? record.companyName : "-");
-
-      return (
-        <Tooltip title={payToName !== "-" ? payToName : undefined}>
-          <Text
-            style={{
-              color: "#0f172a",
-              fontSize: isMobile ? 11 : 13,
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              display: "inline-block",
-              maxWidth: "100%",
-            }}
-          >
-            {payToName}
-          </Text>
-        </Tooltip>
-      );
+    ...(isAdmin
+      ? [
+          {
+            title: "Payment",
+            key: "paymentStatus",
+            width: 130,
+            responsive: ["md" as const],
+            render: (_: unknown, record: Invoice) => renderPaymentControl(record),
+          },
+        ]
+      : []),
+    {
+      title: "Actions",
+      key: "action",
+      width: 100,
+      align: "center" as const,
+      render: (_, record) => (
+        <Space size="small">
+          <Tooltip title="Download PDF" placement="top">
+            <Button
+              type="primary"
+              size={isMobile ? "small" : "middle"}
+              icon={<DownloadOutlined />}
+              loading={downloadingInvoiceId === record._id}
+              disabled={downloadingInvoiceId !== null && downloadingInvoiceId !== record._id}
+              onClick={() => downloadInvoice(record)}
+              style={{
+                borderRadius: "6px",
+                backgroundColor: "#102a63",
+                borderColor: "#102a63",
+              }}
+            />
+          </Tooltip>
+          <Tooltip title="View Invoice" placement="top">
+            <Button
+              type="primary"
+              size={isMobile ? "small" : "middle"}
+              icon={<EyeOutlined />}
+              onClick={() => onView(record)}
+              style={{
+                borderRadius: "6px",
+              }}
+            />
+          </Tooltip>
+        </Space>
+      ),
     },
-  },
-  {
-    title: "Amount",
-    dataIndex: "grandTotal",
-    key: "grandTotal",
-    width: 120,
-    render: (amount) => (
-      <Text
-        strong
-        style={{
-          color: "#0f172a",
-          fontSize: isMobile ? 11 : 13,
-          whiteSpace: "nowrap",
-        }}
-      >
-        ${amount?.toLocaleString(undefined, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}
-      </Text>
-    ),
-  },
-  {
-    title: "Status",
-    dataIndex: "invoiceStatus",
-    key: "invoiceStatus",
-    width: 110,
-    responsive: ["md"],
-    render: (status) => {
-      const colorMap: Record<string, string> = {
-        draft: "default",
-        pending: "warning",
-        approved: "success",
-        paid: "processing",
-        rejected: "error",
-      };
-      return (
-        <Tag
-          color={colorMap[status] || "default"}
-          style={{ fontSize: isMobile ? 10 : 12 }}
-        >
-          {status?.toUpperCase()}
-        </Tag>
-      );
-    },
-  },
-  ...(isAdmin
-    ? [
-        {
-          title: "Payment",
-          key: "paymentStatus",
-          width: 130,
-          responsive: ["md" as const],
-          render: (_: unknown, record: Invoice) => renderPaymentControl(record),
-        },
-      ]
-    : []),
-  {
-    title: "Actions",
-    key: "action",
-    width: 100,
-    align: "center" as const,
-    render: (_, record) => (
-      <Space size="small">
-        <Tooltip title="Download PDF" placement="top">
-          <Button
-            type="primary"
-            size={isMobile ? "small" : "middle"}
-            icon={<DownloadOutlined />}
-            loading={downloadingInvoiceId === record._id}
-            disabled={downloadingInvoiceId !== null && downloadingInvoiceId !== record._id}
-            onClick={() => downloadInvoice(record)}
-            style={{
-              borderRadius: "6px",
-              backgroundColor: "#102a63",
-              borderColor: "#102a63",
-            }}
-          />
-        </Tooltip>
-        <Tooltip title="View Invoice" placement="top">
-          <Button
-            type="primary"
-            size={isMobile ? "small" : "middle"}
-            icon={<EyeOutlined />}
-            onClick={() => onView(record)}
-            style={{
-              borderRadius: "6px",
-            }}
-          />
-        </Tooltip>
-      </Space>
-    ),
-  },
-];
+  ];
 
   return (
     <Spin spinning={loading}>
