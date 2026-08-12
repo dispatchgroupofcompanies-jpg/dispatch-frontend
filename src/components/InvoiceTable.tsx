@@ -17,8 +17,12 @@ import {
   EyeOutlined,
   DownloadOutlined,
   UploadOutlined,
+  FilePdfOutlined,
 } from "@ant-design/icons";
-import { downloadInvoicePDF } from "../../modules/invoice/route";
+import {
+  downloadInvoicePDF,
+  downloadPaidInvoicePDF,
+} from "../../modules/invoice/route";
 import type { ColumnsType } from "antd/es/table";
 import type { Invoice } from "../types/invoice";
 
@@ -37,13 +41,44 @@ interface Props {
   ) => Promise<boolean>;
 }
 
+const safeFileNamePart = (value?: string) => {
+  if (!value) return "";
+  return String(value)
+    .trim()
+    .replace(/\s+/g, "_")
+    .replace(/[\\/:*?"<>|]+/g, "")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+};
+
+const buildDownloadFilename = (
+  invoiceNumber: string,
+  payeeName?: string,
+  payToName?: string,
+  paidDownload: boolean = false,
+) => {
+  const safePayee = safeFileNamePart(payeeName);
+  const safePayTo = safeFileNamePart(payToName);
+  const baseName = [safePayee, safePayTo].filter(Boolean).join("_to_");
+  const paidSuffix = paidDownload ? "-Paid" : "";
+  if (!baseName) {
+    return `Invoice-${invoiceNumber}${paidSuffix}.pdf`;
+  }
+  return `${baseName}-Invoice-${invoiceNumber}${paidSuffix}.pdf`;
+};
+
 const handleDownload = async (
   invoiceId: string,
   invoiceNumber: string,
+  payeeName?: string,
+  payToName?: string,
   isAdmin: boolean = false,
+  paidDownload: boolean = false,
 ) => {
   try {
-    const response = await downloadInvoicePDF(invoiceId, isAdmin);
+    const response = paidDownload
+      ? await downloadPaidInvoicePDF(invoiceId, isAdmin)
+      : await downloadInvoicePDF(invoiceId, isAdmin);
 
     const contentType = String(response.headers?.["content-type"] ?? "");
     const isPdf =
@@ -55,7 +90,12 @@ const handleDownload = async (
       const url = window.URL.createObjectURL(response.data);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `Invoice-${invoiceNumber}.pdf`;
+      link.download = buildDownloadFilename(
+        invoiceNumber,
+        payeeName,
+        payToName,
+        paidDownload,
+      );
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -96,11 +136,8 @@ export default function InvoiceTable({
   // Dynamic calculation for Total Invoices
   const totalInvoices = invoices.length;
 
-  // Pagination state to track global continuous index
   const [currentPage, setCurrentPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
-
-  console.log("InvoiceTable - invoices:", invoices);
 
   // Payment proof modal state
   const [paymentModalInvoice, setPaymentModalInvoice] =
@@ -238,10 +275,51 @@ export default function InvoiceTable({
     );
   };
 
+  const getDisplayName = (record: Invoice) => {
+    const payeeName =
+      (typeof record.payee === "object" && record.payee?.companyName) ||
+      record.payeeName ||
+      (typeof record.payee === "string" ? record.payee : undefined);
+    const payToName =
+      (typeof record.customer === "object" && (record.customer?.companyName || record.customer?.customerName)) ||
+      (typeof record.customer === "string" ? record.customer : undefined) ||
+      (typeof record.companyName === "string" ? record.companyName : undefined);
+
+    return { payeeName, payToName };
+  };
+
   const downloadInvoice = async (record: Invoice) => {
     setDownloadingInvoiceId(record._id);
     try {
-      await handleDownload(record._id, record.invoiceNumber, isAdmin);
+      const { payeeName, payToName } = getDisplayName(record);
+      await handleDownload(
+        record._id,
+        record.invoiceNumber,
+        payeeName,
+        payToName,
+        isAdmin,
+      );
+    } finally {
+      setDownloadingInvoiceId(null);
+    }
+  };
+
+  const downloadPaidInvoice = async (record: Invoice) => {
+    if (!record.paymentProofUrl || record.paymentStatus?.toLowerCase() !== "paid") {
+      return;
+    }
+
+    setDownloadingInvoiceId(record._id);
+    try {
+      const { payeeName, payToName } = getDisplayName(record);
+      await handleDownload(
+        record._id,
+        record.invoiceNumber,
+        payeeName,
+        payToName,
+        isAdmin,
+        true,
+      );
     } finally {
       setDownloadingInvoiceId(null);
     }
@@ -272,33 +350,7 @@ export default function InvoiceTable({
         );
       },
     },
-    {
-      title: "Created At",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      width: 110,
-      responsive: ["md"],
-      render: (date) => {
-        if (!date) return "-";
-        const formattedDate = new Date(date).toLocaleDateString("en-IN", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        });
-
-        return (
-          <Text
-            style={{
-              color: "#0f172a",
-              fontSize: isMobile ? 11 : 13,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {formattedDate}
-          </Text>
-        );
-      },
-    },
+   
     {
       title: "Payee",
       key: "payee",
@@ -439,6 +491,27 @@ export default function InvoiceTable({
               }}
             />
           </Tooltip>
+          {record.paymentStatus?.toLowerCase() === "paid" && record.paymentProofUrl && (
+            <Tooltip title="Download Paid Invoice" placement="top">
+              <Button
+                type="default"
+                size={isMobile ? "small" : "middle"}
+                icon={<FilePdfOutlined />}
+                loading={downloadingInvoiceId === record._id}
+                disabled={
+                  downloadingInvoiceId !== null &&
+                  downloadingInvoiceId !== record._id
+                }
+                onClick={() => downloadPaidInvoice(record)}
+                style={{
+                  borderRadius: "6px",
+                  backgroundColor: "#047857",
+                  borderColor: "#047857",
+                  color: "#ffffff",
+                }}
+              />
+            </Tooltip>
+          )}
           <Tooltip title="View Invoice" placement="top">
             <Button
               type="primary"
@@ -584,6 +657,14 @@ export default function InvoiceTable({
                       loading={downloadingInvoiceId === record._id}
                       onClick={() => downloadInvoice(record)}
                     />
+                    {record.paymentStatus?.toLowerCase() === "paid" && record.paymentProofUrl && (
+                      <Button
+                        size="small"
+                        icon={<FilePdfOutlined />}
+                        loading={downloadingInvoiceId === record._id}
+                        onClick={() => downloadPaidInvoice(record)}
+                      />
+                    )}
                     <Button
                       size="small"
                       type="primary"

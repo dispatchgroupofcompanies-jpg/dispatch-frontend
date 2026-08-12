@@ -102,6 +102,24 @@ export const downloadInvoicePDF = (
   });
 };
 
+export const downloadPaidInvoicePDF = (
+  invoiceId: string,
+  isAdmin: boolean = false,
+) => {
+  const endpoint = isAdmin
+    ? `/admin/invoices/${invoiceId}/download-paid`
+    : `/user/invoices/${invoiceId}/download-paid`;
+
+  return API.get(endpoint, {
+    responseType: "blob",
+  }).catch((error) => {
+    if (error.response?.data?.message) {
+      return Promise.reject(error);
+    }
+    throw error;
+  });
+};
+
 // -------------------------
 // DASHBOARD APIs
 // -------------------------

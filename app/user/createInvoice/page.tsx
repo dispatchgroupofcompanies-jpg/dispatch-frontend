@@ -33,7 +33,6 @@ import {
   downloadInvoicePDF,
 } from "../../../modules/invoice/route";
 import type { Invoice as InvoiceType } from "../../../src/types/invoice";
-import { getPayeeSerialNumbers } from "../../../src/utils/invoiceSerial";
 
 const { useBreakpoint } = Grid;
 
@@ -97,11 +96,6 @@ function DashboardComponent() {
     return { total, grossEarnings, draftCount };
   }, [invoices]);
 
-  const payeeSerialNumbers = useMemo(
-    () => getPayeeSerialNumbers(invoices),
-    [invoices],
-  );
-
   const payeeSummaries = useMemo(() => {
     const summaries = new Map<
       string,
@@ -141,6 +135,25 @@ function DashboardComponent() {
   // -------------------------
   // SERVER-SIDE PDF DOWNLOAD HANDLER
   // -------------------------
+  const safeFileNamePart = (value?: string | null) => {
+    if (!value) return "";
+    return String(value)
+      .trim()
+      .replace(/\s+/g, "_")
+      .replace(/[\\/:*?"<>|]+/g, "")
+      .replace(/_+/g, "_")
+      .replace(/^_+|_+$/g, "");
+  };
+
+  const buildDownloadFilename = (record: InvoiceType) => {
+    const safePayee = safeFileNamePart(record.payee?.companyName || record.payeeName || record.payee?.name);
+    const safePayTo = safeFileNamePart(record.customer?.companyName || record.customer?.customerName);
+    const baseName = [safePayee, safePayTo].filter(Boolean).join("_to_");
+    return baseName
+      ? `${baseName}-Invoice-${record.invoiceNumber}.pdf`
+      : `Invoice-${record.invoiceNumber}.pdf`;
+  };
+
   const triggerDownloadPDF = async (record: InvoiceType) => {
     if (!record || typeof window === "undefined") return;
     setDownloading(true);
@@ -151,7 +164,7 @@ function DashboardComponent() {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `Invoice-${payeeSerialNumbers.get(record._id) || "Statement"}.pdf`;
+      link.download = buildDownloadFilename(record);
 
       document.body.appendChild(link);
       link.click();
