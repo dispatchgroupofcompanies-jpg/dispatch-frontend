@@ -53,7 +53,7 @@ function DashboardComponent() {
   const [selectedPayee, setSelectedPayee] = useState("all");
 
   // -------------------------
-  // PAGINATION STATE (Fixed continuous S No)
+  // PAGINATION STATE
   // -------------------------
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(8);
@@ -213,8 +213,10 @@ function DashboardComponent() {
         width: isMobile ? 50 : 70,
         fixed: isMobile ? ("left" as const) : undefined,
         render: (_: unknown, __: unknown, index: number) => {
-          // Continuous Serial Number calculation
-          const serialNumber = (currentPage - 1) * pageSize + index + 1;
+          // Dynamic Reverse Continuous Serial Number
+          const totalCount = filteredInvoices.length;
+          const serialNumber = totalCount - ((currentPage - 1) * pageSize + index);
+
           return (
             <span
               style={{
@@ -223,7 +225,7 @@ function DashboardComponent() {
                 fontWeight: 500,
               }}
             >
-              {serialNumber}
+              {serialNumber > 0 ? serialNumber : index + 1}
             </span>
           );
         },
@@ -389,7 +391,7 @@ function DashboardComponent() {
         },
       },
     ],
-    [selected, downloading, isMobile, currentPage, pageSize],
+    [selected, downloading, isMobile, currentPage, pageSize, filteredInvoices],
   );
 
   const headerPadding = isMobile ? "20px 16px" : "24px 20px";
@@ -557,7 +559,8 @@ function DashboardComponent() {
             {loading && <div style={{ textAlign: "center", padding: 24, color: "#64748b" }}>Loading invoices...</div>}
             {!loading && filteredInvoices.length === 0 && <div style={{ textAlign: "center", padding: 24, color: "#64748b" }}>No invoices found.</div>}
             {filteredInvoices.map((invoice, index) => {
-              const serialNumber = (currentPage - 1) * pageSize + index + 1;
+              const totalCount = filteredInvoices.length;
+              const serialNumber = totalCount - ((currentPage - 1) * pageSize + index);
               const invoiceStatus = (invoice.invoiceStatus || "draft").toLowerCase();
               const isDraft = invoiceStatus === "draft";
               const statusColor: Record<string, string> = { draft: "default", pending: "warning", approved: "success", paid: "processing", rejected: "error" };
