@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Table, Card, Typography, message, Button, Grid, Select, Tooltip, Modal, Descriptions, Image, Tag } from "antd";
+import { Table, Card, Typography, message, Button, Grid, Select, Tooltip, Modal, Image, Tag } from "antd";
 import { EyeOutlined } from "@ant-design/icons";
 import { getAdminLoadboard, updateAdminLoadboardStatus } from "../../../src/services/admin/loadboard";
 
@@ -46,6 +46,44 @@ const statusTag = (value: string | undefined) => {
     </Tag>
   );
 };
+
+// Helper component for Heading Top -> Data Bottom layout
+const DetailItem = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <div
+    style={{
+      background: "#ffffff",
+      padding: "10px 12px",
+      borderRadius: "8px",
+      border: "1px solid #d1fae5",
+      boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
+      display: "flex",
+      flexDirection: "column",
+      gap: "4px",
+    }}
+  >
+    <span
+      style={{
+        fontSize: "11px",
+        fontWeight: 700,
+        color: "#059669",
+        textTransform: "uppercase",
+        letterSpacing: "0.5px",
+      }}
+    >
+      {label}
+    </span>
+    <div
+      style={{
+        fontSize: "13px",
+        fontWeight: 600,
+        color: "#064e3b",
+        wordBreak: "break-word",
+      }}
+    >
+      {children}
+    </div>
+  </div>
+);
 
 export default function Admin3PDispatchPage() {
   const screens = useBreakpoint();
@@ -122,7 +160,7 @@ export default function Admin3PDispatchPage() {
       ),
     },
     {
-      title: "Driver",
+      title: "Pay To / Company Driver",
       dataIndex: "thirdPartyCarrierName",
       width: 150,
       ellipsis: true,
@@ -217,6 +255,9 @@ export default function Admin3PDispatchPage() {
           )}
           {records.map((record, index) => {
             const isInvoiceGenerated = record.invoiceStatus === "generated";
+            const rowColors = isInvoiceGenerated
+              ? { background: "#f0fdf4", border: "#86efac", text: "#166534" }
+              : { background: "#fef2f2", border: "#fecaca", text: "#b91c1c" };
 
             return (
               <div
@@ -225,8 +266,8 @@ export default function Admin3PDispatchPage() {
                   display: "grid",
                   gap: 12,
                   padding: 14,
-                  background: "#f0fdf4",
-                  borderBottom: "1px solid #a7f3d0",
+                  background: rowColors.background,
+                  borderBottom: `1px solid ${rowColors.border}`,
                 }}
               >
                 <div
@@ -236,7 +277,7 @@ export default function Admin3PDispatchPage() {
                     alignItems: "center",
                     gap: 10,
                     paddingBottom: 10,
-                    borderBottom: "1px solid #a7f3d0",
+                    borderBottom: `1px solid ${rowColors.border}`,
                   }}
                 >
                   <span
@@ -253,7 +294,7 @@ export default function Admin3PDispatchPage() {
                   <span
                     style={{
                       fontWeight: 700,
-                      color: "#064e3b",
+                      color: rowColors.text,
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                       whiteSpace: "nowrap",
@@ -263,13 +304,13 @@ export default function Admin3PDispatchPage() {
                   </span>
                 </div>
 
-                <div style={{ fontSize: 12, color: "#047857" }}>
+                <div style={{ fontSize: 12, color: rowColors.text }}>
                   Dispatcher: <strong>{record.dispatcher || "—"}</strong>
                 </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 4 }}>
-                  <div style={{ fontSize: 11, color: "#047857" }}>CAD Amount</div>
-                  <div style={{ fontWeight: 700, color: "#022c22", fontSize: 15 }}>
+                  <div style={{ fontSize: 11, color: rowColors.text }}>CAD Amount</div>
+                  <div style={{ fontWeight: 700, color: rowColors.text, fontSize: 15 }}>
                     CAD ${Number(record.tripCharges || 0).toLocaleString()}
                   </div>
                 </div>
@@ -302,57 +343,53 @@ export default function Admin3PDispatchPage() {
           })}
         </Card>
 
-        {/* Details Modal */}
+        {/* Mobile Details Modal */}
         <Modal
           open={Boolean(detailsRecord)}
           onCancel={() => setDetailsRecord(null)}
           footer={null}
-          width={320}
+          width={340}
           centered
-          title={<span style={{ color: "#065f46" }}>Dispatch Details</span>}
-          bodyStyle={{ maxHeight: "70vh", overflowY: "auto", background: "#f0fdf4" }}
+          title={<span style={{ color: "#065f46", fontWeight: 700 }}>Dispatch Details</span>}
+          bodyStyle={{ maxHeight: "80vh", overflowY: "auto", background: "#ecfdf5", padding: "16px" }}
         >
           {detailsRecord && (
-            <div style={{ padding: "8px 0" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               {detailsRecord.screenshotUrl && (
                 <Image
                   src={detailsRecord.screenshotUrl}
                   alt="Load screenshot"
                   width="100%"
                   style={{
-                    maxHeight: 200,
+                    maxHeight: 180,
                     objectFit: "contain",
                     borderRadius: 8,
-                    background: "#ecfdf5",
-                    marginBottom: 16,
+                    background: "#ffffff",
+                    border: "1px solid #d1fae5",
                   }}
                 />
               )}
-              <Descriptions
-                column={1}
-                size="small"
-                labelStyle={{ fontWeight: 600, color: "#047857" }}
-                contentStyle={{ color: "#064e3b" }}
-              >
-                <Descriptions.Item label="Driver">
-                  {detailsRecord.thirdPartyCarrierName || "—"}
-                </Descriptions.Item>
-                <Descriptions.Item label="Dispatcher">
-                  {detailsRecord.dispatcher || "—"}
-                </Descriptions.Item>
-                <Descriptions.Item label="CAD Amount">
-                  CAD ${Number(detailsRecord.tripCharges || 0).toLocaleString()}
-                </Descriptions.Item>
-                <Descriptions.Item label="Invoice Status">
-                  {statusTag(detailsRecord.invoiceStatus)}
-                </Descriptions.Item>
-                <Descriptions.Item label="Created By">
-                  {detailsRecord.createdBy?.email || "—"}
-                </Descriptions.Item>
-                <Descriptions.Item label="Created At">
-                  {new Date(detailsRecord.createdAt).toLocaleString()}
-                </Descriptions.Item>
-              </Descriptions>
+              <DetailItem label="Company Name / Payee">
+                {detailsRecord.carrierName || "—"}
+              </DetailItem>
+              <DetailItem label="Pay To / Company Driver">
+                {detailsRecord.thirdPartyCarrierName || "—"}
+              </DetailItem>
+              <DetailItem label="Dispatcher">
+                {detailsRecord.dispatcher || "—"}
+              </DetailItem>
+              <DetailItem label="CAD Amount">
+                CAD ${Number(detailsRecord.tripCharges || 0).toLocaleString()}
+              </DetailItem>
+              <DetailItem label="Invoice Status">
+                {statusTag(detailsRecord.invoiceStatus)}
+              </DetailItem>
+              <DetailItem label="Created By">
+                {detailsRecord.createdBy?.email || "—"}
+              </DetailItem>
+              <DetailItem label="Created At">
+                {new Date(detailsRecord.createdAt).toLocaleString()}
+              </DetailItem>
             </div>
           )}
         </Modal>
@@ -382,22 +419,27 @@ export default function Admin3PDispatchPage() {
           loading={loading}
           pagination={{ pageSize: 20 }}
           size="middle"
-          rowClassName={() => "green-table-row"}
+          rowClassName={(record) =>
+            record.invoiceStatus === "generated"
+              ? "loadboard-row-generated"
+              : "loadboard-row-pending"
+          }
           style={{ background: "#f0fdf4" }}
         />
       </Card>
 
-      {/* Details Modal */}
+      {/* Desktop Details Modal - 3 per column layout */}
       <Modal
         open={Boolean(detailsRecord)}
         onCancel={() => setDetailsRecord(null)}
         footer={null}
-        width={680}
+        width={780}
         centered
-        title={<span style={{ color: "#065f46" }}>3P Dispatch Details</span>}
+        title={<span style={{ color: "#065f46", fontWeight: 700, fontSize: "18px" }}>3P Dispatch Details</span>}
+        bodyStyle={{ background: "#f0fdf4", padding: "20px" }}
       >
         {detailsRecord && (
-          <div style={{ padding: "8px 0" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             {detailsRecord.screenshotUrl && (
               <Image
                 src={detailsRecord.screenshotUrl}
@@ -407,28 +449,33 @@ export default function Admin3PDispatchPage() {
                   maxHeight: 250,
                   objectFit: "contain",
                   borderRadius: 8,
-                  background: "#ecfdf5",
-                  marginBottom: 20,
+                  background: "#ffffff",
+                  border: "1px solid #a7f3d0",
                 }}
               />
             )}
-            <Descriptions
-              bordered
-              column={{ xs: 1, sm: 2 }}
-              size="small"
-              labelStyle={{ fontWeight: 600, color: "#047857", width: 165, background: "#d1fae5" }}
-              contentStyle={{ color: "#064e3b", background: "#f0fdf4" }}
+
+            {/* 3-Column Grid Layout */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(3, 1fr)",
+                gap: "12px",
+              }}
             >
-              <Descriptions.Item label="Driver">
+              <DetailItem label="Company Name / Payee">
+                {detailsRecord.carrierName || "—"}
+              </DetailItem>
+              <DetailItem label="Pay To / Company Driver">
                 {detailsRecord.thirdPartyCarrierName || "—"}
-              </Descriptions.Item>
-              <Descriptions.Item label="Dispatcher">
+              </DetailItem>
+              <DetailItem label="Dispatcher">
                 {detailsRecord.dispatcher || "—"}
-              </Descriptions.Item>
-              <Descriptions.Item label="CAD Amount">
+              </DetailItem>
+              <DetailItem label="CAD Amount">
                 CAD ${Number(detailsRecord.tripCharges || 0).toLocaleString()}
-              </Descriptions.Item>
-              <Descriptions.Item label="Payment ID">
+              </DetailItem>
+              <DetailItem label="Payment ID">
                 {detailsRecord.driverName ? (
                   <Text copyable={{ tooltips: ["Copy", "Copied!"] }}>
                     {detailsRecord.driverName}
@@ -436,20 +483,35 @@ export default function Admin3PDispatchPage() {
                 ) : (
                   "—"
                 )}
-              </Descriptions.Item>
-              <Descriptions.Item label="Invoice Status">
+              </DetailItem>
+              <DetailItem label="Invoice Status">
                 {statusTag(detailsRecord.invoiceStatus)}
-              </Descriptions.Item>
-              <Descriptions.Item label="Created By">
+              </DetailItem>
+              <DetailItem label="Created By">
                 {detailsRecord.createdBy?.email || "—"}
-              </Descriptions.Item>
-              <Descriptions.Item label="Created At">
+              </DetailItem>
+              <DetailItem label="Created At">
                 {new Date(detailsRecord.createdAt).toLocaleString()}
-              </Descriptions.Item>
-            </Descriptions>
+              </DetailItem>
+            </div>
           </div>
         )}
       </Modal>
+
+      <style jsx global>{`
+        .ant-table-tbody > tr.loadboard-row-generated > td {
+          background: #f0fdf4 !important;
+        }
+        .ant-table-tbody > tr.loadboard-row-pending > td {
+          background: #fef2f2 !important;
+        }
+        .ant-table-tbody > tr.loadboard-row-generated:hover > td {
+          background: #dcfce7 !important;
+        }
+        .ant-table-tbody > tr.loadboard-row-pending:hover > td {
+          background: #fee2e2 !important;
+        }
+      `}</style>
     </div>
   );
 }
