@@ -17,4 +17,16 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
+// Response interceptor to handle errors
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Log the error for debugging
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      console.error("🔴 Auth Error:", error.response.status, error.response.data?.message);
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default API;

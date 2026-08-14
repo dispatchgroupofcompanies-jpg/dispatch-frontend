@@ -79,7 +79,6 @@ export default function LoginForm() {
       
       // If still not found, try to generate it automatically
       if (!currentDeviceId) {
-        console.log("No device ID found, attempting to generate...");
         try {
           const FP = await import("@fingerprintjs/fingerprintjs");
           const fp = await FP.load();

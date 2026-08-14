@@ -84,9 +84,7 @@ export default function LoadBoardDetailsModal({ open, record, onClose }: Props) 
           <Descriptions.Item label="Invoice Status">
             {statusTag(record.invoiceStatus, "invoice")}
           </Descriptions.Item>
-          <Descriptions.Item label="Payment Status">
-            {statusTag(record.paymentStatus, "payment")}
-          </Descriptions.Item>
+         
         </Descriptions>
       </div>
     </Modal>

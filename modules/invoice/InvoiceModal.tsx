@@ -9,7 +9,7 @@ import PayeeDetails from "./PayeeDetails";
 import PayToDetails from "./PayToDetails";
 import TripSection from "./TripSection";
 import SummaryCard from "./SummaryCard";
-import { createInvoice, updateInvoice } from "./route";
+import { createInvoice, updateInvoice } from "../../src/services/admin/invoice";
 import { getCompanyProfile } from "../../modules/company/route";
 import type { CompanyProfile } from "../../src/types/company";
 import type { InvoiceFormValues, TripForm } from "../../src/types/invoiceForm";
@@ -106,15 +106,7 @@ export default function CreateInvoiceModal({
       const hstAmount = (calculatedSubtotal * hstRate) / 100;
       const grandTotal = calculatedSubtotal + hstAmount;
 
-      // Debug: Log form values to see if customer data is present
-      console.log(
-        "📤 FORM VALUES BEING SUBMITTED:",
-        JSON.stringify(values, null, 2),
-      );
-      console.log(
-        "📤 CUSTOMER DATA:",
-        JSON.stringify(values.customer, null, 2),
-      );
+      console.log("FORM VALUES BEING SUBMITTED:", JSON.stringify(values, null, 2));
 
       const formattedTrips = (values.trips || []).map((trip: TripForm) => {
         const tCharges = Number(trip?.totalCharges || 0);
@@ -127,29 +119,37 @@ export default function CreateInvoiceModal({
         };
       });
 
-      let invoicePeriod = null;
-      if (values.invoicePeriod && Array.isArray(values.invoicePeriod)) {
-        invoicePeriod = [
-          values.invoicePeriod[0].toISOString(),
-          values.invoicePeriod[1].toISOString(),
-        ];
+      // 1. Separate invoicePeriod out of values to avoid spreading array-typed values
+      const { invoicePeriod: rawPeriod, ...restValues } = values;
+
+      // 2. Format invoicePeriod to object structure matching Partial<Invoice>
+      let formattedInvoicePeriod: { startDate: string; endDate: string } | undefined = undefined;
+
+      if (rawPeriod && Array.isArray(rawPeriod) && rawPeriod.length === 2 && rawPeriod[0] && rawPeriod[1]) {
+        formattedInvoicePeriod = {
+          startDate: typeof rawPeriod[0] === "string" 
+            ? rawPeriod[0] 
+            : dayjs(rawPeriod[0]).toISOString(),
+          endDate: typeof rawPeriod[1] === "string" 
+            ? rawPeriod[1] 
+            : dayjs(rawPeriod[1]).toISOString(),
+        };
       }
 
       const finalPayload = {
-        ...values,
-        invoicePeriod,
+        ...restValues,
+        invoicePeriod: formattedInvoicePeriod,
         trips: formattedTrips,
         subtotal: calculatedSubtotal,
         tax: hstAmount,
         grandTotal: grandTotal,
       };
 
-      // TypeScript Fixed Condition block below
       if (isEditMode && editData?._id) {
-        await updateInvoice(editData._id, finalPayload);
+        await updateInvoice(editData._id, finalPayload as Partial<Invoice>);
         message.success("Invoice Updated Successfully");
       } else if (!isEditMode) {
-        await createInvoice(finalPayload);
+        await createInvoice(finalPayload as Partial<Invoice>);
         message.success("Invoice Dispatched Successfully");
       } else {
         throw new Error(
@@ -287,6 +287,7 @@ export default function CreateInvoiceModal({
           </h3>
           <TripSection
             form={form}
+            invoiceId={editData?._id}
             allowMultiple={
               invoiceType === "multiple" || invoiceType === "Multiple"
             }

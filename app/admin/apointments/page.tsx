@@ -1,36 +1,15 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import {
-  Table,
-  Spin,
-  Alert,
-  Modal,
-  message,
-  Button,
-  Space,
-  Typography,
-  Card,
-  Skeleton,
-  Grid,
-} from "antd";
-import {
-  DownloadOutlined,
-  FileTextOutlined,
-  EyeOutlined,
-} from "@ant-design/icons";
-import type { Breakpoint } from "antd/es/_util/responsiveObserver";
+import { Table, Spin, Alert, Modal, message, Button, Grid } from "antd";
+import { DownloadOutlined } from "@ant-design/icons";
 import {
   getAllAppointments,
-  getInvoiceById,
-  downloadInvoice,
   downloadAppointmentPDF,
 } from "../../../src/services/adminService";
 import type { Appointment } from "./types";
 import { createColumns } from "./components/AppointmentTableColumns";
 import AppointmentExpandedRow from "./components/AppointmentExpandedRow";
-
-const { Text } = Typography;
 
 type AppointmentRecord = Appointment;
 
@@ -109,50 +88,44 @@ export default function AppointmentRecords() {
     },
   ];
 
-  const handleViewInvoice = useCallback(
-    async (record: AppointmentRecord) => {
-      try {
-        message.loading({
-          content: "Loading invoice preview...",
-          key: "invoice-loading",
-        });
+  const handleViewInvoice = useCallback(async (record: AppointmentRecord) => {
+    try {
+      message.loading({
+        content: "Loading invoice preview...",
+        key: "invoice-loading",
+      });
 
-        const blob = await downloadAppointmentPDF(record._id);
-        const url = window.URL.createObjectURL(blob);
-        setInvoiceUrl(url);
-        setInvoiceModalOpen(true);
-        setSelectedAppointment(record);
+      const blob = await downloadAppointmentPDF(record._id);
+      const url = window.URL.createObjectURL(blob);
+      setInvoiceUrl(url);
+      setInvoiceModalOpen(true);
+      setSelectedAppointment(record);
 
-        message.destroy("invoice-loading");
-      } catch (err) {
-        console.error(err);
-        message.destroy("invoice-loading");
-        message.error("Failed to load invoice");
-      }
-    },
-    [downloadAppointmentPDF],
-  );
+      message.destroy("invoice-loading");
+    } catch (err) {
+      console.error(err);
+      message.destroy("invoice-loading");
+      message.error("Failed to load invoice");
+    }
+  }, []);
 
-  const handleDownloadPDF = useCallback(
-    async (id: string) => {
-      try {
-        const blob = await downloadAppointmentPDF(id);
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.setAttribute("download", `appointment-${id}.pdf`);
-        document.body.appendChild(link);
-        link.click();
-        link.parentNode?.removeChild(link);
-        window.URL.revokeObjectURL(url);
-        message.success("PDF downloaded successfully!");
-      } catch (err) {
-        console.error(err);
-        message.error("Failed to download PDF");
-      }
-    },
-    [downloadAppointmentPDF],
-  );
+  const handleDownloadPDF = useCallback(async (id: string) => {
+    try {
+      const blob = await downloadAppointmentPDF(id);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `appointment-${id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      message.success("PDF downloaded successfully!");
+    } catch (err) {
+      console.error(err);
+      message.error("Failed to download PDF");
+    }
+  }, []);
 
   const isMobile = !screens.md;
   const isTablet = screens.md && !screens.lg;

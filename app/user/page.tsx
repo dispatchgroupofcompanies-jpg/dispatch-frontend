@@ -7,7 +7,8 @@ export default function Page() {
   const router = useRouter();
 
   useEffect(() => {
-    router.push("/user/createInvoice");
+    // Send users to the 3P dispatch page — user-side create/appointment pages were removed.
+    router.push("/user/loadboard");
   }, [router]);
 
   return null;

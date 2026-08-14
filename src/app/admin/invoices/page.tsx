@@ -8,7 +8,7 @@ import {
   getInvoices,
   updateInvoiceStatus,
   updatePaymentStatus,
-} from "../../../services/adminService";
+} from "../../../services/admin/invoice";
 
 import type { Invoice } from "../../../types/invoice";
 

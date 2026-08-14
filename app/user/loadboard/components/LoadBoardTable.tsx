@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Button, Grid, Popconfirm, Select, Space, Table, Tooltip } from "antd";
+import { Button, Grid, Popconfirm, Space, Table, Tooltip } from "antd";
 import {
   DeleteOutlined,
   EditOutlined,
@@ -19,24 +19,7 @@ interface Props {
   onViewRecord: (record: LoadBoardRecord) => void;
   onEditRecord: (record: LoadBoardRecord) => void;
   onDeleteRecord: (record: LoadBoardRecord) => void;
-  onStatusChange: (
-    record: LoadBoardRecord,
-    field: "invoiceStatus" | "paymentStatus",
-    value: "generated" | "paid" | "pending"
-  ) => void;
 }
-
-const statusStyle = (value: string, type: "invoice" | "payment") => {
-  const active = value === "generated" || value === "paid";
-  return {
-    width: "100%",
-    color: active ? (type === "invoice" ? "#2563eb" : "#16a34a") : "#d97706",
-    fontWeight: 600,
-    background: active ? (type === "invoice" ? "#eff6ff" : "#f0fdf4") : "#fffbeb",
-    borderColor: active ? (type === "invoice" ? "#bfdbfe" : "#bbf7d0") : "#fde68a",
-    borderRadius: 6,
-  };
-};
 
 export default function LoadBoardTable({
   records,
@@ -44,7 +27,6 @@ export default function LoadBoardTable({
   onViewRecord,
   onEditRecord,
   onDeleteRecord,
-  onStatusChange,
 }: Props) {
   const screens = useBreakpoint();
   const useCards = !screens.lg;
@@ -70,7 +52,7 @@ export default function LoadBoardTable({
       ),
     },
     {
-      title: "Pay To / Driver",
+      title: "Driver",
       dataIndex: "thirdPartyCarrierName",
       ellipsis: true,
       render: (value) => (
@@ -91,71 +73,51 @@ export default function LoadBoardTable({
       ),
     },
     {
-      title: "Invoice",
-      dataIndex: "invoiceStatus",
-      width: 150,
-      responsive: ["md"],
-      render: (value, record) => (
-        <Select
-          size="small"
-          value={value || "pending"}
-          style={statusStyle(value || "pending", "invoice")}
-          onChange={(next) => onStatusChange(record, "invoiceStatus", next)}
-          options={[
-            { value: "generated", label: "Generated" },
-            { value: "pending", label: "Pending" },
-          ]}
-        />
-      ),
-    },
-    {
-      title: "Payment",
-      dataIndex: "paymentStatus",
-      width: 130,
-      responsive: ["md"],
-      render: (value, record) => (
-        <Select
-          size="small"
-          value={value || "pending"}
-          style={statusStyle(value || "pending", "payment")}
-          onChange={(next) => onStatusChange(record, "paymentStatus", next)}
-          options={[
-            { value: "paid", label: "Paid" },
-            { value: "pending", label: "Pending" },
-          ]}
-        />
-      ),
-    },
-    {
       title: "Actions",
       key: "actions",
       width: 120,
-      render: (_v, record) => (
-        <Space size={0}>
-          <Tooltip title="View">
-            <Button
-              type="text"
-              icon={<EyeOutlined />}
-              onClick={() => onViewRecord(record)}
-              style={{ color: "#2563eb" }}
-            />
-          </Tooltip>
-          <Tooltip title="Edit">
-            <Button type="text" icon={<EditOutlined />} onClick={() => onEditRecord(record)} />
-          </Tooltip>
-          <Popconfirm
-            title="Delete this dispatch record?"
-            description="This also removes its screenshot."
-            okText="Delete"
-            okButtonProps={{ danger: true }}
-            onConfirm={() => onDeleteRecord(record)}
-          >
-            <Tooltip title="Delete">
-              <Button danger type="text" icon={<DeleteOutlined />} />
+      render: (_v, record) => {
+        const isInvoiceGenerated = record.invoiceStatus === "generated";
+        return (
+          <Space size={0}>
+            <Tooltip title="View">
+              <Button
+                type="text"
+                icon={<EyeOutlined />}
+                onClick={() => onViewRecord(record)}
+                style={{ color: "#2563eb" }}
+              />
             </Tooltip>
-          </Popconfirm>
-        </Space>
-      ),
+            <Tooltip title={isInvoiceGenerated ? "Cannot edit when invoice is generated" : "Edit"}>
+              <Button
+                type="text"
+                icon={<EditOutlined />}
+                onClick={() => onEditRecord(record)}
+                disabled={isInvoiceGenerated}
+                style={{ color: isInvoiceGenerated ? "#cbd5e1" : "#374151" }}
+              />
+            </Tooltip>
+            <Popconfirm
+              title="Delete this dispatch record?"
+              description="This also removes its screenshot."
+              okText="Delete"
+              okButtonProps={{ danger: true }}
+              onConfirm={() => onDeleteRecord(record)}
+              disabled={isInvoiceGenerated}
+            >
+              <Tooltip title={isInvoiceGenerated ? "Cannot delete when invoice is generated" : "Delete"}>
+                <Button
+                  danger
+                  type="text"
+                  icon={<DeleteOutlined />}
+                  disabled={isInvoiceGenerated}
+                  style={{ color: isInvoiceGenerated ? "#cbd5e1" : "#ef4444" }}
+                />
+              </Tooltip>
+            </Popconfirm>
+          </Space>
+        );
+      },
     },
   ];
 
@@ -227,29 +189,6 @@ export default function LoadBoardTable({
               </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              <Select
-                size="small"
-                value={record.invoiceStatus || "pending"}
-                style={statusStyle(record.invoiceStatus || "pending", "invoice")}
-                onChange={(value) => onStatusChange(record, "invoiceStatus", value)}
-                options={[
-                  { value: "generated", label: "Invoice Generated" },
-                  { value: "pending", label: "Invoice Pending" },
-                ]}
-              />
-              <Select
-                size="small"
-                value={record.paymentStatus || "pending"}
-                style={statusStyle(record.paymentStatus || "pending", "payment")}
-                onChange={(value) => onStatusChange(record, "paymentStatus", value)}
-                options={[
-                  { value: "paid", label: "Paid" },
-                  { value: "pending", label: "Pending" },
-                ]}
-              />
-            </div>
-
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8 }}>
               <Button
                 size="small"
@@ -259,19 +198,41 @@ export default function LoadBoardTable({
               >
                 View
               </Button>
-              <Button size="small" icon={<EditOutlined />} onClick={() => onEditRecord(record)}>
-                Edit
-              </Button>
+              <Tooltip title={record.invoiceStatus === "generated" ? "Cannot edit when invoice is generated" : ""}>
+                <Button
+                  size="small"
+                  icon={<EditOutlined />}
+                  onClick={() => onEditRecord(record)}
+                  disabled={record.invoiceStatus === "generated"}
+                  style={{
+                    color: record.invoiceStatus === "generated" ? "#cbd5e1" : "#374151",
+                  }}
+                >
+                  Edit
+                </Button>
+              </Tooltip>
               <Popconfirm
                 title="Delete this dispatch record?"
                 description="This also removes its screenshot."
                 okText="Delete"
                 okButtonProps={{ danger: true }}
                 onConfirm={() => onDeleteRecord(record)}
+                disabled={record.invoiceStatus === "generated"}
               >
-                <Button danger size="small" icon={<DeleteOutlined />} style={{ width: "100%" }}>
-                  Delete
-                </Button>
+                <Tooltip title={record.invoiceStatus === "generated" ? "Cannot delete when invoice is generated" : ""}>
+                  <Button
+                    danger
+                    size="small"
+                    icon={<DeleteOutlined />}
+                    disabled={record.invoiceStatus === "generated"}
+                    style={{
+                      width: "100%",
+                      color: record.invoiceStatus === "generated" ? "#cbd5e1" : "#ef4444",
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </Tooltip>
               </Popconfirm>
             </div>
           </div>

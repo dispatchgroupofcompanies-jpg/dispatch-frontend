@@ -14,6 +14,7 @@ import {
   Grid,
   Select,
 } from "antd";
+import { useRouter } from "next/navigation";
 import ResponsiveTable from "../../../modules/common/ResponsiveTable";
 import {
   EyeOutlined,
@@ -31,12 +32,36 @@ import {
   getInvoices,
   deleteInvoice,
   downloadInvoicePDF,
-} from "../../../modules/invoice/route";
+} from "../../../src/services/admin/invoice";
+import API from "../../../src/services/api";
 import type { Invoice as InvoiceType } from "../../../src/types/invoice";
 
 const { useBreakpoint } = Grid;
 
 function DashboardComponent() {
+  const router = useRouter();
+
+  useEffect(() => {
+    // Only allow admin users to view this page. Redirect unauthenticated or non-admins.
+    try {
+      const userRaw = typeof window !== 'undefined' ? localStorage.getItem('userData') : null;
+      if (!userRaw) {
+        router.push('/login');
+        return;
+      }
+      const user = JSON.parse(userRaw);
+      console.log("👤 Current user:", user);
+      if (user.role !== 'admin') {
+        router.push('/user/loadboard');
+        return;
+      }
+      // Admins may continue to use this page (render create UI)
+      console.log("✅ Admin verified. Proceeding...");
+    } catch (e) {
+      console.error("❌ Auth check error:", e);
+      router.push('/login');
+    }
+  }, [router]);
   const screens = useBreakpoint();
   const isMobile = !screens.md;
   const isCompact = !screens.lg;
@@ -63,10 +88,38 @@ function DashboardComponent() {
   const loadInvoices = async () => {
     try {
       setLoading(true);
+      console.log("📋 Loading invoices from /admin/invoices...");
+      
       const res = await getInvoices();
-      setInvoices(res.data?.data || []);
-    } catch (err) {
-      message.error("Failed to fetch invoices");
+      
+      console.log("✅ API Response received:", {
+        status: "Success",
+        data: res,
+        invoiceCount: res.data?.length || 0,
+      });
+      
+      setInvoices(res.data || []);
+    } catch (err: any) {
+      console.error("❌ FULL ERROR DETAILS:", {
+        statusCode: err.response?.status,
+        statusText: err.response?.statusText,
+        message: err.response?.data?.message || err.message,
+        url: err.config?.url,
+        method: err.config?.method,
+        responseData: err.response?.data,
+        errorStack: err.stack,
+      });
+      
+      // Only show error message, don't redirect (preserve auth)
+      if (err.response?.status === 401) {
+        message.error("❌ 401: Session expired or invalid token");
+      } else if (err.response?.status === 403) {
+        message.error("❌ 403: Admin access required. Check user role in database.");
+      } else if (err.response?.status === 500) {
+        message.error("❌ 500: Server error - " + err.response?.data?.message);
+      } else {
+        message.error("❌ Failed: " + (err.response?.data?.message || err.message));
+      }
     } finally {
       setLoading(false);
     }
@@ -160,7 +213,7 @@ function DashboardComponent() {
 
     try {
       const response = await downloadInvoicePDF(record._id);
-      const blob = new Blob([response.data], { type: "application/pdf" });
+      const blob = new Blob([response], { type: "application/pdf" });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -350,6 +403,8 @@ function DashboardComponent() {
         render: (_: unknown, record: InvoiceType) => {
           const isDraft =
             (record.invoiceStatus || "draft").toLowerCase() === "draft";
+          const isApproved =
+            (record.invoiceStatus || "").toLowerCase() === "approved";
           return (
             <Space size={isMobile ? 2 : "small"}>
               <Button
@@ -390,15 +445,20 @@ function DashboardComponent() {
                 />
               </Tooltip>
 
-              <Popconfirm
-                title="Purge Invoice Record"
-                description="Are you sure you want to delete this invoice statement permanently?"
-                onConfirm={() => handleDeleteInvoice(record._id)}
-                okText="Confirm Delete"
-                okButtonProps={{ danger: true, type: "primary" }}
-              >
-                <Button danger type="text" icon={<DeleteOutlined />} />
-              </Popconfirm>
+              <Tooltip title={isApproved ? "Approved invoices cannot be deleted" : "Delete invoice"}>
+                <span>
+                  <Popconfirm
+                    title="Purge Invoice Record"
+                    description="Are you sure you want to delete this invoice statement permanently?"
+                    onConfirm={() => handleDeleteInvoice(record._id)}
+                    okText="Confirm Delete"
+                    okButtonProps={{ danger: true, type: "primary" }}
+                    disabled={isApproved}
+                  >
+                    <Button danger type="text" icon={<DeleteOutlined />} disabled={isApproved} />
+                  </Popconfirm>
+                </span>
+              </Tooltip>
             </Space>
           );
         },
@@ -576,6 +636,7 @@ function DashboardComponent() {
               const serialNumber = totalCount - ((currentPage - 1) * pageSize + index);
               const invoiceStatus = (invoice.invoiceStatus || "draft").toLowerCase();
               const isDraft = invoiceStatus === "draft";
+              const isApproved = invoiceStatus === "approved";
               const statusColor: Record<string, string> = { draft: "default", pending: "warning", approved: "success", paid: "processing", rejected: "error" };
               return (
                 <div key={invoice._id} style={{ display: "grid", gap: 12, padding: 14, border: "1px solid #e2e8f0", borderRadius: 12, background: "#fff", boxShadow: "0 2px 6px rgba(15,23,42,.05)" }}>
@@ -591,7 +652,7 @@ function DashboardComponent() {
                     <Button size="small" type="primary" icon={<EyeOutlined />} onClick={() => openView(invoice)} />
                     <Tooltip title="Download PDF"><Button size="small" icon={<DownloadOutlined />} loading={downloading && selected?._id === invoice._id} onClick={() => triggerDownloadPDF(invoice)} /></Tooltip>
                     <Tooltip title={isDraft ? "Edit invoice" : "Only draft invoices can be edited"}><Button size="small" icon={<EditOutlined />} disabled={!isDraft} onClick={() => openEditModal(invoice)} /></Tooltip>
-                    <Popconfirm title="Purge Invoice Record" description="Are you sure you want to delete this invoice statement permanently?" onConfirm={() => handleDeleteInvoice(invoice._id)} okText="Confirm Delete" okButtonProps={{ danger: true, type: "primary" }}><Button size="small" danger icon={<DeleteOutlined />} /></Popconfirm>
+                    <Tooltip title={isApproved ? "Approved invoices cannot be deleted" : "Delete invoice"}><span><Popconfirm title="Purge Invoice Record" description="Are you sure you want to delete this invoice statement permanently?" onConfirm={() => handleDeleteInvoice(invoice._id)} okText="Confirm Delete" okButtonProps={{ danger: true, type: "primary" }} disabled={isApproved}><Button size="small" danger icon={<DeleteOutlined />} disabled={isApproved} /></Popconfirm></span></Tooltip>
                   </div>
                 </div>
               );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Button,
   Card,
@@ -15,13 +15,15 @@ import {
 import type { FormInstance } from "antd";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import type { TripForm } from "../../src/types/invoiceForm";
+import { checkVridExists } from "../../src/services/admin/invoice";
 
 interface Props {
   form: FormInstance<TripForm[]>;
   allowMultiple?: boolean;
+  invoiceId?: string;
 }
 
-export default function TripSection({ form }: Props) {
+export default function TripSection({ form, invoiceId }: Props) {
   const trips = Form.useWatch("trips", form) || ([] as TripForm[]);
 
   const totalChargesSum = useMemo(() => {
@@ -181,7 +183,36 @@ export default function TripSection({ form }: Props) {
                             {...restField}
                             name={[name, "vrid"]}
                             getValueFromEvent={handleUppercase}
-                            rules={[{ required: true, message: "Required" }]}
+                            rules={[
+                              { required: true, message: "Required" },
+                              {
+                                validator: async (_, value) => {
+                                  if (!value || !value.trim()) {
+                                    return Promise.resolve();
+                                  }
+
+                                  const normalizedVrid = value.trim().toLowerCase();
+                                  const isDuplicatedInForm = trips.some(
+                                    (currentTrip: { vrid: any; }, currentIndex: number) =>
+                                      currentIndex !== index &&
+                                      String(currentTrip?.vrid || "").trim().toLowerCase() === normalizedVrid,
+                                  );
+                                  if (isDuplicatedInForm) {
+                                    return Promise.reject(new Error("VRID is duplicated in this invoice"));
+                                  }
+
+                                  try {
+                                    const response = await checkVridExists(value.trim(), invoiceId);
+                                    if (response.success && response.exists) {
+                                      return Promise.reject(new Error("VRID is existing"));
+                                    }
+                                    return Promise.resolve();
+                                  } catch (error) {
+                                    return Promise.resolve();
+                                  }
+                                },
+                              },
+                            ]}
                             style={{ marginBottom: 0 }}
                           >
                             <Input

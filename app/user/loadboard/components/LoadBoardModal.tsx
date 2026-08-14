@@ -28,6 +28,7 @@ export default function LoadBoardModal({ open, onClose, onSave, record }: Props)
         carrierName: record?.carrierName ?? "",
         thirdPartyCarrierName: record?.thirdPartyCarrierName ?? "",
         tripCharges: record?.tripCharges ?? 0,
+        dispatcher: record?.dispatcher ?? "",
         driverName: record?.driverName ?? "",
       });
       setFileList(
@@ -40,7 +41,7 @@ export default function LoadBoardModal({ open, onClose, onSave, record }: Props)
   }, [open, record, form]);
 
   const submit = async (
-    values: Pick<LoadBoardRecord, "carrierName" | "thirdPartyCarrierName" | "tripCharges" | "driverName">
+    values: Pick<LoadBoardRecord, "carrierName" | "thirdPartyCarrierName" | "tripCharges" | "dispatcher" | "driverName">
   ) => {
     setSaving(true);
     try {
@@ -55,7 +56,6 @@ export default function LoadBoardModal({ open, onClose, onSave, record }: Props)
           load1Id: record?.load1Id ?? "",
           pickupTime: record?.pickupTime ?? "",
           deliveryTime: record?.deliveryTime ?? "",
-          dispatcher: record?.dispatcher ?? "",
           dispatchCharges: record?.dispatchCharges ?? 0,
           tonu: record?.tonu ?? false,
           status: record?.status ?? "active",
@@ -78,39 +78,53 @@ export default function LoadBoardModal({ open, onClose, onSave, record }: Props)
       width={isMobile ? "94vw" : 680}
       title={record ? "Edit 3P Dispatch" : "Add 3P Dispatch"}
     >
-      <Form form={form} layout="vertical" onFinish={submit} style={{ marginTop: 16 }}>
-        <Row gutter={16}>
-          <Col xs={24} md={12}>
+      <Form form={form} layout="vertical" onFinish={submit} style={{ marginTop: 8 }}>
+        <Row gutter={[14, 6]}>
+          <Col xs={24} sm={12}>
             <Form.Item
               label="Company Name / Payee"
               name="carrierName"
               rules={[{ required: true, message: "Company name / payee is required" }]}
+              style={{ marginBottom: 8 }}
             >
               <Input placeholder="Enter company name / payee" />
             </Form.Item>
           </Col>
 
-          <Col xs={24} md={12}>
+          <Col xs={24} sm={12}>
             <Form.Item
               label="Pay To / Company Driver"
               name="thirdPartyCarrierName"
               rules={[{ required: true, message: "Pay To / Company Driver is required" }]}
+              style={{ marginBottom: 8 }}
             >
               <Input placeholder="Enter Pay To / Company Driver" />
             </Form.Item>
           </Col>
 
-          <Col xs={24} md={12}>
+          <Col xs={24} sm={12}>
             <Form.Item
               label="CAD Amount"
               name="tripCharges"
               rules={[{ required: true, message: "CAD amount is required" }]}
+              style={{ marginBottom: 8 }}
             >
               <InputNumber min={0} precision={2} prefix="CAD $" style={{ width: "100%" }} />
             </Form.Item>
           </Col>
 
-          <Col xs={24} md={12}>
+          <Col xs={24} sm={12}>
+            <Form.Item
+              label="Dispatcher"
+              name="dispatcher"
+              rules={[{ required: true, message: "Dispatcher name is required" }]}
+              style={{ marginBottom: 8 }}
+            >
+              <Input placeholder="Enter dispatcher name" />
+            </Form.Item>
+          </Col>
+
+          <Col xs={24} sm={12}>
             <Form.Item
               label="Payment ID"
               name="driverName"
@@ -118,13 +132,14 @@ export default function LoadBoardModal({ open, onClose, onSave, record }: Props)
                 { required: true, message: "Payment ID (email) is required" },
                 { type: "email", message: "Please enter a valid email address" },
               ]}
+              style={{ marginBottom: 8 }}
             >
               <Input placeholder="Enter email address" />
             </Form.Item>
           </Col>
 
-          <Col span={24}>
-            <Form.Item label="Upload Image / Load Screenshot">
+          <Col xs={24} sm={12}>
+            <Form.Item label="Upload Image / Load Screenshot" style={{ marginBottom: 8 }}>
               <Upload
                 accept="image/png,image/jpeg,image/webp"
                 maxCount={1}

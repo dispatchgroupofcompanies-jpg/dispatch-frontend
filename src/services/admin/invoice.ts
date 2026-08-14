@@ -51,3 +51,33 @@ export const downloadInvoicePDF = async (invoiceId: string): Promise<Blob> => {
   });
   return res.data as Blob;
 };
+
+export const downloadPaidInvoicePDF = async (invoiceId: string): Promise<Blob> => {
+  const res = await API.get(`/admin/invoices/${invoiceId}/download-paid`, {
+    responseType: "blob",
+  });
+  return res.data as Blob;
+};
+
+export const updatePaymentStatus = async (
+  invoiceId: string,
+  status: "pending" | "paid",
+  paymentProof?: File,
+): Promise<ApiResponse<Invoice>> => {
+  const formData = new FormData();
+  formData.append("status", status);
+  if (paymentProof) formData.append("paymentProof", paymentProof);
+
+  const res = await API.patch(`/admin/invoices/${invoiceId}/payment-status`, formData);
+  return res.data as ApiResponse<Invoice>;
+};
+
+export const checkVridExists = (
+  vrid: string,
+  excludeInvoiceId?: string,
+): Promise<{ success: boolean; exists: boolean }> => {
+  const res = API.get("/admin/invoices/check-vrid", {
+    params: { vrid, ...(excludeInvoiceId ? { excludeInvoiceId } : {}) },
+  });
+  return res.then((r) => r.data as { success: boolean; exists: boolean });
+};

@@ -159,20 +159,6 @@ export default function LoadBoardPage() {
     } catch { message.error("Failed to delete dispatch record"); }
   };
 
-  const handleStatusChange = async (record: LoadBoardRecord, field: "invoiceStatus" | "paymentStatus", value: "generated" | "paid" | "pending") => {
-    if (!record._id) return;
-    const updated = { ...record, [field]: value } as LoadBoardRecord;
-    setRecords((current) => current.map((item) => item._id === record._id ? updated : item));
-    try {
-      const response = await updateLoadBoardRecord(record._id, { [field]: value });
-      setRecords((current) => current.map((item) => item._id === record._id ? response.data : item));
-      message.success("Status updated");
-    } catch {
-      setRecords((current) => current.map((item) => item._id === record._id ? record : item));
-      message.error("Failed to update status");
-    }
-  };
-
   return (
     <div
       style={{
@@ -434,9 +420,8 @@ export default function LoadBoardPage() {
           records={filteredRecords}
           loading={loading}
           onViewRecord={handleViewRecord}
-          onEditRecord={handleEditRecord} /* 👈 Updated to handleEditRecord */
+          onEditRecord={handleEditRecord}
           onDeleteRecord={handleDeleteRecord}
-          onStatusChange={handleStatusChange}
         />
       </Card>
 

@@ -164,12 +164,8 @@ export default function Sidebar({
 
   const getSelectedKey = () => {
     switch (pathname) {
-      case "/user/createInvoice":
-        return "1";
-      case "/user/appointment":
-        return "2";
       case "/user/loadboard":
-        return "3";
+        return "1";
       default:
         return "1";
     }
@@ -178,18 +174,6 @@ export default function Sidebar({
   const menuItems = [
     {
       key: "1",
-      icon: <FileAddOutlined style={{ fontSize: "16px" }} />,
-      label: "CREATE INVOICE",
-      path: "/user/createInvoice",
-    },
-    {
-      key: "2",
-      icon: <CalendarOutlined style={{ fontSize: "16px" }} />,
-      label: "BOOK APPOINTMENT",
-      path: "/user/appointment",
-    },
-    {
-      key: "3",
       icon: <FileTextOutlined style={{ fontSize: "16px" }} />,
       label: "3P DISPATCH",
       path: "/user/loadboard",

@@ -22,7 +22,7 @@ import {
 import {
   downloadInvoicePDF,
   downloadPaidInvoicePDF,
-} from "../../modules/invoice/route";
+} from "../services/admin/invoice";
 import type { ColumnsType } from "antd/es/table";
 import type { Invoice } from "../types/invoice";
 
@@ -72,48 +72,25 @@ const handleDownload = async (
   invoiceNumber: string,
   payeeName?: string,
   payToName?: string,
-  isAdmin: boolean = false,
   paidDownload: boolean = false,
 ) => {
   try {
-    const response = paidDownload
-      ? await downloadPaidInvoicePDF(invoiceId, isAdmin)
-      : await downloadInvoicePDF(invoiceId, isAdmin);
-
-    const contentType = String(response.headers?.["content-type"] ?? "");
-    const isPdf =
-      response.data instanceof Blob &&
-      (contentType.includes("application/pdf") ||
-        response.data.type.includes("application/pdf"));
-
-    if (isPdf) {
-      const url = window.URL.createObjectURL(response.data);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = buildDownloadFilename(
-        invoiceNumber,
-        payeeName,
-        payToName,
-        paidDownload,
-      );
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      return;
-    }
-
-    const fallback =
-      response.data instanceof Blob
-        ? JSON.parse(await response.data.text())
-        : response.data;
-
-    if (fallback?.pdfUrl) {
-      window.location.assign(fallback.pdfUrl);
-      return;
-    }
-
-    throw new Error("The server did not return a PDF file.");
+    const pdf = paidDownload
+      ? await downloadPaidInvoicePDF(invoiceId)
+      : await downloadInvoicePDF(invoiceId);
+    const url = window.URL.createObjectURL(pdf);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = buildDownloadFilename(
+      invoiceNumber,
+      payeeName,
+      payToName,
+      paidDownload,
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
   } catch (error) {
     console.error("Error downloading invoice:", error);
     alert("Failed to download invoice. Please try again.");
@@ -137,7 +114,7 @@ export default function InvoiceTable({
   const totalInvoices = invoices.length;
 
   const [currentPage, setCurrentPage] = React.useState(1);
-  const [pageSize, setPageSize] = React.useState(10);
+  const [pageSize, setPageSize] = React.useState(20);
 
   // Payment proof modal state
   const [paymentModalInvoice, setPaymentModalInvoice] =
@@ -297,7 +274,6 @@ export default function InvoiceTable({
         record.invoiceNumber,
         payeeName,
         payToName,
-        isAdmin,
       );
     } finally {
       setDownloadingInvoiceId(null);
@@ -317,7 +293,6 @@ export default function InvoiceTable({
         record.invoiceNumber,
         payeeName,
         payToName,
-        isAdmin,
         true,
       );
     } finally {
@@ -684,6 +659,7 @@ export default function InvoiceTable({
             pagination={{
               current: currentPage,
               pageSize: pageSize,
+              pageSizeOptions: ["10", "20", "50", "100"], // 2. Dropdown options
               size: "small",
               showSizeChanger: !isMobile,
               showTotal: (total) =>
