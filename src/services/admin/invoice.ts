@@ -8,7 +8,9 @@ export const createInvoice = (
   return res.then((r) => r.data as ApiResponse<Invoice>);
 };
 
-export const getInvoices = (params: Record<string, any> = {}): Promise<ApiResponse<Invoice[]>> => {
+export const getInvoices = (
+  params: Record<string, any> = {},
+): Promise<ApiResponse<Invoice[]>> => {
   const res = API.get("/admin/invoices", { params });
   return res.then((r) => r.data as ApiResponse<Invoice[]>);
 };
@@ -52,7 +54,9 @@ export const downloadInvoicePDF = async (invoiceId: string): Promise<Blob> => {
   return res.data as Blob;
 };
 
-export const downloadPaidInvoicePDF = async (invoiceId: string): Promise<Blob> => {
+export const downloadPaidInvoicePDF = async (
+  invoiceId: string,
+): Promise<Blob> => {
   const res = await API.get(`/admin/invoices/${invoiceId}/download-paid`, {
     responseType: "blob",
   });
@@ -64,12 +68,40 @@ export const updatePaymentStatus = async (
   status: "pending" | "paid",
   paymentProof?: File,
 ): Promise<ApiResponse<Invoice>> => {
+  // 🔍 LOG 1: Inputs check karein
+  console.log("🔍 [Frontend Service Input]:", {
+    invoiceId,
+    status,
+    paymentProof,
+  });
+
   const formData = new FormData();
   formData.append("status", status);
-  if (paymentProof) formData.append("paymentProof", paymentProof);
 
-  const res = await API.patch(`/admin/invoices/${invoiceId}/payment-status`, formData);
-  return res.data as ApiResponse<Invoice>;
+  if (paymentProof) {
+    formData.append("paymentProof", paymentProof);
+  }
+
+  // 🔍 LOG 2: FormData content check karein (FormData ko direct console.log karne se khali dikhta hai, isliye entries loop lagayein)
+  console.log("🔍 [FormData Entries]:");
+  for (let [key, value] of formData.entries()) {
+    console.log(` -> ${key}:`, value);
+  }
+
+  const res = await API.patch<ApiResponse<Invoice>>(
+    `/admin/invoices/${invoiceId}/payment-status`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data", // Ensure boundary set ho
+      },
+    },
+  );
+
+  // 🔍 LOG 3: API Response check karein
+  console.log("🔍 [API Response Data]:", res.data);
+
+  return res.data;
 };
 
 export const checkVridExists = (
