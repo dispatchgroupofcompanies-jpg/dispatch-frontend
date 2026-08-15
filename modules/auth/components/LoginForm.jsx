@@ -180,7 +180,7 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center px-4 py-8 relative overflow-hidden">
+    <div className="login-shell bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center px-3 py-3 sm:px-4 sm:py-4 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
@@ -189,12 +189,12 @@ export default function LoginForm() {
       </div>
 
       <Spin spinning={loading} description="Signing in...">
-        <div className="w-full max-w-5xl relative z-10">
+        <div className="login-content w-full max-w-5xl relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 items-center">
             
             {/* Left Side - Branding */}
-            <div className="hidden lg:block p-12">
-              <div className="space-y-8">
+            <div className="login-branding hidden lg:block p-8 xl:p-12">
+              <div className="space-y-6 xl:space-y-8">
                 {/* Logo */}
                 <div className="relative">
                   <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-2xl flex items-center justify-center shadow-2xl transform rotate-6 hover:rotate-12 transition-transform duration-300">
@@ -205,7 +205,7 @@ export default function LoginForm() {
 
                 {/* Title */}
                 <div>
-                  <Title level={2} className="!text-white !mb-3 !text-5xl !font-bold !leading-tight">
+                  <Title level={2} className="!text-white !mb-3 !text-4xl xl:!text-5xl !font-bold !leading-tight">
                     Dispatch Management System
                   </Title>
                   <Text className="text-gray-300 text-lg block leading-relaxed">
@@ -214,7 +214,7 @@ export default function LoginForm() {
                 </div>
 
                 {/* Features */}
-                <div className="space-y-5 pt-4">
+                <div className="space-y-4 xl:space-y-5 pt-2 xl:pt-4">
                   <div className="flex items-start gap-4 group">
                     <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-lg">
                       <span className="text-2xl">✅</span>
@@ -250,7 +250,7 @@ export default function LoginForm() {
 
             {/* Right Side - Form */}
             <div className="w-full">
-              <div className="bg-gray-800/95 backdrop-blur-xl p-6 sm:p-8 shadow-2xl rounded-none lg:rounded-l-2xl">
+              <div className="login-card bg-gray-800/95 backdrop-blur-xl p-5 sm:p-8 shadow-2xl rounded-2xl lg:rounded-l-2xl lg:rounded-r-none">
                 
                 {/* Mobile Logo */}
                 <div className="lg:hidden mb-6 text-center">
@@ -387,6 +387,17 @@ export default function LoginForm() {
         .animation-delay-4000 {
           animation-delay: 4s;
         }
+
+        .login-shell {
+          height: 100vh;
+          height: 100dvh;
+          min-height: 0;
+          overscroll-behavior: none;
+        }
+
+        .login-content {
+          max-height: 100%;
+        }
         
         /* Force white text in all inputs */
         .ant-input,
@@ -414,6 +425,46 @@ export default function LoginForm() {
         
         .ant-input-affix-wrapper input {
           background-color: transparent !important;
+        }
+
+        .ant-input:hover,
+        .ant-input:focus,
+        .ant-input-focused,
+        .ant-input-affix-wrapper:hover,
+        .ant-input-affix-wrapper:focus,
+        .ant-input-affix-wrapper-focused {
+          background-color: #374151 !important;
+          border-color: #38bdf8 !important;
+          box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.16) !important;
+        }
+
+        .ant-input:-webkit-autofill,
+        .ant-input:-webkit-autofill:hover,
+        .ant-input:-webkit-autofill:focus,
+        .ant-input-affix-wrapper input:-webkit-autofill,
+        .ant-input-affix-wrapper input:-webkit-autofill:hover,
+        .ant-input-affix-wrapper input:-webkit-autofill:focus {
+          -webkit-text-fill-color: #ffffff !important;
+          -webkit-box-shadow: 0 0 0 1000px #374151 inset !important;
+          box-shadow: 0 0 0 1000px #374151 inset !important;
+          caret-color: #ffffff;
+          transition: background-color 9999s ease-out 0s;
+        }
+
+        @media (max-height: 640px) {
+          .login-card { padding: 16px !important; }
+          .login-card .ant-form-item { margin-bottom: 12px; }
+          .login-card .ant-typography { margin-bottom: 4px !important; }
+          .login-card .mt-6 { margin-top: 14px !important; }
+          .login-card .mb-6 { margin-bottom: 14px !important; }
+        }
+
+        @media (min-width: 1024px) and (max-height: 760px) {
+          .login-branding { padding-top: 12px !important; padding-bottom: 12px !important; }
+          .login-branding .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 16px; }
+          .login-branding .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 10px; }
+          .login-branding .text-4xl { font-size: 30px !important; }
+          .login-branding .text-lg { font-size: 14px !important; }
         }
       `}</style>
     </div>

@@ -22,15 +22,25 @@ export const maskGstNumber = (gstNumber?: string) => {
   return `******${lastSix}`;
 };
 
-export const getInvoiceTemplate = (invoice: any, serialNumberOverride?: number | string) => {
-  const serialNumber = serialNumberOverride ?? invoice.payeeSerialNumber ?? invoice.invoiceNumber ?? "N/A";
+export const getInvoiceTemplate = (
+  invoice: any,
+  serialNumberOverride?: number | string,
+) => {
+  const serialNumber =
+    serialNumberOverride ??
+    invoice.payeeSerialNumber ??
+    invoice.invoiceNumber ??
+    "N/A";
   const dynamicInvoiceTitle = `INVOICE - #${serialNumber}`;
   const eTransferAddress =
     invoice.customer?.eTransfer || invoice.payee?.eTransferAddress;
 
   const dispatchTotal =
     invoice.dispatchTotal ||
-    invoice.trips?.reduce((acc: number, t: any) => acc + (t.dispatchAmount || 0), 0) ||
+    invoice.trips?.reduce(
+      (acc: number, t: any) => acc + (t.dispatchAmount || 0),
+      0,
+    ) ||
     0;
 
   const tripRows = (invoice.trips || [])
@@ -160,6 +170,12 @@ export const getInvoiceTemplate = (invoice: any, serialNumberOverride?: number |
           <div class="main-content">
             <div class="header-section">
               <h1 class="invoice-title">${dynamicInvoiceTitle}</h1>
+              <div style="margin-top: 6px; color: #64748b; font-size: 8px; line-height: 1.15; font-weight: bold; letter-spacing: 0.2px;">
+                All invoices are non HST/GST<br/>
+                We are not responsible for your previous record more than 30 days<br/>
+                Rest later for further previous invoices record<br/>
+                Of 03 months we will charge you $50
+              </div>
             </div>
 
             <table class="details-table" style="table-layout: fixed;">
@@ -227,20 +243,28 @@ export const getInvoiceTemplate = (invoice: any, serialNumberOverride?: number |
                     <tr>
                       <td colspan="2" style="padding: 8px 8px 2px 8px; font-size: 10px; font-weight: bold; color: #dc2626; text-transform: uppercase;">DEPOSIT DETAILS</td>
                     </tr>
-                    ${eTransferAddress ? `
+                    ${
+                      eTransferAddress
+                        ? `
                     <tr>
                       <td colspan="2" style="padding: 2px 8px 4px 12px; font-size: 10px; color: #dc2626;">
                         <span style="font-weight: bold;">E-TRANSFER:</span> <span style="color: #475569; font-weight: bold;">${eTransferAddress}</span>
                       </td>
                     </tr>
-                    ` : ""}
-                    ${invoice.accountNumber ? `
+                    `
+                        : ""
+                    }
+                    ${
+                      invoice.accountNumber
+                        ? `
                     <tr>
                       <td colspan="2" style="padding: 2px 8px 6px 12px; font-size: 10px; color: #dc2626;">
                         <span style="font-weight: bold;">VOID CHEQUE:</span> <span style="color: #475569;">Inst: ${invoice.institutionNumber || "003"} | Transit: ${invoice.transitNumber || "115000"} | Acct: ${invoice.accountNumber}</span>
                       </td>
                     </tr>
-                    ` : ""}
+                    `
+                        : ""
+                    }
                   </table>
                 </td>
               </tr>
@@ -258,12 +282,18 @@ export const getInvoiceTemplate = (invoice: any, serialNumberOverride?: number |
                   </div>
                 </td>
                 <td style="width: 45%; vertical-align: top;">
-                  <div class="footer-right-copy">
+                  <div class="footer-right-copy" style="font-size: 8px; line-height: 1.15;">
                     Open Board, Bison, Walmart, Load Link<br/>
                     and Non Amazon Dispatch Solutions<br/><br/>
-                    <b>Contact :</b> xcdgoc@gmail.com<br/>
-                    +91 750 121 6555<br/>
-                    Shahid ul islam
+                    <b>Contact:</b> <span style="color: #dc2626; font-weight: bold;">BUSINESS HEAD SHAHID UL ISLAM</span><br/>
+                    EXTREME CANADA DISPATCH GROUP OF COMPANIES<br/>
+                    DIN 11644512<br/>
+                    TAN AMRX10063E<br/>
+                    CIN U52241JK20260PC018999<br/>
+                    business@xcdgocpvtltd.com<br/>
+                    xcdgocpvtltd@gmail.com<br/>
+                    +1 519 191 0142<br/>
+                    +91 750 121 6555
                   </div>
                 </td>
               </tr>
