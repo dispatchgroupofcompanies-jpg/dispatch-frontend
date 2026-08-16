@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   Card,
@@ -12,11 +11,14 @@ import {
   Space,
   Typography,
   Button,
+  Avatar,
 } from "antd";
 import {
   FileTextOutlined,
-  UpOutlined,
-  DownOutlined,
+  PlusOutlined,
+  MinusOutlined,
+  UserOutlined,
+  BankOutlined,
 } from "@ant-design/icons";
 import { getInvoices } from "@/src/services/admin/invoice";
 import type { CompanyHistoryInvoice } from "./types";
@@ -26,6 +28,16 @@ import CompanyHistoryExportModals from "./components/CompanyHistoryExportModals"
 import { getPayeeSerialNumbers } from "@/src/utils/invoiceSerial";
 
 const { Title, Text } = Typography;
+
+const getPayeeName = (invoice: CompanyHistoryInvoice) =>
+  invoice.payee?.companyName || invoice.payeeName;
+
+const getPayToName = (invoice: CompanyHistoryInvoice) =>
+  invoice.customer?.companyName ||
+  invoice.customer?.customerName ||
+  invoice.payToName ||
+  invoice.vendorName ||
+  invoice.payToAccountName;
 
 export default function CompanyHistoryPage() {
   const [loading, setLoading] = useState(true);
@@ -37,12 +49,12 @@ export default function CompanyHistoryPage() {
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
   const [expandedRowKeys, setExpandedRowKeys] = useState<readonly React.Key[]>(
-    [],
+    []
   );
   const mountedRef = useRef(true);
   const payeeSerialNumbers = useMemo(
     () => getPayeeSerialNumbers(invoices),
-    [invoices],
+    [invoices]
   );
 
   const applyFilters = useCallback(() => {
@@ -50,34 +62,44 @@ export default function CompanyHistoryPage() {
 
     if (selectedCompany) {
       filtered = filtered.filter(
-        (inv) => inv.customer?.companyName === selectedCompany,
+        (inv) =>
+          getPayeeName(inv) === selectedCompany ||
+          getPayToName(inv) === selectedCompany
       );
     }
 
     if (searchText.trim()) {
       const searchLower = searchText.toLowerCase();
       filtered = filtered.filter((inv) => {
-        const companyMatch = inv.customer?.companyName
+        const companyMatch = getPayToName(inv)
           ?.toLowerCase()
           .includes(searchLower);
+
+        const payeeMatch =
+          getPayeeName(inv)?.toLowerCase().includes(searchLower) ||
+          inv.payeeName?.toLowerCase().includes(searchLower) ||
+          inv.payeeEmail?.toLowerCase().includes(searchLower) ||
+          inv.payee?.email?.toLowerCase().includes(searchLower);
+
+        const payToMatch =
+          getPayToName(inv)?.toLowerCase().includes(searchLower) ||
+          inv.payToName?.toLowerCase().includes(searchLower) ||
+          inv.vendorName?.toLowerCase().includes(searchLower) ||
+          inv.customer?.email?.toLowerCase().includes(searchLower);
 
         const tripMatch = inv.trips?.some(
           (trip) =>
             trip.vrid?.toLowerCase().includes(searchLower) ||
             trip.loadId1?.toLowerCase().includes(searchLower) ||
-            trip.loadId2?.toLowerCase().includes(searchLower),
+            trip.loadId2?.toLowerCase().includes(searchLower)
         );
 
-        return companyMatch || tripMatch;
+        return companyMatch || payeeMatch || payToMatch || tripMatch;
       });
     }
 
     setFilteredInvoices(filtered);
-  }, [
-    invoices,
-    selectedCompany,
-    searchText,
-  ]);
+  }, [invoices, selectedCompany, searchText]);
 
   const fetchInvoices = useCallback(async () => {
     try {
@@ -90,11 +112,13 @@ export default function CompanyHistoryPage() {
 
       const uniqueCompanies = Array.from(
         new Set(
-          invoiceData
-            .map((inv: CompanyHistoryInvoice) => inv.customer?.companyName)
-            .filter(Boolean),
-        ),
-      ) as string[];
+          invoiceData.flatMap((inv: CompanyHistoryInvoice) =>
+            [getPayeeName(inv), getPayToName(inv)].filter(
+              (name): name is string => Boolean(name)
+            )
+          )
+        )
+      );
       setCompanies(uniqueCompanies.sort());
 
       if (invoiceData.length === 0) {
@@ -149,17 +173,18 @@ export default function CompanyHistoryPage() {
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
+      approved: "purple",
       paid: "green",
       sent: "blue",
       draft: "default",
       cancelled: "red",
       pending: "orange",
     };
-    return colors[status.toLowerCase()] || "default";
+    return colors[status?.toLowerCase()] || "default";
   };
 
   const [isMobile, setIsMobile] = useState(false);
-  const headerPadding = isMobile ? "20px 16px" : "24px 20px";
+  const headerPadding = isMobile ? "16px 12px" : "24px 20px";
 
   useEffect(() => {
     const checkMobile = () => {
@@ -170,21 +195,80 @@ export default function CompanyHistoryPage() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  // Columns using fixed pixel widths to guarantee alignment on row expansion
   const columns = [
     {
-      title: "Invoice #",
-      key: "invoiceNumber",
-      render: (_: unknown, record: CompanyHistoryInvoice) => (
-        <Text strong>#{payeeSerialNumbers.get(record._id) || 1}</Text>
+      title: "Date",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      width: 120,
+      render: (date: string) => (
+        <Text type="secondary" style={{ fontSize: "13px", whiteSpace: "nowrap" }}>
+          {date ? formatDate(date) : "N/A"}
+        </Text>
       ),
+    },
+    {
+      title: "Payee Details",
+      key: "payeeDetails",
+      width: 260,
+      render: (_: unknown, record: CompanyHistoryInvoice) => {
+        const payeeName = getPayeeName(record);
+        const payeeEmail = record.payee?.email || record.payeeEmail;
+
+        return (
+          <Space size="small">
+            <Avatar
+              size="small"
+              icon={<UserOutlined />}
+              style={{ backgroundColor: "#e0e7ff", color: "#1e3a8a", flexShrink: 0 }}
+            />
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <Text strong style={{ fontSize: "13px" }}>
+                {payeeName || "N/A"}
+              </Text>
+              {payeeEmail && (
+                <Text type="secondary" style={{ fontSize: "12px" }}>
+                  {payeeEmail}
+                </Text>
+              )}
+            </div>
+          </Space>
+        );
+      },
+    },
+    {
+      title: "Pay-to Details",
+      key: "payToDetails",
+      width: 240,
+      render: (_: unknown, record: CompanyHistoryInvoice) => {
+        const payToName = getPayToName(record);
+
+        return (
+          <Space size="small">
+            <Avatar
+              size="small"
+              icon={<BankOutlined />}
+              style={{ backgroundColor: "#fef3c7", color: "#d97706", flexShrink: 0 }}
+            />
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <Text strong style={{ fontSize: "13px" }}>
+                {payToName || "N/A"}
+              </Text>
+            </div>
+          </Space>
+        );
+      },
     },
     {
       title: "Amount",
       dataIndex: "grandTotal",
       key: "grandTotal",
+      width: 120,
+      align: "right" as const,
       render: (amount: number) => (
-        <Text strong style={{ color: "#52c41a" }}>
-          {formatCurrency(amount)}
+        <Text strong style={{ color: "#16a34a", fontSize: "14px" }}>
+          {formatCurrency(amount || 0)}
         </Text>
       ),
     },
@@ -192,17 +276,22 @@ export default function CompanyHistoryPage() {
       title: "Status",
       dataIndex: "invoiceStatus",
       key: "invoiceStatus",
+      width: 110,
+      align: "center" as const,
       render: (status: string) => (
-        <Tag color={getStatusColor(status)} style={{ fontWeight: 600 }}>
-          {status.toUpperCase()}
+        <Tag
+          color={getStatusColor(status)}
+          style={{
+            borderRadius: "12px",
+            fontWeight: 600,
+            fontSize: "11px",
+            textTransform: "uppercase",
+            margin: 0,
+          }}
+        >
+          {status ? status.toUpperCase() : "N/A"}
         </Tag>
       ),
-    },
-    {
-      title: "Date",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      render: (date: string) => formatDate(date),
     },
   ];
 
@@ -254,7 +343,7 @@ export default function CompanyHistoryPage() {
             style={{
               color: "rgba(255,255,255,0.85)",
               fontSize: isMobile ? 12 : 14,
-              marginTop: 6,
+              marginTop: 4,
               display: "block",
             }}
           >
@@ -263,7 +352,7 @@ export default function CompanyHistoryPage() {
         </div>
       </div>
 
-      {/* Search and Actions */}
+      {/* Search and Filters */}
       <Card
         style={{
           borderRadius: "16px",
@@ -280,6 +369,16 @@ export default function CompanyHistoryPage() {
           setSearchText={setSearchText}
           onClearFilters={handleClearFilters}
           isMobile={isMobile}
+          exportControl={
+            <CompanyHistoryExportModals
+              filteredInvoices={filteredInvoices}
+              formatCurrency={formatCurrency}
+              formatDate={formatDate}
+              isMobile={isMobile}
+              selectedCompany={selectedCompany}
+              payeeSerialNumbers={payeeSerialNumbers}
+            />
+          }
         />
       </Card>
 
@@ -287,10 +386,10 @@ export default function CompanyHistoryPage() {
       {(selectedCompany || searchText) && (
         <Row
           style={{
-            marginTop: 16,
-            paddingTop: 14,
+            marginTop: 12,
+            paddingTop: 12,
             borderTop: "1px solid #f1f5f9",
-            marginBottom: 16,
+            marginBottom: 12,
           }}
         >
           <Col span={24}>
@@ -329,29 +428,19 @@ export default function CompanyHistoryPage() {
       {/* Results Count Summary */}
       <Row style={{ marginBottom: 16 }}>
         <Col span={24}>
-          <Text type="secondary">
+          <Text type="secondary" style={{ fontSize: 14 }}>
             Showing <Text strong>{filteredInvoices.length}</Text> of{" "}
             <Text strong>{invoices.length}</Text> invoices
           </Text>
         </Col>
       </Row>
 
-      {/* Export Buttons */}
-      <CompanyHistoryExportModals
-        filteredInvoices={filteredInvoices}
-        formatCurrency={formatCurrency}
-        formatDate={formatDate}
-        isMobile={isMobile}
-        selectedCompany={selectedCompany}
-        payeeSerialNumbers={payeeSerialNumbers}
-      />
-
       {/* Invoices Table Card */}
       <Card
         style={{
           borderRadius: "12px",
           boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-          marginTop: 16,
+          marginTop: 0,
         }}
         title={
           <div
@@ -383,7 +472,7 @@ export default function CompanyHistoryPage() {
               borderRadius: "16px",
             }}
           >
-            <div style={{ fontSize: "56px", marginBottom: "16px" }}>📋</div>
+            <div style={{ fontSize: "40px", marginBottom: "12px" }}>📋</div>
             <Title
               level={4}
               style={{
@@ -410,21 +499,91 @@ export default function CompanyHistoryPage() {
             </Text>
           </div>
         ) : isMobile ? (
-          <div style={{ display: "grid", gap: 12 }}>
+          <div style={{ display: "grid", gap: 5 }}>
             {filteredInvoices.map((invoice) => {
               const expanded = expandedRowKeys.includes(invoice._id);
-              return <div key={invoice._id} style={{ display: "grid", gap: 12, padding: 14, border: "1px solid #e2e8f0", borderRadius: 12, background: "#fff" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "auto minmax(0, 1fr)", gap: 10, alignItems: "center" }}>
-                  <span style={{ fontWeight: 700, color: "#fff", background: "#10b981", padding: "4px 9px", borderRadius: 6 }}>#{payeeSerialNumbers.get(invoice._id) || 1}</span>
-                  <span style={{ fontWeight: 700, color: "#1e293b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{formatDate(invoice.createdAt)}</span>
+              const payeeName = getPayeeName(invoice);
+              const payToName = getPayToName(invoice);
+
+              return (
+                <div
+                  key={invoice._id}
+                  style={{
+                    display: "grid",
+                    gap: 10,
+                    padding: 12,
+                    border: "1px solid #e2e8f0",
+                    borderRadius: 10,
+                    background: "#fff",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      {formatDate(invoice.createdAt)}
+                    </Text>
+                    <Button
+                      type="text"
+                      shape="circle"
+                      size="small"
+                      icon={expanded ? <MinusOutlined /> : <PlusOutlined />}
+                      onClick={() => handleExpandRow(invoice)}
+                    />
+                  </div>
+
+                  <div style={{ display: "grid", gap: 4, fontSize: 13 }}>
+                    <div>
+                      <Text type="secondary">Payee: </Text>
+                      <Text strong>{payeeName || "N/A"}</Text>
+                    </div>
+                    <div>
+                      <Text type="secondary">Pay-to: </Text>
+                      <Text strong>{payToName || "N/A"}</Text>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      paddingTop: 8,
+                      borderTop: "1px dashed #e2e8f0",
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: 11, color: "#64748b" }}>Amount</div>
+                      <div style={{ fontWeight: 700, color: "#16a34a", fontSize: 14 }}>
+                        {formatCurrency(invoice.grandTotal)}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: 11, color: "#64748b", marginBottom: 2 }}>Status</div>
+                      <Tag
+                        color={getStatusColor(invoice.invoiceStatus)}
+                        style={{ margin: 0, fontWeight: 600, fontSize: 10 }}
+                      >
+                        {invoice.invoiceStatus?.toUpperCase() || "N/A"}
+                      </Tag>
+                    </div>
+                  </div>
+
+                  {expanded && (
+                    <CompanyHistoryExpandedRow
+                      record={invoice}
+                      isMobile
+                      formatCurrency={formatCurrency}
+                      formatDate={formatDate}
+                      getStatusColor={getStatusColor}
+                    />
+                  )}
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                  <div><div style={{ fontSize: 11, color: "#64748b", marginBottom: 3 }}>Amount</div><div style={{ fontWeight: 700, color: "#16a34a" }}>{formatCurrency(invoice.grandTotal)}</div></div>
-                  <div><div style={{ fontSize: 11, color: "#64748b", marginBottom: 3 }}>Status</div><Tag color={getStatusColor(invoice.invoiceStatus)} style={{ margin: 0, fontWeight: 600 }}>{invoice.invoiceStatus.toUpperCase()}</Tag></div>
-                </div>
-                <Button type="primary" size="small" onClick={() => handleExpandRow(invoice)}>{expanded ? "Hide Details" : "View Details"}</Button>
-                {expanded && <CompanyHistoryExpandedRow record={invoice} isMobile formatCurrency={formatCurrency} formatDate={formatDate} getStatusColor={getStatusColor} />}
-              </div>;
+              );
             })}
           </div>
         ) : (
@@ -432,6 +591,7 @@ export default function CompanyHistoryPage() {
             dataSource={filteredInvoices}
             columns={columns}
             rowKey="_id"
+            scroll={{ x: "max-content" }}
             expandable={{
               expandedRowRender: (record) => (
                 <CompanyHistoryExpandedRow
@@ -444,18 +604,15 @@ export default function CompanyHistoryPage() {
               ),
               expandedRowKeys: expandedRowKeys,
               onExpandedRowsChange: handleExpandedRowsChange,
-              expandIcon: ({ expanded, record }) => {
-                return (
-                  <Button
-                    type="link"
-                    icon={expanded ? <UpOutlined /> : <DownOutlined />}
-                    onClick={() => handleExpandRow(record)}
-                    style={{ color: "#1890ff", padding: 0 }}
-                  >
-                    {expanded ? "Hide Details" : "View Details"}
-                  </Button>
-                );
-              },
+              expandIcon: ({ expanded, onExpand, record }) => (
+                <Button
+                  type="text"
+                  shape="circle"
+                  size="small"
+                  icon={expanded ? <MinusOutlined /> : <PlusOutlined />}
+                  onClick={(e) => onExpand(record, e)}
+                />
+              ),
             }}
             pagination={{
               pageSize: 10,
@@ -464,7 +621,7 @@ export default function CompanyHistoryPage() {
                 `${range[0]}-${range[1]} of ${total} invoices`,
             }}
             size="middle"
-            style={{ borderRadius: "8px", overflow: "hidden" }}
+            style={{ borderRadius: "8px" }}
           />
         )}
       </Card>

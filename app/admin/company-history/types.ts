@@ -12,6 +12,11 @@ export interface CompanyHistoryInvoiceTrip {
 }
 
 export interface CompanyHistoryInvoice {
+  payeeName?: string;
+  payeeEmail?: string;
+  payToName?: string;
+  vendorName?: string;
+  payToAccountName?: string;
   carrierNeedToPay?: number;
   carrierNeedsToReceive?: number;
   _id: string;
@@ -19,6 +24,7 @@ export interface CompanyHistoryInvoice {
   invoiceStatus: string;
   grandTotal: number;
   customer?: {
+    customerName?: string;
     companyName?: string;
     contactPerson?: string;
     phone?: string;

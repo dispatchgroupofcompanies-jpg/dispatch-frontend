@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { Select, Input, Button, Row, Col } from "antd";
 import {
   ReloadOutlined,
@@ -14,6 +15,7 @@ interface FiltersProps {
   setSearchText: (text: string) => void;
   onClearFilters: () => void;
   isMobile: boolean;
+  exportControl: ReactNode;
 }
 
 export default function CompanyHistoryFilters({
@@ -24,6 +26,7 @@ export default function CompanyHistoryFilters({
   setSearchText,
   onClearFilters,
   isMobile,
+  exportControl,
 }: FiltersProps) {
   const hasActiveFilters = selectedCompany || searchText;
 
@@ -68,6 +71,7 @@ export default function CompanyHistoryFilters({
             size="large"
             style={{ minWidth: isMobile ? "100%" : 230, flex: isMobile ? 1 : undefined }}
           />
+          {exportControl}
           <Button
             icon={<ReloadOutlined />}
             size="large"
