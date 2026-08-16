@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Form,
   Input,
@@ -8,8 +8,6 @@ import {
   message,
   Card,
   Typography,
-  Space,
-  Alert,
 } from "antd";
 import {
   LockOutlined,
@@ -19,34 +17,14 @@ import {
 import { useRouter } from "next/navigation";
 import {
   resetAdminPassword,
-  getAdminProfile,
 } from "@/src/services/admin/admin";
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 export default function ResetPasswordPage() {
   const [form] = Form.useForm();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [adminEmail, setAdminEmail] = useState("");
-  const [isFirstTime, setIsFirstTime] = useState(false);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const response = await getAdminProfile();
-        if (response.success && response.admin) {
-          setAdminEmail(response.admin.email);
-          // Check if password is still hardcoded (first time user)
-          // We'll show a special message for first-time users
-        }
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      }
-    };
-
-    fetchProfile();
-  }, []);
 
   const handleFinish = async (values: {
     currentPassword: string;
@@ -98,45 +76,26 @@ export default function ResetPasswordPage() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "20px",
+        padding: "16px",
       }}
     >
       <Card
         style={{
           width: "100%",
-          maxWidth: 500,
-          borderRadius: 12,
-          boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+          maxWidth: 420,
+          borderRadius: 16,
+          boxShadow: "0 16px 40px rgba(15,23,42,0.12)",
         }}
+        styles={{ body: { padding: "28px" } }}
       >
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
+        <div style={{ textAlign: "center", marginBottom: 22 }}>
           <SafetyCertificateOutlined
-            style={{ fontSize: 48, color: "#2563eb", marginBottom: 16 }}
+            style={{ fontSize: 38, color: "#2563eb", marginBottom: 10 }}
           />
           <Title level={3} style={{ margin: 0, color: "#0f172a" }}>
             Reset Admin Password
           </Title>
-          <Text type="secondary" style={{ fontSize: 14 }}>
-            Secure your account with a new password
-          </Text>
         </div>
-
-        {adminEmail && (
-          <Alert
-            message={`Logged in as: ${adminEmail}`}
-            type="info"
-            showIcon
-            style={{ marginBottom: 24, borderRadius: 8 }}
-          />
-        )}
-
-        <Alert
-          message="Security Notice"
-          description="After resetting your password, you will need to login again with your new password. The old password will no longer work."
-          type="warning"
-          showIcon
-          style={{ marginBottom: 24, borderRadius: 8 }}
-        />
 
         <Form
           form={form}
@@ -158,7 +117,7 @@ export default function ResetPasswordPage() {
           >
             <Input.Password
               prefix={<LockOutlined className="text-gray-400" />}
-              placeholder="Enter current password (default: 111111)"
+              placeholder="Enter current password"
               className="rounded-lg"
             />
           </Form.Item>
@@ -210,7 +169,7 @@ export default function ResetPasswordPage() {
             />
           </Form.Item>
 
-          <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
+          <Form.Item style={{ marginBottom: 0, marginTop: 18 }}>
             <Button
               type="primary"
               htmlType="submit"
@@ -231,18 +190,6 @@ export default function ResetPasswordPage() {
           </Form.Item>
         </Form>
 
-        <div style={{ textAlign: "center", marginTop: 24 }}>
-          <Text type="secondary" style={{ fontSize: 13 }}>
-            Remember your password?{" "}
-            <Button
-              type="link"
-              onClick={() => router.push("/admin/dashboard")}
-              style={{ padding: 0, height: "auto", fontWeight: 600 }}
-            >
-              Go to Dashboard
-            </Button>
-          </Text>
-        </div>
       </Card>
     </div>
   );

@@ -173,7 +173,6 @@ export default function CompanyHistoryPage() {
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      approved: "purple",
       paid: "green",
       sent: "blue",
       draft: "default",
@@ -197,17 +196,6 @@ export default function CompanyHistoryPage() {
 
   // Columns using fixed pixel widths to guarantee alignment on row expansion
   const columns = [
-    {
-      title: "Date",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      width: 120,
-      render: (date: string) => (
-        <Text type="secondary" style={{ fontSize: "13px", whiteSpace: "nowrap" }}>
-          {date ? formatDate(date) : "N/A"}
-        </Text>
-      ),
-    },
     {
       title: "Payee Details",
       key: "payeeDetails",
@@ -291,6 +279,18 @@ export default function CompanyHistoryPage() {
         >
           {status ? status.toUpperCase() : "N/A"}
         </Tag>
+      ),
+    },
+    {
+      title: "Date",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      width: 120,
+      align: "right" as const,
+      render: (date: string) => (
+        <Text type="secondary" style={{ fontSize: "13px", whiteSpace: "nowrap" }}>
+          {date ? formatDate(date) : "N/A"}
+        </Text>
       ),
     },
   ];
