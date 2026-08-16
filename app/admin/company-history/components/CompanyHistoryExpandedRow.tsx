@@ -279,8 +279,7 @@ export default function CompanyHistoryExpandedRow({
                   columns={tripColumns}
                   pagination={false}
                   size="small"
-                  scroll={{ x: 800 }}
-                  style={{ borderRadius: "8px", overflow: "hidden" }}
+                  style={{ borderRadius: "8px" }}
                 />
               )}
             </Card>

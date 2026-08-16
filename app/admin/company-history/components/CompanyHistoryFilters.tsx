@@ -32,12 +32,12 @@ export default function CompanyHistoryFilters({
 
   return (
     <Row
-      gutter={[16, 16]}
+      gutter={[16, 12]}
       align="middle"
       justify="space-between"
       style={{ marginBottom: 0 }}
     >
-      <Col xs={24} lg={10}>
+      <Col xs={24} xl={9}>
         <Input
           placeholder="Search company, VRID, or Load ID"
           value={searchText}
@@ -47,12 +47,12 @@ export default function CompanyHistoryFilters({
           allowClear
         />
       </Col>
-      <Col xs={24} lg={14}>
+      <Col xs={24} xl={15}>
         <div
           style={{
             display: "flex",
             justifyContent: isMobile ? "stretch" : "flex-end",
-            gap: 12,
+            gap: 10,
             flexWrap: "wrap",
           }}
         >
@@ -69,7 +69,10 @@ export default function CompanyHistoryFilters({
             showSearch
             optionFilterProp="label"
             size="large"
-            style={{ minWidth: isMobile ? "100%" : 230, flex: isMobile ? 1 : undefined }}
+            style={{
+              width: isMobile ? "100%" : 220,
+              flex: "0 1 220px",
+            }}
           />
           {exportControl}
           <Button

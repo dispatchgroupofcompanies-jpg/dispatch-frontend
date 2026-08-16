@@ -178,6 +178,7 @@ export default function CompanyHistoryPage() {
       draft: "default",
       cancelled: "red",
       pending: "orange",
+      approved: "purple",
     };
     return colors[status?.toLowerCase()] || "default";
   };
@@ -196,6 +197,17 @@ export default function CompanyHistoryPage() {
 
   // Columns using fixed pixel widths to guarantee alignment on row expansion
   const columns = [
+    {
+      title: "Date",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      width: 120,
+      render: (date: string) => (
+        <Text type="secondary" style={{ fontSize: "13px", whiteSpace: "nowrap" }}>
+          {date ? formatDate(date) : "N/A"}
+        </Text>
+      ),
+    },
     {
       title: "Payee Details",
       key: "payeeDetails",
@@ -275,22 +287,12 @@ export default function CompanyHistoryPage() {
             fontSize: "11px",
             textTransform: "uppercase",
             margin: 0,
+            minWidth: "92px",
+            textAlign: "center",
           }}
         >
           {status ? status.toUpperCase() : "N/A"}
         </Tag>
-      ),
-    },
-    {
-      title: "Date",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      width: 120,
-      align: "right" as const,
-      render: (date: string) => (
-        <Text type="secondary" style={{ fontSize: "13px", whiteSpace: "nowrap" }}>
-          {date ? formatDate(date) : "N/A"}
-        </Text>
       ),
     },
   ];
@@ -360,6 +362,7 @@ export default function CompanyHistoryPage() {
           marginBottom: 16,
           border: "1px solid #f1f5f9",
         }}
+        styles={{ body: { padding: isMobile ? "12px" : "18px 20px" } }}
       >
         <CompanyHistoryFilters
           companies={companies}
@@ -566,7 +569,13 @@ export default function CompanyHistoryPage() {
                       <div style={{ fontSize: 11, color: "#64748b", marginBottom: 2 }}>Status</div>
                       <Tag
                         color={getStatusColor(invoice.invoiceStatus)}
-                        style={{ margin: 0, fontWeight: 600, fontSize: 10 }}
+                        style={{
+                          margin: 0,
+                          minWidth: "92px",
+                          textAlign: "center",
+                          fontWeight: 600,
+                          fontSize: 10,
+                        }}
                       >
                         {invoice.invoiceStatus?.toUpperCase() || "N/A"}
                       </Tag>
@@ -591,7 +600,6 @@ export default function CompanyHistoryPage() {
             dataSource={filteredInvoices}
             columns={columns}
             rowKey="_id"
-            scroll={{ x: "max-content" }}
             expandable={{
               expandedRowRender: (record) => (
                 <CompanyHistoryExpandedRow
@@ -621,7 +629,7 @@ export default function CompanyHistoryPage() {
                 `${range[0]}-${range[1]} of ${total} invoices`,
             }}
             size="middle"
-            style={{ borderRadius: "8px" }}
+            style={{ borderRadius: "8px", overflow: "hidden" }}
           />
         )}
       </Card>
