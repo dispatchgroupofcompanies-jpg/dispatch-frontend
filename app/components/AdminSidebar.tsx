@@ -45,27 +45,30 @@ export default function AdminSidebar({
       path: "/admin/dashboard",
     },
     {
-      icon: <CalendarOutlined style={{ fontSize: 18, color: "#fff" }} />,
-      label: "Appointment Records",
-      path: "/admin/apointments",
-    },
-     {
       icon: <FileAddOutlined style={{ fontSize: 18, color: "#fff" }} />,
       label: "Create Invoice",
       path: "/admin/createInvoice",
-    },
-      {
-      icon: <FileTextOutlined style={{ fontSize: 18, color: "#fff" }} />,
-      label: "3P Dispatch",
-      path: "/admin/3p-dispatch",
     },
     {
       icon: <FileTextOutlined style={{ fontSize: 18, color: "#fff" }} />,
       label: "Invoice Approval",
       path: "/admin/invoices",
     },
-  
-   
+    {
+      icon: <FileTextOutlined style={{ fontSize: 18, color: "#fff" }} />,
+      label: "Invoice History",
+      path: "/admin/company-history",
+    },
+    {
+      icon: <FileTextOutlined style={{ fontSize: 18, color: "#fff" }} />,
+      label: "3P Dispatch",
+      path: "/admin/3p-dispatch",
+    },
+    {
+      icon: <CalendarOutlined style={{ fontSize: 18, color: "#fff" }} />,
+      label: "Appointment Records",
+      path: "/admin/apointments",
+    },
     {
       icon: <CalendarOutlined style={{ fontSize: 18, color: "#fff" }} />,
       label: "Book Appointment",
@@ -87,11 +90,6 @@ export default function AdminSidebar({
       icon: <GlobalOutlined style={{ fontSize: 18, color: "#fff" }} />,
       label: "Company Records",
       path: "/admin/company-record",
-    },
-    {
-      icon: <FileTextOutlined style={{ fontSize: 18, color: "#fff" }} />,
-      label: "Invoice History",
-      path: "/admin/company-history",
     },
     {
       icon: <LockOutlined style={{ fontSize: 18, color: "#fff" }} />,
