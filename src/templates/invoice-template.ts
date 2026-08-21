@@ -7,13 +7,13 @@ export const formatCurrency = (amount?: number, currency = "CAD") => {
 
 export const formatDate = (dateStr?: string) => {
   if (!dateStr) return "N/A";
-  return new Date(dateStr)
-    .toLocaleDateString("en-CA", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    })
-    .replace(/\//g, "-");
+  
+  // Uses "en-GB" locale which formats natively as DD/MM/YYYY
+  return new Date(dateStr).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 };
 
 export const maskGstNumber = (gstNumber?: string) => {

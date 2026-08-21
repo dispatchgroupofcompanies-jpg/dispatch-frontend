@@ -26,7 +26,6 @@ import CompanyHistoryFilters from "./components/CompanyHistoryFilters";
 import CompanyHistoryExpandedRow from "./components/CompanyHistoryExpandedRow";
 import CompanyHistoryExportModals from "./components/CompanyHistoryExportModals";
 import { getPayeeSerialNumbers } from "@/src/utils/invoiceSerial";
-
 const { Title, Text } = Typography;
 
 const getPayeeName = (invoice: CompanyHistoryInvoice) =>
@@ -49,12 +48,12 @@ export default function CompanyHistoryPage() {
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
   const [expandedRowKeys, setExpandedRowKeys] = useState<readonly React.Key[]>(
-    []
+    [],
   );
   const mountedRef = useRef(true);
   const payeeSerialNumbers = useMemo(
     () => getPayeeSerialNumbers(invoices),
-    [invoices]
+    [invoices],
   );
 
   const applyFilters = useCallback(() => {
@@ -64,7 +63,7 @@ export default function CompanyHistoryPage() {
       filtered = filtered.filter(
         (inv) =>
           getPayeeName(inv) === selectedCompany ||
-          getPayToName(inv) === selectedCompany
+          getPayToName(inv) === selectedCompany,
       );
     }
 
@@ -91,7 +90,7 @@ export default function CompanyHistoryPage() {
           (trip) =>
             trip.vrid?.toLowerCase().includes(searchLower) ||
             trip.loadId1?.toLowerCase().includes(searchLower) ||
-            trip.loadId2?.toLowerCase().includes(searchLower)
+            trip.loadId2?.toLowerCase().includes(searchLower),
         );
 
         return companyMatch || payeeMatch || payToMatch || tripMatch;
@@ -114,10 +113,10 @@ export default function CompanyHistoryPage() {
         new Set(
           invoiceData.flatMap((inv: CompanyHistoryInvoice) =>
             [getPayeeName(inv), getPayToName(inv)].filter(
-              (name): name is string => Boolean(name)
-            )
-          )
-        )
+              (name): name is string => Boolean(name),
+            ),
+          ),
+        ),
       );
       setCompanies(uniqueCompanies.sort());
 
@@ -203,7 +202,10 @@ export default function CompanyHistoryPage() {
       key: "createdAt",
       width: 120,
       render: (date: string) => (
-        <Text type="secondary" style={{ fontSize: "13px", whiteSpace: "nowrap" }}>
+        <Text
+          type="secondary"
+          style={{ fontSize: "13px", whiteSpace: "nowrap" }}
+        >
           {date ? formatDate(date) : "N/A"}
         </Text>
       ),
@@ -221,7 +223,11 @@ export default function CompanyHistoryPage() {
             <Avatar
               size="small"
               icon={<UserOutlined />}
-              style={{ backgroundColor: "#e0e7ff", color: "#1e3a8a", flexShrink: 0 }}
+              style={{
+                backgroundColor: "#e0e7ff",
+                color: "#1e3a8a",
+                flexShrink: 0,
+              }}
             />
             <div style={{ display: "flex", flexDirection: "column" }}>
               <Text strong style={{ fontSize: "13px" }}>
@@ -249,7 +255,11 @@ export default function CompanyHistoryPage() {
             <Avatar
               size="small"
               icon={<BankOutlined />}
-              style={{ backgroundColor: "#fef3c7", color: "#d97706", flexShrink: 0 }}
+              style={{
+                backgroundColor: "#fef3c7",
+                color: "#d97706",
+                flexShrink: 0,
+              }}
             />
             <div style={{ display: "flex", flexDirection: "column" }}>
               <Text strong style={{ fontSize: "13px" }}>
@@ -560,13 +570,29 @@ export default function CompanyHistoryPage() {
                     }}
                   >
                     <div>
-                      <div style={{ fontSize: 11, color: "#64748b" }}>Amount</div>
-                      <div style={{ fontWeight: 700, color: "#16a34a", fontSize: 14 }}>
+                      <div style={{ fontSize: 11, color: "#64748b" }}>
+                        Amount
+                      </div>
+                      <div
+                        style={{
+                          fontWeight: 700,
+                          color: "#16a34a",
+                          fontSize: 14,
+                        }}
+                      >
                         {formatCurrency(invoice.grandTotal)}
                       </div>
                     </div>
                     <div style={{ textAlign: "right" }}>
-                      <div style={{ fontSize: 11, color: "#64748b", marginBottom: 2 }}>Status</div>
+                      <div
+                        style={{
+                          fontSize: 11,
+                          color: "#64748b",
+                          marginBottom: 2,
+                        }}
+                      >
+                        Status
+                      </div>
                       <Tag
                         color={getStatusColor(invoice.invoiceStatus)}
                         style={{
