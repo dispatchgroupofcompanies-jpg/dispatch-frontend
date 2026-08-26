@@ -395,74 +395,84 @@ function DashboardComponent() {
           );
         },
       },
-      {
-        title: "Actions",
-        key: "action",
-        width: isMobile ? 134 : 260,
-        align: "center" as const,
-        render: (_: unknown, record: InvoiceType) => {
-          const isDraft =
-            (record.invoiceStatus || "draft").toLowerCase() === "draft";
-          const isApproved =
-            (record.invoiceStatus || "").toLowerCase() === "approved";
-          return (
-            <Space size={isMobile ? 2 : "small"}>
+     {
+  title: "Actions",
+  key: "action",
+  width: isMobile ? 134 : 260,
+  align: "center" as const,
+  render: (_: unknown, record: InvoiceType) => {
+    const isApproved =
+      (record.invoiceStatus || "").toLowerCase() === "approved";
+
+    return (
+      <Space size={isMobile ? 2 : "small"}>
+        {/* View Button */}
+        <Button
+          type="primary"
+          icon={<EyeOutlined />}
+          onClick={() => openView(record)}
+        >
+          {!isMobile && "View"}
+        </Button>
+
+        {/* Download PDF Button */}
+        <Tooltip title="Download Clean PDF">
+          <Button
+            type="default"
+            loading={downloading && selected?._id === record._id}
+            style={{
+              color: "#10b981",
+              borderColor: "#a7f3d0",
+              backgroundColor: "#f0fdf4",
+            }}
+            icon={<DownloadOutlined />}
+            onClick={() => triggerDownloadPDF(record)}
+          />
+        </Tooltip>
+
+        {/* Edit Button - ALWAYS ENABLED FOR ALL STAGES */}
+        <Tooltip title="Modify Properties">
+          <Button
+            type="default"
+            icon={<EditOutlined />}
+            style={{
+              borderColor: "#ea580c",
+              color: "#ea580c",
+            }}
+            onClick={() => openEditModal(record)}
+          />
+        </Tooltip>
+
+        {/* Delete Button */}
+        <Tooltip
+          title={
+            isApproved
+              ? "Approved invoices cannot be deleted"
+              : "Delete invoice"
+          }
+        >
+          <span>
+            <Popconfirm
+              title="Purge Invoice Record"
+              description="Are you sure you want to delete this invoice statement permanently?"
+              onConfirm={() => handleDeleteInvoice(record._id)}
+              okText="Confirm Delete"
+              okButtonProps={{ danger: true, type: "primary" }}
+              disabled={isApproved}
+            >
               <Button
-                type="primary"
-                icon={<EyeOutlined />}
-                onClick={() => openView(record)}
-              >
-                {!isMobile && "View"}
-              </Button>
-
-              <Tooltip title="Download Clean PDF">
-                <Button
-                  type="default"
-                  loading={downloading && selected?._id === record._id}
-                  style={{
-                    color: "#10b981",
-                    borderColor: "#a7f3d0",
-                    backgroundColor: "#f0fdf4",
-                  }}
-                  icon={<DownloadOutlined />}
-                  onClick={() => triggerDownloadPDF(record)}
-                />
-              </Tooltip>
-
-              <Tooltip
-                title={
-                  isDraft
-                    ? "Modify Properties"
-                    : "Locked (Only editable in draft stage)"
-                }
-              >
-                <Button
-                  type="default"
-                  icon={<EditOutlined />}
-                  disabled={!isDraft}
-                  style={{ borderColor: isDraft ? "#cbd5e1" : "#f1f5f9" }}
-                  onClick={() => openEditModal(record)}
-                />
-              </Tooltip>
-
-              <Tooltip title={isApproved ? "Approved invoices cannot be deleted" : "Delete invoice"}>
-                <span>
-                  <Popconfirm
-                    title="Purge Invoice Record"
-                    description="Are you sure you want to delete this invoice statement permanently?"
-                    onConfirm={() => handleDeleteInvoice(record._id)}
-                    okText="Confirm Delete"
-                    okButtonProps={{ danger: true, type: "primary" }}
-                    disabled={isApproved}
-                  >
-                    <Button danger type="text" icon={<DeleteOutlined />} disabled={isApproved} />
-                  </Popconfirm>
-                </span>
-              </Tooltip>
-            </Space>
-          );
-        },
-      },
+                danger
+                type="text"
+                icon={<DeleteOutlined />}
+                disabled={isApproved}
+              />
+            </Popconfirm>
+          </span>
+        </Tooltip>
+      </Space>
+    );
+  },
+},
     ],
     [selected, downloading, isMobile, currentPage, pageSize, filteredInvoices],
   );
