@@ -1,11 +1,28 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Table, Card, Typography, message, Button, Grid, Select, Tooltip, Modal, Image, Tag } from "antd";
-import { EyeOutlined } from "@ant-design/icons";
-import { getAdminLoadboard, updateAdminLoadboardStatus } from "../../../src/services/admin/loadboard";
+import React, { useEffect, useState, useMemo } from "react";
+import {
+  Table,
+  Card,
+  Typography,
+  message,
+  Button,
+  Grid,
+  Select,
+  Tooltip,
+  Modal,
+  Image,
+  Tag,
+  Input,
+  Space,
+} from "antd";
+import { EyeOutlined, SearchOutlined } from "@ant-design/icons";
+import {
+  getAdminLoadboard,
+  updateAdminLoadboardStatus,
+} from "../../../src/services/admin/loadboard";
 
-const { Text } = Typography;
+const { Text, Title } = Typography;
 const { useBreakpoint } = Grid;
 
 interface LoadBoardRecord {
@@ -14,7 +31,6 @@ interface LoadBoardRecord {
   paymentStatus?: string;
   createdBy?: { email: string; name: string };
   createdAt: string;
-  vrid?: string;
   load1Id?: string;
   carrierName?: string;
   thirdPartyCarrierName?: string;
@@ -93,6 +109,11 @@ export default function Admin3PDispatchPage() {
   const [statusUpdating, setStatusUpdating] = useState<Record<string, boolean>>({});
   const [detailsRecord, setDetailsRecord] = useState<LoadBoardRecord | null>(null);
 
+  // Search & Pagination States
+  const [searchText, setSearchText] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   const fetchRecords = async () => {
     setLoading(true);
     try {
@@ -139,30 +160,56 @@ export default function Admin3PDispatchPage() {
     }
   };
 
+  // Filter records based on Search Bar (Company Name, Pay To Name, Dispatcher)
+  const filteredRecords = useMemo(() => {
+    if (!searchText.trim()) return records;
+    const term = searchText.toLowerCase().trim();
+    return records.filter((r) => {
+      const carrierMatch = r.carrierName?.toLowerCase().includes(term);
+      const thirdPartyMatch = r.thirdPartyCarrierName?.toLowerCase().includes(term);
+      const dispatcherMatch = r.dispatcher?.toLowerCase().includes(term);
+      return carrierMatch || thirdPartyMatch || dispatcherMatch;
+    });
+  }, [records, searchText]);
+
   const columns = [
     {
       title: "S.No",
       key: "serial",
-      width: 60,
-      render: (_v: any, _r: any, index: number) => (
-        <span
-          style={{
-            fontWeight: 700,
-            color: "#fff",
-            background: "#059669",
-            padding: "4px 9px",
-            borderRadius: 6,
-            display: "inline-block",
-          }}
-        >
-          #{index + 1}
+      width: 70,
+      render: (_v: any, _r: any, index: number) => {
+        const serialNumber = (currentPage - 1) * pageSize + index + 1;
+        return (
+          <span
+            style={{
+              fontWeight: 700,
+              color: "#fff",
+              background: "#059669",
+              padding: "4px 9px",
+              borderRadius: 6,
+              display: "inline-block",
+            }}
+          >
+            #{serialNumber}
+          </span>
+        );
+      },
+    },
+    {
+      title: "Company Name / Payee",
+      dataIndex: "carrierName",
+      width: 170,
+      ellipsis: true,
+      render: (value: string) => (
+        <span style={{ fontWeight: 600, color: "#047857" }}>
+          {value || "—"}
         </span>
       ),
     },
     {
       title: "Pay To / Company Driver",
       dataIndex: "thirdPartyCarrierName",
-      width: 150,
+      width: 170,
       ellipsis: true,
       render: (value: string) => (
         <span style={{ fontWeight: 600, color: "#064e3b" }}>
@@ -173,14 +220,14 @@ export default function Admin3PDispatchPage() {
     {
       title: "Dispatcher",
       dataIndex: "dispatcher",
-      width: 150,
+      width: 140,
       ellipsis: true,
       render: (value: string) => value || "—",
     },
     {
-      title: "CAD",
+      title: "CAD Amount",
       dataIndex: "tripCharges",
-      width: 120,
+      width: 130,
       render: (value: number) => (
         <span style={{ fontWeight: 700, color: "#022c22", whiteSpace: "nowrap" }}>
           CAD ${Number(value || 0).toLocaleString()}
@@ -188,9 +235,9 @@ export default function Admin3PDispatchPage() {
       ),
     },
     {
-      title: "Invoice",
+      title: "Invoice Status",
       dataIndex: "invoiceStatus",
-      width: 140,
+      width: 150,
       render: (value: string, record: LoadBoardRecord) => {
         const isGenerated = value === "generated";
 
@@ -213,21 +260,69 @@ export default function Admin3PDispatchPage() {
     {
       title: "Actions",
       key: "actions",
-      width: 100,
+      width: 90,
+      align: "center" as const,
       render: (_v: any, record: LoadBoardRecord) => (
-        <Tooltip title="View">
+        <Tooltip title="View Details">
           <Button
-            type="text"
+            type="primary"
+            ghost
             icon={<EyeOutlined />}
             onClick={() => setDetailsRecord(record)}
-            style={{ color: "#047857", fontWeight: 600 }}
+            style={{ borderColor: "#10b981", color: "#047857" }}
           />
         </Tooltip>
       ),
     },
   ];
 
+  const renderHeader = () => (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: isMobile ? "column" : "row",
+        justifyContent: "space-between",
+        alignItems: isMobile ? "stretch" : "center",
+        gap: 12,
+        padding: "16px 20px",
+        background: "#ffffff",
+        borderBottom: "1px solid #e5e7eb",
+        borderRadius: "12px 12px 0 0",
+      }}
+    >
+      <div>
+        <Title level={4} style={{ margin: 0, color: "#065f46" }}>
+          3P Dispatch Records
+        </Title>
+        <Text type="secondary" style={{ fontSize: 12 }}>
+          Manage and review third-party dispatch load records
+        </Text>
+      </div>
+      <Input
+        placeholder="Search by Company Name or Dispatcher..."
+        prefix={<SearchOutlined style={{ color: "#10b981" }} />}
+        allowClear
+        value={searchText}
+        onChange={(e) => {
+          setSearchText(e.target.value);
+          setCurrentPage(1); // Reset to page 1 on search
+        }}
+        style={{
+          width: isMobile ? "100%" : 360,
+          borderRadius: 8,
+          borderColor: "#a7f3d0",
+        }}
+      />
+    </div>
+  );
+
   if (isMobile) {
+    const startIndex = (currentPage - 1) * pageSize;
+    const paginatedMobileRecords = filteredRecords.slice(
+      startIndex,
+      startIndex + pageSize
+    );
+
     return (
       <div
         style={{
@@ -238,26 +333,24 @@ export default function Admin3PDispatchPage() {
           background: "#ecfdf5",
         }}
       >
-        <Card
-          title={<h3 style={{ margin: 0, color: "#065f46" }}>3P Dispatch Records</h3>}
-          style={{ background: "#d1fae5", borderColor: "#a7f3d0" }}
-          bodyStyle={{ padding: 0 }}
-        >
+        <Card bodyStyle={{ padding: 0 }} style={{ borderRadius: 12, overflow: "hidden" }}>
+          {renderHeader()}
           {loading && (
             <div style={{ textAlign: "center", padding: 24, color: "#047857" }}>
               Loading dispatch records...
             </div>
           )}
-          {!loading && records.length === 0 && (
-            <div style={{ textAlign: "center", padding: 24, color: "#047857" }}>
-              No dispatch records found.
+          {!loading && filteredRecords.length === 0 && (
+            <div style={{ textAlign: "center", padding: 24, color: "#6b7280" }}>
+              No matching records found.
             </div>
           )}
-          {records.map((record, index) => {
+          {paginatedMobileRecords.map((record, index) => {
             const isInvoiceGenerated = record.invoiceStatus === "generated";
             const rowColors = isInvoiceGenerated
               ? { background: "#f0fdf4", border: "#86efac", text: "#166534" }
               : { background: "#fef2f2", border: "#fecaca", text: "#b91c1c" };
+            const serialNumber = startIndex + index + 1;
 
             return (
               <div
@@ -272,25 +365,28 @@ export default function Admin3PDispatchPage() {
               >
                 <div
                   style={{
-                    display: "grid",
-                    gridTemplateColumns: "auto minmax(0, 1fr)",
+                    display: "flex",
+                    justifyContent: "space-between",
                     alignItems: "center",
                     gap: 10,
-                    paddingBottom: 10,
+                    paddingBottom: 8,
                     borderBottom: `1px solid ${rowColors.border}`,
                   }}
                 >
-                  <span
-                    style={{
-                      fontWeight: 700,
-                      color: "#fff",
-                      background: "#059669",
-                      padding: "4px 9px",
-                      borderRadius: 6,
-                    }}
-                  >
-                    #{index + 1}
-                  </span>
+                  <Space>
+                    <span
+                      style={{
+                        fontWeight: 700,
+                        color: "#fff",
+                        background: "#059669",
+                        padding: "3px 8px",
+                        borderRadius: 6,
+                        fontSize: 12,
+                      }}
+                    >
+                      #{serialNumber}
+                    </span>
+                  </Space>
                   <span
                     style={{
                       fontWeight: 700,
@@ -300,44 +396,43 @@ export default function Admin3PDispatchPage() {
                       whiteSpace: "nowrap",
                     }}
                   >
-                    {record.thirdPartyCarrierName || "—"}
+                    {record.carrierName || record.thirdPartyCarrierName || "—"}
                   </span>
                 </div>
 
-                <div style={{ fontSize: 12, color: rowColors.text }}>
+                <div style={{ fontSize: 12, color: "#374151" }}>
                   Dispatcher: <strong>{record.dispatcher || "—"}</strong>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 4 }}>
-                  <div style={{ fontSize: 11, color: rowColors.text }}>CAD Amount</div>
-                  <div style={{ fontWeight: 700, color: rowColors.text, fontSize: 15 }}>
-                    CAD ${Number(record.tripCharges || 0).toLocaleString()}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <div style={{ fontSize: 11, color: "#6b7280" }}>CAD Amount</div>
+                    <div style={{ fontWeight: 700, color: rowColors.text, fontSize: 15 }}>
+                      CAD ${Number(record.tripCharges || 0).toLocaleString()}
+                    </div>
                   </div>
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
-                  <Select
+                  <Button
                     size="small"
-                    value={record.invoiceStatus || "pending"}
-                    disabled={isInvoiceGenerated}
-                    style={statusStyle(record.invoiceStatus || "pending", isInvoiceGenerated)}
-                    onChange={(value) => handleStatusChange(record._id, "invoiceStatus", value)}
-                    loading={statusUpdating[record._id]}
-                    options={[
-                      { value: "generated", label: "Generated" },
-                      { value: "pending", label: "Pending" },
-                    ]}
-                  />
+                    icon={<EyeOutlined />}
+                    onClick={() => setDetailsRecord(record)}
+                    style={{ color: "#047857", borderColor: "#a7f3d0", background: "#ffffff" }}
+                  >
+                    View
+                  </Button>
                 </div>
 
-                <Button
+                <Select
                   size="small"
-                  icon={<EyeOutlined />}
-                  onClick={() => setDetailsRecord(record)}
-                  style={{ color: "#047857", borderColor: "#a7f3d0", background: "#ffffff" }}
-                >
-                  View Details
-                </Button>
+                  value={record.invoiceStatus || "pending"}
+                  disabled={isInvoiceGenerated}
+                  style={statusStyle(record.invoiceStatus || "pending", isInvoiceGenerated)}
+                  onChange={(value) => handleStatusChange(record._id, "invoiceStatus", value)}
+                  loading={statusUpdating[record._id]}
+                  options={[
+                    { value: "generated", label: "Generated" },
+                    { value: "pending", label: "Pending" },
+                  ]}
+                />
               </div>
             );
           })}
@@ -408,16 +503,33 @@ export default function Admin3PDispatchPage() {
       }}
     >
       <Card
-        title={<h3 style={{ margin: 0, color: "#065f46" }}>3P Dispatch Records</h3>}
-        style={{ background: "#f0fdf4", borderColor: "#a7f3d0" }}
+        style={{
+          background: "#ffffff",
+          borderColor: "#a7f3d0",
+          borderRadius: 12,
+          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+          overflow: "hidden",
+        }}
         bodyStyle={{ padding: 0 }}
       >
+        {renderHeader()}
         <Table
-          dataSource={records}
+          dataSource={filteredRecords}
           columns={columns}
           rowKey={(r) => r._id}
           loading={loading}
-          pagination={{ pageSize: 20 }}
+          pagination={{
+            current: currentPage,
+            pageSize: pageSize,
+            total: filteredRecords.length,
+            onChange: (page, size) => {
+              setCurrentPage(page);
+              setPageSize(size);
+            },
+            showSizeChanger: true,
+            pageSizeOptions: ["10", "20", "50", "100"],
+            style: { paddingRight: 16 },
+          }}
           size="middle"
           rowClassName={(record) =>
             record.invoiceStatus === "generated"
