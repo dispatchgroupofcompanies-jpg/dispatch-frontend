@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import {
   Table,
   Card,
@@ -41,6 +41,19 @@ interface LoadBoardRecord {
   [key: string]: any;
 }
 
+// Static Select Options
+const STATUS_OPTIONS = [
+  { value: "generated", label: "Generated" },
+  { value: "pending", label: "Pending" },
+];
+
+const FILTER_STATUS_OPTIONS = [
+  { label: "Pending", value: "pending" },
+  { label: "Generated", value: "generated" },
+];
+
+const PAGE_SIZE_OPTIONS = ["10", "20", "50", "100"];
+
 const statusStyle = (value: string, isDisabled: boolean = false) => {
   const isGenerated = value === "generated";
   return {
@@ -57,68 +70,80 @@ const statusStyle = (value: string, isDisabled: boolean = false) => {
 const statusTag = (value: string | undefined) => {
   const isGenerated = value === "generated";
   return (
-    <Tag color={isGenerated ? "green" : "red"} style={{ margin: 0, fontWeight: 600 }}>
+    <Tag
+      color={isGenerated ? "green" : "red"}
+      style={{ margin: 0, fontWeight: 600 }}
+    >
       {isGenerated ? "Invoice Generated" : "Invoice Pending"}
     </Tag>
   );
 };
 
-// Helper component for Heading Top -> Data Bottom layout
-const DetailItem = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <div
-    style={{
-      background: "#ffffff",
-      padding: "10px 12px",
-      borderRadius: "8px",
-      border: "1px solid #d1fae5",
-      boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
-      display: "flex",
-      flexDirection: "column",
-      gap: "4px",
-    }}
-  >
-    <span
-      style={{
-        fontSize: "11px",
-        fontWeight: 700,
-        color: "#059669",
-        textTransform: "uppercase",
-        letterSpacing: "0.5px",
-      }}
-    >
-      {label}
-    </span>
+// Memoized Helper Component for Details Modal
+const DetailItem = React.memo(
+  ({ label, children }: { label: string; children: React.ReactNode }) => (
     <div
       style={{
-        fontSize: "13px",
-        fontWeight: 600,
-        color: "#064e3b",
-        wordBreak: "break-word",
+        background: "#ffffff",
+        padding: "10px 12px",
+        borderRadius: "8px",
+        border: "1px solid #d1fae5",
+        boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
+        display: "flex",
+        flexDirection: "column",
+        gap: "4px",
       }}
     >
-      {children}
+      <span
+        style={{
+          fontSize: "11px",
+          fontWeight: 700,
+          color: "#059669",
+          textTransform: "uppercase",
+          letterSpacing: "0.5px",
+        }}
+      >
+        {label}
+      </span>
+      <div
+        style={{
+          fontSize: "13px",
+          fontWeight: 600,
+          color: "#064e3b",
+          wordBreak: "break-word",
+        }}
+      >
+        {children}
+      </div>
     </div>
-  </div>
+  )
 );
+DetailItem.displayName = "DetailItem";
 
 export default function Admin3PDispatchPage() {
   const screens = useBreakpoint();
   const isMobile = !screens.lg;
+
   const [loading, setLoading] = useState(false);
   const [records, setRecords] = useState<LoadBoardRecord[]>([]);
-  const [statusUpdating, setStatusUpdating] = useState<Record<string, boolean>>({});
-  const [detailsRecord, setDetailsRecord] = useState<LoadBoardRecord | null>(null);
+  const [statusUpdating, setStatusUpdating] = useState<Record<string, boolean>>(
+    {}
+  );
+  const [detailsRecord, setDetailsRecord] = useState<LoadBoardRecord | null>(
+    null
+  );
 
-  // Search & Pagination States
+  // Search, Filter & Pagination States
   const [searchText, setSearchText] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const fetchRecords = async () => {
+  const fetchRecords = useCallback(async () => {
     setLoading(true);
     try {
       const res = await getAdminLoadboard({ limit: 500 });
-      if (res && res.success) {
+      if (res?.success) {
         setRecords(res.data || []);
       } else {
         message.error(res?.message || "Failed to load 3P dispatch records");
@@ -129,152 +154,184 @@ export default function Admin3PDispatchPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchRecords();
+  }, [fetchRecords]);
+
+  const handleStatusChange = useCallback(
+    async (
+      recordId: string,
+      field: "invoiceStatus" | "paymentStatus",
+      value: string
+    ) => {
+      setStatusUpdating((prev) => ({ ...prev, [recordId]: true }));
+      try {
+        const statusUpdate = { [field]: value };
+        const res = await updateAdminLoadboardStatus(recordId, statusUpdate);
+        if (res.success) {
+          setRecords((prev) =>
+            prev.map((r) => (r._id === recordId ? res.data : r))
+          );
+          message.success("Status updated successfully");
+        } else {
+          message.error(res.message || "Failed to update status");
+        }
+      } catch (err) {
+        console.error(err);
+        message.error("Failed to update status");
+      } finally {
+        setStatusUpdating((prev) => ({ ...prev, [recordId]: false }));
+      }
+    },
+    []
+  );
+
+  // Filter records by status and search query combined
+  const filteredRecords = useMemo(() => {
+    const term = searchText.toLowerCase().trim();
+
+    return records.filter((r) => {
+      const recordStatus = r.invoiceStatus || "pending";
+      if (statusFilter && recordStatus !== statusFilter) {
+        return false;
+      }
+
+      if (term) {
+        const carrierMatch = r.carrierName?.toLowerCase().includes(term);
+        const thirdPartyMatch = r.thirdPartyCarrierName
+          ?.toLowerCase()
+          .includes(term);
+        const dispatcherMatch = r.dispatcher?.toLowerCase().includes(term);
+
+        if (!carrierMatch && !thirdPartyMatch && !dispatcherMatch) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [records, searchText, statusFilter]);
+
+  // Table columns memoized to avoid re-renders on unrelated state changes
+  const columns = useMemo(
+    () => [
+      {
+        title: "S.No",
+        key: "serial",
+        width: 70,
+        render: (_v: any, _r: any, index: number) => {
+          const serialNumber = (currentPage - 1) * pageSize + index + 1;
+          return (
+            <span
+              style={{
+                fontWeight: 700,
+                color: "#fff",
+                background: "#059669",
+                padding: "4px 9px",
+                borderRadius: 6,
+                display: "inline-block",
+              }}
+            >
+              #{serialNumber}
+            </span>
+          );
+        },
+      },
+      {
+        title: "Company Name / Payee",
+        dataIndex: "carrierName",
+        width: 170,
+        ellipsis: true,
+        render: (value: string) => (
+          <span style={{ fontWeight: 600, color: "#047857" }}>
+            {value || "—"}
+          </span>
+        ),
+      },
+      {
+        title: "Pay To / Company Driver",
+        dataIndex: "thirdPartyCarrierName",
+        width: 170,
+        ellipsis: true,
+        render: (value: string) => (
+          <span style={{ fontWeight: 600, color: "#064e3b" }}>
+            {value || "—"}
+          </span>
+        ),
+      },
+      {
+        title: "Dispatcher",
+        dataIndex: "dispatcher",
+        width: 140,
+        ellipsis: true,
+        render: (value: string) => value || "—",
+      },
+      {
+        title: "CAD Amount",
+        dataIndex: "tripCharges",
+        width: 130,
+        render: (value: number) => (
+          <span
+            style={{ fontWeight: 700, color: "#022c22", whiteSpace: "nowrap" }}
+          >
+            CAD ${Number(value || 0).toLocaleString()}
+          </span>
+        ),
+      },
+      {
+        title: "Invoice Status",
+        dataIndex: "invoiceStatus",
+        width: 150,
+        render: (value: string, record: LoadBoardRecord) => {
+          const isGenerated = value === "generated";
+
+          return (
+            <Select
+              size="small"
+              value={value || "pending"}
+              disabled={isGenerated}
+              style={statusStyle(value || "pending", isGenerated)}
+              onChange={(val) =>
+                handleStatusChange(record._id, "invoiceStatus", val)
+              }
+              loading={statusUpdating[record._id]}
+              options={STATUS_OPTIONS}
+            />
+          );
+        },
+      },
+      {
+        title: "Actions",
+        key: "actions",
+        width: 90,
+        align: "center" as const,
+        render: (_v: any, record: LoadBoardRecord) => (
+          <Tooltip title="View Details">
+            <Button
+              type="primary"
+              ghost
+              icon={<EyeOutlined />}
+              onClick={() => setDetailsRecord(record)}
+              style={{ borderColor: "#10b981", color: "#047857" }}
+            />
+          </Tooltip>
+        ),
+      },
+    ],
+    [currentPage, pageSize, statusUpdating, handleStatusChange]
+  );
+
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchText(e.target.value);
+    setCurrentPage(1);
   }, []);
 
-  const handleStatusChange = async (
-    recordId: string,
-    field: "invoiceStatus" | "paymentStatus",
-    value: string
-  ) => {
-    setStatusUpdating((prev) => ({ ...prev, [recordId]: true }));
-    try {
-      const statusUpdate = { [field]: value };
-      const res = await updateAdminLoadboardStatus(recordId, statusUpdate);
-      if (res.success) {
-        setRecords((prev) =>
-          prev.map((r) => (r._id === recordId ? res.data : r))
-        );
-        message.success("Status updated successfully");
-      } else {
-        message.error(res.message || "Failed to update status");
-      }
-    } catch (err) {
-      console.error(err);
-      message.error("Failed to update status");
-    } finally {
-      setStatusUpdating((prev) => ({ ...prev, [recordId]: false }));
-    }
-  };
-
-  // Filter records based on Search Bar (Company Name, Pay To Name, Dispatcher)
-  const filteredRecords = useMemo(() => {
-    if (!searchText.trim()) return records;
-    const term = searchText.toLowerCase().trim();
-    return records.filter((r) => {
-      const carrierMatch = r.carrierName?.toLowerCase().includes(term);
-      const thirdPartyMatch = r.thirdPartyCarrierName?.toLowerCase().includes(term);
-      const dispatcherMatch = r.dispatcher?.toLowerCase().includes(term);
-      return carrierMatch || thirdPartyMatch || dispatcherMatch;
-    });
-  }, [records, searchText]);
-
-  const columns = [
-    {
-      title: "S.No",
-      key: "serial",
-      width: 70,
-      render: (_v: any, _r: any, index: number) => {
-        const serialNumber = (currentPage - 1) * pageSize + index + 1;
-        return (
-          <span
-            style={{
-              fontWeight: 700,
-              color: "#fff",
-              background: "#059669",
-              padding: "4px 9px",
-              borderRadius: 6,
-              display: "inline-block",
-            }}
-          >
-            #{serialNumber}
-          </span>
-        );
-      },
-    },
-    {
-      title: "Company Name / Payee",
-      dataIndex: "carrierName",
-      width: 170,
-      ellipsis: true,
-      render: (value: string) => (
-        <span style={{ fontWeight: 600, color: "#047857" }}>
-          {value || "—"}
-        </span>
-      ),
-    },
-    {
-      title: "Pay To / Company Driver",
-      dataIndex: "thirdPartyCarrierName",
-      width: 170,
-      ellipsis: true,
-      render: (value: string) => (
-        <span style={{ fontWeight: 600, color: "#064e3b" }}>
-          {value || "—"}
-        </span>
-      ),
-    },
-    {
-      title: "Dispatcher",
-      dataIndex: "dispatcher",
-      width: 140,
-      ellipsis: true,
-      render: (value: string) => value || "—",
-    },
-    {
-      title: "CAD Amount",
-      dataIndex: "tripCharges",
-      width: 130,
-      render: (value: number) => (
-        <span style={{ fontWeight: 700, color: "#022c22", whiteSpace: "nowrap" }}>
-          CAD ${Number(value || 0).toLocaleString()}
-        </span>
-      ),
-    },
-    {
-      title: "Invoice Status",
-      dataIndex: "invoiceStatus",
-      width: 150,
-      render: (value: string, record: LoadBoardRecord) => {
-        const isGenerated = value === "generated";
-
-        return (
-          <Select
-            size="small"
-            value={value || "pending"}
-            disabled={isGenerated}
-            style={statusStyle(value || "pending", isGenerated)}
-            onChange={(val) => handleStatusChange(record._id, "invoiceStatus", val)}
-            loading={statusUpdating[record._id]}
-            options={[
-              { value: "generated", label: "Generated" },
-              { value: "pending", label: "Pending" },
-            ]}
-          />
-        );
-      },
-    },
-    {
-      title: "Actions",
-      key: "actions",
-      width: 90,
-      align: "center" as const,
-      render: (_v: any, record: LoadBoardRecord) => (
-        <Tooltip title="View Details">
-          <Button
-            type="primary"
-            ghost
-            icon={<EyeOutlined />}
-            onClick={() => setDetailsRecord(record)}
-            style={{ borderColor: "#10b981", color: "#047857" }}
-          />
-        </Tooltip>
-      ),
-    },
-  ];
+  const handleStatusFilterChange = useCallback((value: string | undefined) => {
+    setStatusFilter(value);
+    setCurrentPage(1);
+  }, []);
 
   const renderHeader = () => (
     <div
@@ -298,30 +355,39 @@ export default function Admin3PDispatchPage() {
           Manage and review third-party dispatch load records
         </Text>
       </div>
-      <Input
-        placeholder="Search by Company Name or Dispatcher..."
-        prefix={<SearchOutlined style={{ color: "#10b981" }} />}
-        allowClear
-        value={searchText}
-        onChange={(e) => {
-          setSearchText(e.target.value);
-          setCurrentPage(1); // Reset to page 1 on search
-        }}
-        style={{
-          width: isMobile ? "100%" : 360,
-          borderRadius: 8,
-          borderColor: "#a7f3d0",
-        }}
-      />
+      <Space direction={isMobile ? "vertical" : "horizontal"} size={12}>
+        <Select
+          placeholder="Filter by Status"
+          allowClear
+          value={statusFilter}
+          onChange={handleStatusFilterChange}
+          style={{ width: isMobile ? "100%" : 180 }}
+          options={FILTER_STATUS_OPTIONS}
+        />
+        <Input
+          placeholder="Search by Company Name or Dispatcher..."
+          prefix={<SearchOutlined style={{ color: "#10b981" }} />}
+          allowClear
+          value={searchText}
+          onChange={handleSearchChange}
+          style={{
+            width: isMobile ? "100%" : 300,
+            borderRadius: 8,
+            borderColor: "#a7f3d0",
+          }}
+        />
+      </Space>
     </div>
   );
 
+  const paginatedMobileRecords = useMemo(() => {
+    if (!isMobile) return [];
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredRecords.slice(startIndex, startIndex + pageSize);
+  }, [isMobile, filteredRecords, currentPage, pageSize]);
+
   if (isMobile) {
     const startIndex = (currentPage - 1) * pageSize;
-    const paginatedMobileRecords = filteredRecords.slice(
-      startIndex,
-      startIndex + pageSize
-    );
 
     return (
       <div
@@ -333,7 +399,10 @@ export default function Admin3PDispatchPage() {
           background: "#ecfdf5",
         }}
       >
-        <Card bodyStyle={{ padding: 0 }} style={{ borderRadius: 12, overflow: "hidden" }}>
+        <Card
+          bodyStyle={{ padding: 0 }}
+          style={{ borderRadius: 12, overflow: "hidden" }}
+        >
           {renderHeader()}
           {loading && (
             <div style={{ textAlign: "center", padding: 24, color: "#047857" }}>
@@ -404,10 +473,24 @@ export default function Admin3PDispatchPage() {
                   Dispatcher: <strong>{record.dispatcher || "—"}</strong>
                 </div>
 
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
                   <div>
-                    <div style={{ fontSize: 11, color: "#6b7280" }}>CAD Amount</div>
-                    <div style={{ fontWeight: 700, color: rowColors.text, fontSize: 15 }}>
+                    <div style={{ fontSize: 11, color: "#6b7280" }}>
+                      CAD Amount
+                    </div>
+                    <div
+                      style={{
+                        fontWeight: 700,
+                        color: rowColors.text,
+                        fontSize: 15,
+                      }}
+                    >
                       CAD ${Number(record.tripCharges || 0).toLocaleString()}
                     </div>
                   </div>
@@ -415,7 +498,11 @@ export default function Admin3PDispatchPage() {
                     size="small"
                     icon={<EyeOutlined />}
                     onClick={() => setDetailsRecord(record)}
-                    style={{ color: "#047857", borderColor: "#a7f3d0", background: "#ffffff" }}
+                    style={{
+                      color: "#047857",
+                      borderColor: "#a7f3d0",
+                      background: "#ffffff",
+                    }}
                   >
                     View
                   </Button>
@@ -425,13 +512,15 @@ export default function Admin3PDispatchPage() {
                   size="small"
                   value={record.invoiceStatus || "pending"}
                   disabled={isInvoiceGenerated}
-                  style={statusStyle(record.invoiceStatus || "pending", isInvoiceGenerated)}
-                  onChange={(value) => handleStatusChange(record._id, "invoiceStatus", value)}
+                  style={statusStyle(
+                    record.invoiceStatus || "pending",
+                    isInvoiceGenerated
+                  )}
+                  onChange={(value) =>
+                    handleStatusChange(record._id, "invoiceStatus", value)
+                  }
                   loading={statusUpdating[record._id]}
-                  options={[
-                    { value: "generated", label: "Generated" },
-                    { value: "pending", label: "Pending" },
-                  ]}
+                  options={STATUS_OPTIONS}
                 />
               </div>
             );
@@ -445,11 +534,22 @@ export default function Admin3PDispatchPage() {
           footer={null}
           width={340}
           centered
-          title={<span style={{ color: "#065f46", fontWeight: 700 }}>Dispatch Details</span>}
-          bodyStyle={{ maxHeight: "80vh", overflowY: "auto", background: "#ecfdf5", padding: "16px" }}
+          title={
+            <span style={{ color: "#065f46", fontWeight: 700 }}>
+              Dispatch Details
+            </span>
+          }
+          bodyStyle={{
+            maxHeight: "80vh",
+            overflowY: "auto",
+            background: "#ecfdf5",
+            padding: "16px",
+          }}
         >
           {detailsRecord && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+            >
               {detailsRecord.screenshotUrl && (
                 <Image
                   src={detailsRecord.screenshotUrl}
@@ -527,7 +627,7 @@ export default function Admin3PDispatchPage() {
               setPageSize(size);
             },
             showSizeChanger: true,
-            pageSizeOptions: ["10", "20", "50", "100"],
+            pageSizeOptions: PAGE_SIZE_OPTIONS,
             style: { paddingRight: 16 },
           }}
           size="middle"
@@ -540,18 +640,24 @@ export default function Admin3PDispatchPage() {
         />
       </Card>
 
-      {/* Desktop Details Modal - 3 per column layout */}
+      {/* Desktop Details Modal */}
       <Modal
         open={Boolean(detailsRecord)}
         onCancel={() => setDetailsRecord(null)}
         footer={null}
         width={780}
         centered
-        title={<span style={{ color: "#065f46", fontWeight: 700, fontSize: "18px" }}>3P Dispatch Details</span>}
+        title={
+          <span style={{ color: "#065f46", fontWeight: 700, fontSize: "18px" }}>
+            3P Dispatch Details
+          </span>
+        }
         bodyStyle={{ background: "#f0fdf4", padding: "20px" }}
       >
         {detailsRecord && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+          >
             {detailsRecord.screenshotUrl && (
               <Image
                 src={detailsRecord.screenshotUrl}
@@ -567,7 +673,6 @@ export default function Admin3PDispatchPage() {
               />
             )}
 
-            {/* 3-Column Grid Layout */}
             <div
               style={{
                 display: "grid",
