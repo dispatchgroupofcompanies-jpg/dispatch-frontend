@@ -54,12 +54,12 @@ const statusStyle = (value: string, isDisabled: boolean = false) => {
   const isGenerated = value === "generated";
   return {
     width: "100%",
-    color: isGenerated ? "#15803d" : "#dc2626",
-    fontWeight: 600,
-    background: isGenerated ? "#dcfce7" : "#fef2f2",
-    borderColor: isGenerated ? "#86efac" : "#fecaca",
+    color: isGenerated ? "#047857" : "#b91c1c",
+    fontWeight: 700,
+    background: isGenerated ? "#dcfce7" : "#fee2e2",
+    borderColor: isGenerated ? "#86efac" : "#fca5a5",
     borderRadius: 6,
-    opacity: isDisabled ? 0.75 : 1,
+    opacity: isDisabled ? 0.85 : 1,
   };
 };
 
@@ -124,7 +124,6 @@ export default function Admin3PDispatchPage() {
   const [statusUpdating, setStatusUpdating] = useState<Record<string, boolean>>({});
   const [detailsRecord, setDetailsRecord] = useState<LoadBoardRecord | null>(null);
 
-  // Filter & Pagination States
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
   const [selectedWeekRange, setSelectedWeekRange] = useState<string | undefined>(undefined);
@@ -134,7 +133,7 @@ export default function Admin3PDispatchPage() {
   const fetchRecords = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await getAdminLoadboard({ limit: 500 });
+      const res = await getAdminLoadboard({ limit: 1000 });
       if (res?.success) {
         setRecords(res.data || []);
       } else {
@@ -152,7 +151,6 @@ export default function Admin3PDispatchPage() {
     fetchRecords();
   }, [fetchRecords]);
 
-  // Assign permanent global sequential index starting from #1 (Oldest created record after July 19)
   const indexedRecords = useMemo(() => {
     const sorted = [...records].sort(
       (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
@@ -207,20 +205,16 @@ export default function Admin3PDispatchPage() {
     setCurrentPage(1);
   }, []);
 
-  // Filter records against the globally indexed records
-  // Shows newest items at the top while preserving their global serial numbers
   const filteredRecords = useMemo(() => {
     const term = searchText.toLowerCase().trim();
 
     const filtered = indexedRecords.filter((r) => {
-      // 1. Status Filter
       const recordStatus = r.invoiceStatus || "pending";
       if (statusFilter && recordStatus !== statusFilter) {
         return false;
       }
 
-      // 2. Weekly Settlement Range Filter
-      if (selectedWeekRange) {
+      if (selectedWeekRange && selectedWeekRange !== "all") {
         const [startStr, endStr] = selectedWeekRange.split("_");
         const recordDate = dayjs(r.createdAt);
         const startDate = dayjs(startStr).startOf("day");
@@ -231,7 +225,6 @@ export default function Admin3PDispatchPage() {
         }
       }
 
-      // 3. Search Query Filter
       if (term) {
         const carrierMatch = r.carrierName?.toLowerCase().includes(term);
         const thirdPartyMatch = r.thirdPartyCarrierName
@@ -247,7 +240,6 @@ export default function Admin3PDispatchPage() {
       return true;
     });
 
-    // Display newest record of the selected week on top
     return filtered.sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
@@ -262,15 +254,17 @@ export default function Admin3PDispatchPage() {
         render: (_v: any, record: LoadBoardRecord) => (
           <span
             style={{
-              fontWeight: 700,
-              color: "#fff",
+              fontWeight: 800,
+              color: "#ffffff",
               background: "#059669",
-              padding: "4px 9px",
+              padding: "4px 10px",
               borderRadius: 6,
               display: "inline-block",
+              minWidth: 32,
+              textAlign: "center",
             }}
           >
-            #{record.globalSerial}
+            {record.globalSerial}
           </span>
         ),
       },
@@ -404,7 +398,7 @@ export default function Admin3PDispatchPage() {
           {paginatedMobileRecords.map((record) => {
             const isInvoiceGenerated = record.invoiceStatus === "generated";
             const rowColors = isInvoiceGenerated
-              ? { background: "#f0fdf4", border: "#86efac", text: "#166534" }
+              ? { background: "#ecfdf5", border: "#a7f3d0", text: "#047857" }
               : { background: "#fef2f2", border: "#fecaca", text: "#b91c1c" };
 
             return (
@@ -431,7 +425,7 @@ export default function Admin3PDispatchPage() {
                   <Space>
                     <span
                       style={{
-                        fontWeight: 700,
+                        fontWeight: 800,
                         color: "#fff",
                         background: "#059669",
                         padding: "3px 8px",
@@ -439,7 +433,7 @@ export default function Admin3PDispatchPage() {
                         fontSize: 12,
                       }}
                     >
-                      #{record.globalSerial}
+                      {record.globalSerial}
                     </span>
                   </Space>
                   <span
@@ -513,7 +507,6 @@ export default function Admin3PDispatchPage() {
           })}
         </Card>
 
-        {/* Mobile Details Modal */}
         <Modal
           open={Boolean(detailsRecord)}
           onCancel={() => setDetailsRecord(null)}
@@ -550,7 +543,7 @@ export default function Admin3PDispatchPage() {
                   }}
                 />
               )}
-              <DetailItem label="S.No">#{detailsRecord.globalSerial}</DetailItem>
+              <DetailItem label="S.No">{detailsRecord.globalSerial}</DetailItem>
               <DetailItem label="Company Name / Payee">
                 {detailsRecord.carrierName || "—"}
               </DetailItem>
@@ -627,7 +620,6 @@ export default function Admin3PDispatchPage() {
         />
       </Card>
 
-      {/* Desktop Details Modal */}
       <Modal
         open={Boolean(detailsRecord)}
         onCancel={() => setDetailsRecord(null)}
@@ -667,7 +659,7 @@ export default function Admin3PDispatchPage() {
                 gap: "12px",
               }}
             >
-              <DetailItem label="S.No">#{detailsRecord.globalSerial}</DetailItem>
+              <DetailItem label="S.No">{detailsRecord.globalSerial}</DetailItem>
               <DetailItem label="Company Name / Payee">
                 {detailsRecord.carrierName || "—"}
               </DetailItem>
@@ -705,7 +697,7 @@ export default function Admin3PDispatchPage() {
 
       <style jsx global>{`
         .ant-table-tbody > tr.loadboard-row-generated > td {
-          background: #f0fdf4 !important;
+          background: #ecfdf5 !important;
         }
         .ant-table-tbody > tr.loadboard-row-pending > td {
           background: #fef2f2 !important;
