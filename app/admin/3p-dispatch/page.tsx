@@ -13,16 +13,17 @@ import {
   Modal,
   Image,
   Tag,
-  Input,
   Space,
 } from "antd";
-import { EyeOutlined, SearchOutlined } from "@ant-design/icons";
+import { EyeOutlined } from "@ant-design/icons";
+import dayjs from "dayjs";
 import {
   getAdminLoadboard,
   updateAdminLoadboardStatus,
 } from "../../../src/services/admin/loadboard";
+import { DispatchFilterBar } from "./DispatchFilterBar";
 
-const { Text, Title } = Typography;
+const { Text } = Typography;
 const { useBreakpoint } = Grid;
 
 interface LoadBoardRecord {
@@ -38,18 +39,13 @@ interface LoadBoardRecord {
   dispatcher?: string;
   tripCharges?: number;
   screenshotUrl?: string;
+  globalSerial?: number;
   [key: string]: any;
 }
 
-// Static Select Options
 const STATUS_OPTIONS = [
   { value: "generated", label: "Generated" },
   { value: "pending", label: "Pending" },
-];
-
-const FILTER_STATUS_OPTIONS = [
-  { label: "Pending", value: "pending" },
-  { label: "Generated", value: "generated" },
 ];
 
 const PAGE_SIZE_OPTIONS = ["10", "20", "50", "100"];
@@ -79,7 +75,6 @@ const statusTag = (value: string | undefined) => {
   );
 };
 
-// Memoized Helper Component for Details Modal
 const DetailItem = React.memo(
   ({ label, children }: { label: string; children: React.ReactNode }) => (
     <div
@@ -126,16 +121,13 @@ export default function Admin3PDispatchPage() {
 
   const [loading, setLoading] = useState(false);
   const [records, setRecords] = useState<LoadBoardRecord[]>([]);
-  const [statusUpdating, setStatusUpdating] = useState<Record<string, boolean>>(
-    {}
-  );
-  const [detailsRecord, setDetailsRecord] = useState<LoadBoardRecord | null>(
-    null
-  );
+  const [statusUpdating, setStatusUpdating] = useState<Record<string, boolean>>({});
+  const [detailsRecord, setDetailsRecord] = useState<LoadBoardRecord | null>(null);
 
-  // Search, Filter & Pagination States
+  // Filter & Pagination States
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  const [selectedWeekRange, setSelectedWeekRange] = useState<string | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -159,6 +151,18 @@ export default function Admin3PDispatchPage() {
   useEffect(() => {
     fetchRecords();
   }, [fetchRecords]);
+
+  // Assign permanent global sequential index starting from #1 (Oldest created record after July 19)
+  const indexedRecords = useMemo(() => {
+    const sorted = [...records].sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+
+    return sorted.map((record, index) => ({
+      ...record,
+      globalSerial: index + 1,
+    }));
+  }, [records]);
 
   const handleStatusChange = useCallback(
     async (
@@ -188,16 +192,46 @@ export default function Admin3PDispatchPage() {
     []
   );
 
-  // Filter records by status and search query combined
+  const handleSearchChange = useCallback((text: string) => {
+    setSearchText(text);
+    setCurrentPage(1);
+  }, []);
+
+  const handleStatusFilterChange = useCallback((value: string | undefined) => {
+    setStatusFilter(value);
+    setCurrentPage(1);
+  }, []);
+
+  const handleWeekFilterChange = useCallback((range?: string) => {
+    setSelectedWeekRange(range);
+    setCurrentPage(1);
+  }, []);
+
+  // Filter records against the globally indexed records
+  // Shows newest items at the top while preserving their global serial numbers
   const filteredRecords = useMemo(() => {
     const term = searchText.toLowerCase().trim();
 
-    return records.filter((r) => {
+    const filtered = indexedRecords.filter((r) => {
+      // 1. Status Filter
       const recordStatus = r.invoiceStatus || "pending";
       if (statusFilter && recordStatus !== statusFilter) {
         return false;
       }
 
+      // 2. Weekly Settlement Range Filter
+      if (selectedWeekRange) {
+        const [startStr, endStr] = selectedWeekRange.split("_");
+        const recordDate = dayjs(r.createdAt);
+        const startDate = dayjs(startStr).startOf("day");
+        const endDate = dayjs(endStr).endOf("day");
+
+        if (recordDate.isBefore(startDate) || recordDate.isAfter(endDate)) {
+          return false;
+        }
+      }
+
+      // 3. Search Query Filter
       if (term) {
         const carrierMatch = r.carrierName?.toLowerCase().includes(term);
         const thirdPartyMatch = r.thirdPartyCarrierName
@@ -212,32 +246,33 @@ export default function Admin3PDispatchPage() {
 
       return true;
     });
-  }, [records, searchText, statusFilter]);
 
-  // Table columns memoized to avoid re-renders on unrelated state changes
+    // Display newest record of the selected week on top
+    return filtered.sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }, [indexedRecords, searchText, statusFilter, selectedWeekRange]);
+
   const columns = useMemo(
     () => [
       {
         title: "S.No",
         key: "serial",
         width: 70,
-        render: (_v: any, _r: any, index: number) => {
-          const serialNumber = (currentPage - 1) * pageSize + index + 1;
-          return (
-            <span
-              style={{
-                fontWeight: 700,
-                color: "#fff",
-                background: "#059669",
-                padding: "4px 9px",
-                borderRadius: 6,
-                display: "inline-block",
-              }}
-            >
-              #{serialNumber}
-            </span>
-          );
-        },
+        render: (_v: any, record: LoadBoardRecord) => (
+          <span
+            style={{
+              fontWeight: 700,
+              color: "#fff",
+              background: "#059669",
+              padding: "4px 9px",
+              borderRadius: 6,
+              display: "inline-block",
+            }}
+          >
+            #{record.globalSerial}
+          </span>
+        ),
       },
       {
         title: "Company Name / Payee",
@@ -320,64 +355,7 @@ export default function Admin3PDispatchPage() {
         ),
       },
     ],
-    [currentPage, pageSize, statusUpdating, handleStatusChange]
-  );
-
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchText(e.target.value);
-    setCurrentPage(1);
-  }, []);
-
-  const handleStatusFilterChange = useCallback((value: string | undefined) => {
-    setStatusFilter(value);
-    setCurrentPage(1);
-  }, []);
-
-  const renderHeader = () => (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: isMobile ? "column" : "row",
-        justifyContent: "space-between",
-        alignItems: isMobile ? "stretch" : "center",
-        gap: 12,
-        padding: "16px 20px",
-        background: "#ffffff",
-        borderBottom: "1px solid #e5e7eb",
-        borderRadius: "12px 12px 0 0",
-      }}
-    >
-      <div>
-        <Title level={4} style={{ margin: 0, color: "#065f46" }}>
-          3P Dispatch Records
-        </Title>
-        <Text type="secondary" style={{ fontSize: 12 }}>
-          Manage and review third-party dispatch load records
-        </Text>
-      </div>
-      <Space direction={isMobile ? "vertical" : "horizontal"} size={12}>
-        <Select
-          placeholder="Filter by Status"
-          allowClear
-          value={statusFilter}
-          onChange={handleStatusFilterChange}
-          style={{ width: isMobile ? "100%" : 180 }}
-          options={FILTER_STATUS_OPTIONS}
-        />
-        <Input
-          placeholder="Search by Company Name or Dispatcher..."
-          prefix={<SearchOutlined style={{ color: "#10b981" }} />}
-          allowClear
-          value={searchText}
-          onChange={handleSearchChange}
-          style={{
-            width: isMobile ? "100%" : 300,
-            borderRadius: 8,
-            borderColor: "#a7f3d0",
-          }}
-        />
-      </Space>
-    </div>
+    [statusUpdating, handleStatusChange]
   );
 
   const paginatedMobileRecords = useMemo(() => {
@@ -386,9 +364,18 @@ export default function Admin3PDispatchPage() {
     return filteredRecords.slice(startIndex, startIndex + pageSize);
   }, [isMobile, filteredRecords, currentPage, pageSize]);
 
-  if (isMobile) {
-    const startIndex = (currentPage - 1) * pageSize;
+  const filterHeader = (
+    <DispatchFilterBar
+      searchText={searchText}
+      statusFilter={statusFilter}
+      selectedWeekRange={selectedWeekRange}
+      onSearchChange={handleSearchChange}
+      onStatusFilterChange={handleStatusFilterChange}
+      onWeekFilterChange={handleWeekFilterChange}
+    />
+  );
 
+  if (isMobile) {
     return (
       <div
         style={{
@@ -403,7 +390,7 @@ export default function Admin3PDispatchPage() {
           bodyStyle={{ padding: 0 }}
           style={{ borderRadius: 12, overflow: "hidden" }}
         >
-          {renderHeader()}
+          {filterHeader}
           {loading && (
             <div style={{ textAlign: "center", padding: 24, color: "#047857" }}>
               Loading dispatch records...
@@ -414,12 +401,11 @@ export default function Admin3PDispatchPage() {
               No matching records found.
             </div>
           )}
-          {paginatedMobileRecords.map((record, index) => {
+          {paginatedMobileRecords.map((record) => {
             const isInvoiceGenerated = record.invoiceStatus === "generated";
             const rowColors = isInvoiceGenerated
               ? { background: "#f0fdf4", border: "#86efac", text: "#166534" }
               : { background: "#fef2f2", border: "#fecaca", text: "#b91c1c" };
-            const serialNumber = startIndex + index + 1;
 
             return (
               <div
@@ -453,7 +439,7 @@ export default function Admin3PDispatchPage() {
                         fontSize: 12,
                       }}
                     >
-                      #{serialNumber}
+                      #{record.globalSerial}
                     </span>
                   </Space>
                   <span
@@ -564,6 +550,7 @@ export default function Admin3PDispatchPage() {
                   }}
                 />
               )}
+              <DetailItem label="S.No">#{detailsRecord.globalSerial}</DetailItem>
               <DetailItem label="Company Name / Payee">
                 {detailsRecord.carrierName || "—"}
               </DetailItem>
@@ -612,7 +599,7 @@ export default function Admin3PDispatchPage() {
         }}
         bodyStyle={{ padding: 0 }}
       >
-        {renderHeader()}
+        {filterHeader}
         <Table
           dataSource={filteredRecords}
           columns={columns}
@@ -680,6 +667,7 @@ export default function Admin3PDispatchPage() {
                 gap: "12px",
               }}
             >
+              <DetailItem label="S.No">#{detailsRecord.globalSerial}</DetailItem>
               <DetailItem label="Company Name / Payee">
                 {detailsRecord.carrierName || "—"}
               </DetailItem>
