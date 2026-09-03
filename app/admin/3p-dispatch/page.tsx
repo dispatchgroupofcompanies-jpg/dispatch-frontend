@@ -205,6 +205,34 @@ export default function Admin3PDispatchPage() {
     setCurrentPage(1);
   }, []);
 
+  const selectedWeekSummary = useMemo(() => {
+    const weekRecords = !selectedWeekRange || selectedWeekRange === "all"
+      ? records
+      : (() => {
+          const [startStr, endStr] = selectedWeekRange.split("_");
+          const startDate = dayjs(startStr).startOf("day");
+          const endDate = dayjs(endStr).endOf("day");
+
+          return records.filter((record) => {
+            const recordDate = dayjs(record.createdAt);
+            return !recordDate.isBefore(startDate) && !recordDate.isAfter(endDate);
+          });
+        })();
+
+    return weekRecords.reduce(
+      (summary, record) => {
+        summary.total += 1;
+        if (record.invoiceStatus === "generated") {
+          summary.generated += 1;
+        } else {
+          summary.pending += 1;
+        }
+        return summary;
+      },
+      { total: 0, pending: 0, generated: 0 }
+    );
+  }, [records, selectedWeekRange]);
+
   const filteredRecords = useMemo(() => {
     const term = searchText.toLowerCase().trim();
 
@@ -363,6 +391,7 @@ export default function Admin3PDispatchPage() {
       searchText={searchText}
       statusFilter={statusFilter}
       selectedWeekRange={selectedWeekRange}
+      selectedWeekSummary={selectedWeekSummary}
       onSearchChange={handleSearchChange}
       onStatusFilterChange={handleStatusFilterChange}
       onWeekFilterChange={handleWeekFilterChange}

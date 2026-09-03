@@ -17,6 +17,11 @@ interface DispatchFilterBarProps {
   searchText?: string;
   statusFilter?: string;
   selectedWeekRange?: string;
+  selectedWeekSummary?: {
+    total: number;
+    pending: number;
+    generated: number;
+  };
   onSearchChange?: (text: string) => void;
   onStatusFilterChange?: (status?: string) => void;
   onWeekFilterChange?: (range?: string) => void;
@@ -32,6 +37,7 @@ export const DispatchFilterBar: React.FC<DispatchFilterBarProps> = React.memo(
     searchText = "",
     statusFilter,
     selectedWeekRange,
+    selectedWeekSummary,
     onSearchChange = () => {},
     onStatusFilterChange = () => {},
     onWeekFilterChange = () => {},
@@ -83,23 +89,63 @@ export const DispatchFilterBar: React.FC<DispatchFilterBarProps> = React.memo(
       <div
         style={{
           display: "flex",
-          flexDirection: isMobile ? "column" : "row",
-          justifyContent: "space-between",
+          flexDirection: "column",
           alignItems: isMobile ? "stretch" : "center",
-          gap: 12,
+          gap: 14,
           padding: "16px 20px",
           background: "#ffffff",
           borderBottom: "1px solid #e5e7eb",
           borderRadius: "12px 12px 0 0",
         }}
       >
-        <div>
-          <Title level={4} style={{ margin: 0, color: "#065f46" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+            width: "100%",
+            flexWrap: "wrap",
+          }}
+        >
+          <Title
+            level={4}
+            style={{ margin: 0, color: "#065f46", whiteSpace: "nowrap" }}
+          >
             3P Dispatch Records
           </Title>
+
+          {selectedWeekRange && selectedWeekRange !== "all" && (
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {[
+                { label: "Received", value: selectedWeekSummary?.total ?? 0, color: "#065f46", background: "#d1fae5" },
+                { label: "Pending", value: selectedWeekSummary?.pending ?? 0, color: "#92400e", background: "#fef3c7" },
+                { label: "Generated", value: selectedWeekSummary?.generated ?? 0, color: "#166534", background: "#dcfce7" },
+              ].map((summary) => (
+                <span
+                  key={summary.label}
+                  style={{
+                    padding: "5px 10px",
+                    borderRadius: 999,
+                    background: summary.background,
+                    color: summary.color,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {summary.label}: {summary.value}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
-        <Space direction={isMobile ? "vertical" : "horizontal"} size={12}>
+        <Space
+          direction={isMobile ? "vertical" : "horizontal"}
+          size={12}
+          style={{ alignSelf: isMobile ? "stretch" : "flex-start" }}
+        >
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
             <Button
               icon={<LeftOutlined />}
@@ -109,7 +155,7 @@ export const DispatchFilterBar: React.FC<DispatchFilterBarProps> = React.memo(
             />
 
             <Select
-              placeholder="Select Settlement Week"
+              placeholder="Select Week"
               value={selectedWeekRange}
               onChange={onWeekFilterChange}
               style={{ width: isMobile ? "100%" : 260 }}
