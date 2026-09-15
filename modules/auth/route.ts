@@ -1,7 +1,6 @@
-const API_URL = typeof window !== "undefined" && !process.env.NEXT_PUBLIC_API_URL
-  ? `${window.location.origin}/api`
-  : process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-  console.log("API_URL:", API_URL);
+import { API_BASE_URL } from "../../src/config/api";
+
+const API_URL = API_BASE_URL;
 
 export const signin = async (data: {
   email: string;
@@ -24,6 +23,7 @@ export const signin = async (data: {
     if (!response.ok) {
       return {
         success: false,
+        status: result.status,
         message: result.message || "Login failed",
         error: result,
       };

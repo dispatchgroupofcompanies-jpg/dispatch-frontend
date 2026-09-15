@@ -1,5 +1,9 @@
 "use client";
 
+import AdminPageHeader from "@/src/components/admin/AdminPageHeader";
+import design from "@/src/components/admin/AdminPages.module.css";
+
+
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import {
   Table,
@@ -300,7 +304,6 @@ export default function Admin3PDispatchPage() {
         title: "Company Name / Payee",
         dataIndex: "carrierName",
         width: 170,
-        ellipsis: true,
         render: (value: string) => (
           <span style={{ fontWeight: 600, color: "#047857" }}>
             {value || "—"}
@@ -311,7 +314,6 @@ export default function Admin3PDispatchPage() {
         title: "Pay To / Company Driver",
         dataIndex: "thirdPartyCarrierName",
         width: 170,
-        ellipsis: true,
         render: (value: string) => (
           <span style={{ fontWeight: 600, color: "#064e3b" }}>
             {value || "—"}
@@ -322,7 +324,6 @@ export default function Admin3PDispatchPage() {
         title: "Dispatcher",
         dataIndex: "dispatcher",
         width: 140,
-        ellipsis: true,
         render: (value: string) => value || "—",
       },
       {
@@ -400,15 +401,8 @@ export default function Admin3PDispatchPage() {
 
   if (isMobile) {
     return (
-      <div
-        style={{
-          maxWidth: 1400,
-          margin: "0 auto",
-          padding: "12px",
-          minHeight: "calc(100vh - 80px)",
-          background: "#ecfdf5",
-        }}
-      >
+      <div className={design.page}>
+        <AdminPageHeader title="3P dispatch" description="Track carrier loads, weekly activity and invoice status." section="DISPATCH" />
         <Card
           bodyStyle={{ padding: 0 }}
           style={{ borderRadius: 12, overflow: "hidden" }}
@@ -469,15 +463,15 @@ export default function Admin3PDispatchPage() {
                     style={{
                       fontWeight: 700,
                       color: rowColors.text,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
+                      overflowWrap: "anywhere",
+                      whiteSpace: "normal",
                     }}
                   >
                     {record.carrierName || record.thirdPartyCarrierName || "—"}
                   </span>
                 </div>
 
+                <div style={{ fontSize: 12, color: "#374151", overflowWrap: "anywhere" }}>Pay To / Company Driver: <strong>{record.thirdPartyCarrierName || "?"}</strong></div>
                 <div style={{ fontSize: 12, color: "#374151" }}>
                   Dispatcher: <strong>{record.dispatcher || "—"}</strong>
                 </div>
@@ -602,15 +596,8 @@ export default function Admin3PDispatchPage() {
   }
 
   return (
-    <div
-      style={{
-        maxWidth: 1400,
-        margin: "0 auto",
-        padding: 24,
-        minHeight: "calc(100vh - 80px)",
-        background: "#ecfdf5",
-      }}
-    >
+    <div className={design.page}>
+        <AdminPageHeader title="3P dispatch" description="Track carrier loads, weekly activity and invoice status." section="DISPATCH" />
       <Card
         style={{
           background: "#ffffff",
@@ -639,6 +626,7 @@ export default function Admin3PDispatchPage() {
             pageSizeOptions: PAGE_SIZE_OPTIONS,
             style: { paddingRight: 16 },
           }}
+          scroll={{ x: "max-content" }}
           size="middle"
           rowClassName={(record) =>
             record.invoiceStatus === "generated"

@@ -1,0 +1,35 @@
+.workspace {
+  min-width: 0;
+  min-height: 100svh;
+  color: #17243b;
+  background: radial-gradient(ellipse at top right, #eaf0fa 0, transparent 45%), #f5f7fb;
+}
+.adminMain {
+  padding: clamp(12px, 2vw, 28px);
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+}
+.userMain { min-width: 0; }
+.workspace :global(.ant-card) {
+  border-color: #e3e8f0;
+  box-shadow: 0 4px 20px rgb(20 35 63 / 4%);
+}
+.workspace :global(.ant-table-wrapper) { min-width: 0; max-width: 100%; }
+.workspace :global(.ant-table-cell) { overflow-wrap: break-word; }
+.workspace :global(.ant-input),
+.workspace :global(.ant-select-selector) { border-radius: 8px; }
+.workspace :global(.ant-pagination) { flex-wrap: wrap; row-gap: 8px; }
+.workspace :global(button:focus-visible),
+.workspace :global(a:focus-visible) { outline: 3px solid #cfa75d; outline-offset: 3px; }
+@media (max-width: 991px) {
+  .adminMain { padding-top: 68px; }
+}
+@media (max-width: 575px) {
+  .workspace :global(.ant-card-head) { padding-inline: 12px; }
+  .workspace :global(.ant-card-body) { padding: 12px; }
+  .workspace :global(.ant-card-head-title) { white-space: normal; }
+  .workspace :global(.ant-table-cell) { font-size: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .workspace, .workspace * { scroll-behavior: auto !important; transition: none !important; }
+}

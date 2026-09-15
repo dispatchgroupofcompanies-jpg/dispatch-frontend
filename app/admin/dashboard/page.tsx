@@ -1,5 +1,9 @@
 "use client";
 
+import AdminPageHeader from "@/src/components/admin/AdminPageHeader";
+import design from "@/src/components/admin/AdminPages.module.css";
+
+
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Card,
@@ -230,7 +234,7 @@ export default function AdminDashboardPage() {
 
   const [isMobile, setIsMobile] = useState(false);
   const [isCompact, setIsCompact] = useState(false);
-  const headerPadding = isMobile ? "20px 16px" : "24px 20px";
+
 
   useEffect(() => {
     const checkMobile = () => {
@@ -243,58 +247,14 @@ export default function AdminDashboardPage() {
   }, []);
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#f8fafc",
-      }}
-    >
-      {/* Header Section */}
-      <div
-        style={{
-          background: "linear-gradient(135deg, #065f46 0%, #10b981 100%)",
-          padding: headerPadding,
-          marginBottom: isMobile ? 16 : 24,
-          borderRadius: isMobile ? 12 : 16,
-          boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-        }}
-      >
-        <div style={{ maxWidth: 1400, margin: "0 auto" }}>
-          <Title
-            level={2}
-            style={{
-              color: "#fff",
-              margin: 0,
-              fontWeight: 700,
-              fontSize: isMobile ? 20 : 24,
-            }}
-          >
-            Dashboard Overview
-          </Title>
-          <Text
-            style={{
-              color: "rgba(255,255,255,0.85)",
-              fontSize: isMobile ? 12 : 13,
-              marginTop: 6,
-              display: "block",
-            }}
-          >
-            Real-time core parameters analytics and data metric feed
-          </Text>
-        </div>
-      </div>
+    <div className={design.page}>
+      <AdminPageHeader title="Dashboard overview" description="Your invoice activity, approvals and revenue in one place." section="OVERVIEW" />
 
       {/* Content Container */}
-      <div
-        style={{
-          maxWidth: 1400,
-          margin: "0 auto",
-          padding: `0 ${isMobile ? "12px" : "20px"} ${isMobile ? "12px" : "20px"}`,
-        }}
-      >
+      <div className={design.content}>
         <Spin spinning={loading}>
           {/* 🎴 SECTION 1: COUNTER CARDS */}
-          <Row gutter={[20, 20]} style={{ marginBottom: 32 }}>
+          <Row className={design.metrics} gutter={[16, 16]} style={{ marginBottom: 24 }}>
             <Col xs={24} sm={12} lg={6}>
               <Card
                 style={{
@@ -309,7 +269,7 @@ export default function AdminDashboardPage() {
                       type="secondary"
                       style={{ fontSize: 13, fontWeight: 500 }}
                     >
-                      Total System Invoices
+                      Total invoices
                     </Text>
                   }
                   value={stats.totalInvoices}
@@ -341,7 +301,7 @@ export default function AdminDashboardPage() {
                       type="secondary"
                       style={{ fontSize: 13, fontWeight: 500 }}
                     >
-                      Pending Verification
+                      Pending approval
                     </Text>
                   }
                   value={stats.pendingInvoices}
@@ -373,7 +333,7 @@ export default function AdminDashboardPage() {
                       type="secondary"
                       style={{ fontSize: 13, fontWeight: 500 }}
                     >
-                      Approved Pipelines
+                      Approved invoices
                     </Text>
                   }
                   value={stats.approvedInvoices}
@@ -405,7 +365,7 @@ export default function AdminDashboardPage() {
                       type="secondary"
                       style={{ fontSize: 13, fontWeight: 500 }}
                     >
-                      Gross Volume Settlement
+                      Total revenue
                     </Text>
                   }
                   value={stats.totalRevenue}
@@ -436,7 +396,7 @@ export default function AdminDashboardPage() {
               <Card
                 title={
                   <span style={{ fontWeight: 600 }}>
-                    Invoice Volume Scaling (CAD)
+                    Recent invoice amounts (CAD)
                   </span>
                 }
                 style={{ borderRadius: 12, border: "1px solid #e2e8f0" }}
@@ -458,7 +418,7 @@ export default function AdminDashboardPage() {
                       justifyContent: "center",
                     }}
                   >
-                    No Dynamic Log Recorded
+                    No recent invoices
                   </div>
                 )}
               </Card>
@@ -467,7 +427,7 @@ export default function AdminDashboardPage() {
               <Card
                 title={
                   <span style={{ fontWeight: 600 }}>
-                    Audit Status Distribution
+                    Invoice status distribution
                   </span>
                 }
                 style={{ borderRadius: 12, border: "1px solid #e2e8f0" }}
@@ -489,7 +449,7 @@ export default function AdminDashboardPage() {
                       justifyContent: "center",
                     }}
                   >
-                    No Active Flow Spread
+                    No invoice activity yet
                   </div>
                 )}
               </Card>
@@ -499,7 +459,7 @@ export default function AdminDashboardPage() {
           <Card
             title={
               <span style={{ fontSize: 16, fontWeight: 700, color: "#0f172a" }}>
-                Recent Processing Invoices Stream
+                Recent invoices
               </span>
             }
             style={{

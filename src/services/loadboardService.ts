@@ -1,20 +1,20 @@
 import axios from "axios";
 import type { LoadBoardRecord } from "../../app/user/loadboard/types";
+import { API_BASE_URL } from "../config/api";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_URL = API_BASE_URL;
 
 const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
   return {
+    withCredentials: true,
     headers: {
-      Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
   };
 };
 
 const getMultipartAuthHeaders = () => ({
-  headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+  withCredentials: true,
 });
 
 // Get all load board records

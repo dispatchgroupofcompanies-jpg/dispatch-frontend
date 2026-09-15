@@ -1,5 +1,9 @@
 "use client";
 
+import AdminPageHeader from "@/src/components/admin/AdminPageHeader";
+import design from "@/src/components/admin/AdminPages.module.css";
+
+
 import React, { useEffect, useState, useCallback } from "react";
 import { Table, Spin, Alert, Modal, message, Button, Grid } from "antd";
 import { DownloadOutlined } from "@ant-design/icons";
@@ -130,8 +134,6 @@ export default function AppointmentRecords() {
   const isMobile = !screens.md;
   const isTablet = screens.md && !screens.lg;
 
-  const containerPadding = isMobile ? "12px" : isTablet ? "16px" : "24px";
-  const headerPadding = isMobile ? "20px 16px" : "24px 20px";
   const cardPadding = isMobile ? "12px 14px" : "16px 18px";
 
   const columns = createColumns({
@@ -150,49 +152,12 @@ export default function AppointmentRecords() {
   );
 
   return (
-    <div
-      style={{
-        maxWidth: 1400,
-        margin: "0 auto",
-        padding: containerPadding,
-        minHeight: "calc(100vh - 80px)",
-        background: "#f8fafc",
-      }}
-    >
+    <div className={design.page}>
       {/* Header Section */}
-      <div
-        style={{
-          background: "linear-gradient(135deg, #065f46 0%, #10b981 100%)",
-          padding: headerPadding,
-          marginBottom: isMobile ? 16 : 24,
-          borderRadius: isMobile ? 12 : 16,
-          boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-        }}
-      >
-        <div>
-          <h2
-            style={{
-              margin: 0,
-              fontSize: isMobile ? 20 : 24,
-              fontWeight: 700,
-              color: "#fff",
-            }}
-          >
-            Appointment records
-          </h2>
-          <p
-            style={{
-              margin: "4px 0 0",
-              fontSize: isMobile ? 12 : 14,
-              color: "rgba(255,255,255,0.85)",
-            }}
-          >
-            All booked trips and shipments
-          </p>
-        </div>
-      </div>
+      <AdminPageHeader title="Appointment records" description="Manage booked trips, shipments and appointment details." section="APPOINTMENTS" />
 
       <div
+        className={design.summaryGrid}
         style={{
           display: "grid",
           gridTemplateColumns: isMobile
@@ -282,7 +247,7 @@ export default function AppointmentRecords() {
               },
               rowExpandable: () => true,
             }}
-            scroll={isMobile ? { x: "max-content" } : { x: undefined }}
+            scroll={{ x: "max-content" }}
             style={{
               fontSize: isMobile ? 12 : 13,
             }}

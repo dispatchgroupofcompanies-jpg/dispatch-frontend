@@ -1,4 +1,8 @@
 "use client";
+
+import AdminPageHeader from "@/src/components/admin/AdminPageHeader";
+import design from "@/src/components/admin/AdminPages.module.css";
+
 import { useState, useEffect, useCallback } from "react";
 import {
   Card,
@@ -227,7 +231,6 @@ export default function DeviceRequestsPage() {
           <Text
             code
             copyable
-            ellipsis={{ tooltip: deviceId }}
             style={{
               fontSize: 13,
               fontFamily: "monospace",
@@ -333,51 +336,14 @@ export default function DeviceRequestsPage() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#f8fafc",
-        padding: isMobile ? "16px 12px" : "32px 24px",
-      }}
-    >
+    <div className={design.page}>
       <div style={{ maxWidth: 1400, margin: "0 auto" }}>
         {/* Header Section */}
-        <div
-          style={{
-            background: "linear-gradient(135deg, #065f46 0%, #10b981 100%)",
-            padding: isMobile ? "24px 16px" : "28px 36px",
-            marginBottom: 24,
-            borderRadius: 12,
-            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
-          }}
-        >
-          <Title
-            level={2}
-            style={{
-              color: "#fff",
-              margin: 0,
-              fontWeight: 800,
-              fontSize: isMobile ? 24 : 30,
-              letterSpacing: "-0.5px",
-            }}
-          >
-            Device Approvals
-          </Title>
-          <Text
-            style={{
-              color: "rgba(255,255,255,0.9)",
-              fontSize: isMobile ? 14 : 16,
-              marginTop: 6,
-              display: "block",
-            }}
-          >
-            Review and manage device access requests securely.
-          </Text>
-        </div>
+        <AdminPageHeader title="Device approvals" description="Review device requests and manage secure team access." section="SECURITY" />
 
         {/* Statistics Cards */}
-        <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-          <Col xs={12} sm={12} lg={6}>
+        <Row className={design.metrics} gutter={[16, 16]} style={{ marginBottom: 24 }}>
+          <Col xs={24} sm={12} lg={6}>
             <Card
               styles={{ body: { padding: "24px" } }}
               style={{
@@ -404,7 +370,7 @@ export default function DeviceRequestsPage() {
               />
             </Card>
           </Col>
-          <Col xs={12} sm={12} lg={6}>
+          <Col xs={24} sm={12} lg={6}>
             <Card
               styles={{ body: { padding: "24px" } }}
               style={{
@@ -431,7 +397,7 @@ export default function DeviceRequestsPage() {
               />
             </Card>
           </Col>
-          <Col xs={12} sm={12} lg={6}>
+          <Col xs={24} sm={12} lg={6}>
             <Card
               styles={{ body: { padding: "24px" } }}
               style={{
@@ -458,7 +424,7 @@ export default function DeviceRequestsPage() {
               />
             </Card>
           </Col>
-          <Col xs={12} sm={12} lg={6}>
+          <Col xs={24} sm={12} lg={6}>
             <Card
               styles={{ body: { padding: "24px" } }}
               style={{
@@ -657,7 +623,6 @@ export default function DeviceRequestsPage() {
                           <Text
                             code
                             copyable
-                            ellipsis
                             style={{
                               width: "100%",
                               display: "block",
@@ -749,6 +714,7 @@ export default function DeviceRequestsPage() {
               ) : (
                 <Table
                   columns={columns}
+                  scroll={{ x: "max-content" }}
                   dataSource={deviceRequests}
                   rowKey="_id"
                   pagination={{

@@ -3,6 +3,7 @@
 import { Form, Modal, Button, message, Row, Col } from "antd";
 import { useMemo, useEffect, useState } from "react";
 import dayjs from "dayjs";
+import styles from "./InvoiceForm.module.css";
 
 import InvoiceDetails from "./InvoiceDetails";
 import PayeeDetails from "./PayeeDetails";
@@ -172,6 +173,8 @@ export default function CreateInvoiceModal({
 
   return (
     <Modal
+      className={styles.modal}
+      zIndex={1700}
       title={
         <div
           style={{
@@ -183,8 +186,8 @@ export default function CreateInvoiceModal({
         >
           <span style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a" }}>
             {isEditMode
-              ? "✏️ Edit Invoice Master Log"
-              : "➕ Generate New Bill Statement"}
+              ? "✏️ Edit invoice"
+              : "➕ Create invoice"}
           </span>
         </div>
       }
@@ -194,7 +197,7 @@ export default function CreateInvoiceModal({
         onClose();
       }}
       footer={null}
-      width={1200}
+      width="min(1200px, calc(100vw - 24px))"
       style={{ top: 15 }}
       styles={{
         body: { padding: "0px 8px 8px 8px" },
@@ -203,7 +206,8 @@ export default function CreateInvoiceModal({
       <Form
         form={form}
         layout="vertical"
-        size="small"
+        className={styles.form}
+        size="middle"
         onFinish={handleSubmit}
         requiredMark={false}
         initialValues={{
@@ -230,7 +234,7 @@ export default function CreateInvoiceModal({
             marginBottom: 8,
           }}
         >
-          <InvoiceDetails />
+          <InvoiceDetails key={String(open)} />
         </div>
 
         <Row gutter={[12, 12]} style={{ marginBottom: 8 }}>
@@ -299,6 +303,7 @@ export default function CreateInvoiceModal({
         </div>
 
         <div
+          className={styles.actions}
           style={{
             display: "flex",
             justifyContent: "flex-end",

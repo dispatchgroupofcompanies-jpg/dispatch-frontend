@@ -1,5 +1,9 @@
 "use client";
 
+import AdminPageHeader from "@/src/components/admin/AdminPageHeader";
+import design from "@/src/components/admin/AdminPages.module.css";
+
+
 import { useState, useEffect, useRef } from "react";
 import {
   
@@ -459,59 +463,11 @@ export default function CompanyRecordPage() {
     </div>
   );
 
-  const headerPadding = isMobile ? "20px 16px" : "24px 20px";
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#f8fafc",
-        padding: isMobile ? "12px" : "20px",
-      }}
-    >
+    <div className={design.page}>
       {/* Header Section */}
-      <div
-        style={{
-          background: "linear-gradient(135deg, #065f46 0%, #10b981 100%)",
-          padding: headerPadding,
-          marginBottom: isMobile ? 16 : 24,
-          borderRadius: isMobile ? 12 : 16,
-          boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: isMobile ? "column" : "row",
-            justifyContent: "space-between",
-            alignItems: isMobile ? "flex-start" : "center",
-            gap: isMobile ? "16px" : "0",
-          }}
-        >
-          <div>
-            <Title
-              level={3}
-              style={{
-                margin: 0,
-                fontSize: isMobile ? 20 : 24,
-                fontWeight: 700,
-                color: "#fff",
-              }}
-            >
-              Company Records
-            </Title>
-            <Text
-              style={{
-                color: "rgba(255,255,255,0.85)",
-                fontSize: isMobile ? 12 : 14,
-                marginTop: 6,
-                display: "block",
-              }}
-            >
-              Manage baseline enterprise structural identities
-            </Text>
-          </div>
-          <Button
+      <AdminPageHeader title="Company records" description="Manage company profiles, contact details and billing information." section="COMPANIES" actions={<Button
             type="primary"
             size="middle"
             icon={<PlusOutlined />}
@@ -526,9 +482,7 @@ export default function CompanyRecordPage() {
             }}
           >
             Add Company Profile
-          </Button>
-        </div>
-      </div>
+          </Button>} />
 
       {/* Content Container */}
       <div

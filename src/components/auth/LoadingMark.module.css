@@ -1,0 +1,5 @@
+.mark { display: inline-grid !important; place-items: center; width: 40px !important; height: 40px !important; border-radius: 12px; background: #17263f; color: #e5c58b; font-size: 22px; font-weight: 700; line-height: 1; animation: breathe 1.3s ease-in-out infinite !important; }
+.large { width: 64px !important; height: 64px !important; border-radius: 18px; font-size: 30px; box-shadow: 0 8px 24px rgb(23 38 63 / 12%); }
+.small { width: 18px !important; height: 18px !important; border-radius: 5px; font-size: 12px; }
+@keyframes breathe { 0%, 100% { opacity: .6; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .mark { animation: none !important; } }

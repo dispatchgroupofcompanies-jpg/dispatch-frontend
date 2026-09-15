@@ -1,0 +1,26 @@
+.modal :global(.ant-modal-container) { padding: 24px; border-radius: 18px; background: #f7f9fc; }
+.modal :global(.ant-modal-header) { background: transparent; padding-bottom: 18px; margin-bottom: 16px; border-bottom: 1px solid #dfe6ef; }
+.modal :global(.ant-modal-title) > div { background: #17263f !important; padding: 18px 20px !important; border-radius: 12px !important; }
+.modal :global(.ant-modal-title) span { color: #fff !important; font-size: 17px !important; }
+.form { min-width: 0; }
+.form :global(.ant-card) { border-radius: 12px !important; border-color: #e0e6ee !important; box-shadow: none !important; }
+.form :global(.ant-card-head) { min-height: 48px !important; padding-inline: 16px !important; background: #eef2f8 !important; }
+.form :global(.ant-card-head-title) { white-space: normal; }
+.form :global(.ant-card-head-title span) { font-size: 14px !important; color: #253851 !important; }
+.form :global(.ant-card-body) { padding: 16px !important; }
+.form :global(.ant-form-item) { margin-bottom: 16px !important; }
+.form :global(.ant-form-item-label) { padding-bottom: 6px !important; }
+.form :global(.ant-form-item-label > label) { font-size: 12px !important; font-weight: 600; color: #50617a !important; }
+.form :global(.ant-input), .form :global(.ant-input-affix-wrapper), .form :global(.ant-input-number), .form :global(.ant-picker), .form :global(.ant-select) { min-height: 38px; border-radius: 8px !important; font-size: 13px !important; }
+.form :global(.ant-select-selector) { min-height: 38px !important; border-radius: 8px !important; }
+.form :global(.ant-input-number-input) { min-height: 36px; }
+.actions { padding: 16px 0 0; border-top: 1px solid #e0e6ee; gap: 10px !important; }
+.actions :global(.ant-btn) { height: 42px; padding-inline: 24px; border-radius: 9px !important; }
+.actions :global(.ant-btn-primary) { background: #17263f !important; }
+@media (max-width: 767px) {
+ .modal { margin: 12px auto !important; top: 0 !important; padding-bottom: 12px; }
+ .modal :global(.ant-modal-container) { padding: 14px 10px; }
+ .modal :global(.ant-modal-body) { padding: 0 !important; }
+ .form :global(.ant-card-body) { padding: 12px !important; }
+ .actions :global(.ant-btn) { flex: 1; min-width: 0 !important; }
+}

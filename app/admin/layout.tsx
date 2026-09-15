@@ -1,10 +1,15 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import SessionLoader from "@/src/components/auth/SessionLoader";
+
+import { useState, useEffect } from "react";
 import { Drawer, Button, message } from "antd";
 import { useRouter, usePathname } from "next/navigation";
 import { MenuOutlined } from "@ant-design/icons";
-import AdminSidebar from "../components/AdminSidebar";
+import AdminSidebar from "@/src/components/layout/AdminSidebar";
+import { useMediaQuery } from "@/src/hooks/useMediaQuery";
+import styles from "@/src/components/layout/Workspace.module.css";
+import { getSession, signOut } from "../../src/services/auth";
 
 export default function AdminLayout({
   children,
@@ -12,25 +17,26 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== "undefined" ? window.innerWidth < 992 : true
-  );
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const isMobile = useMediaQuery("(max-width: 991px)");
+  const [drawerPath, setDrawerPath] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
-  const previousPathnameRef = useRef(pathname);
+  const drawerOpen = drawerPath === pathname;
+  const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
-    // Basic Auth Check
-    const token = localStorage.getItem("token");
-    if (!token && pathname !== "/admin/login") {
-      router.push("/admin/login");
-    }
+    let active = true;
+    getSession().then((user) => {
+      if (!active) return;
+      if (!user) router.replace("/login");
+      else if (user.role !== "admin") router.replace("/user/loadboard");
+      else setAuthorized(true);
+    });
 
     // Responsive Handlers
     const checkResponsive = () => {
-      const mobile = window.innerWidth < 992;
-      setIsMobile(mobile);
+
+
       // Auto-collapse sidebar if screen gets small, but not yet mobile
       if (window.innerWidth < 1200 && window.innerWidth >= 992) {
         setSidebarCollapsed(true);
@@ -49,38 +55,24 @@ export default function AdminLayout({
       if (typeof window !== "undefined") {
         window.removeEventListener("resize", checkResponsive);
       }
+      active = false;
     };
   }, [router, pathname]);
 
-  // Close drawer when route changes on mobile
-  useEffect(() => {
-    if (previousPathnameRef.current !== pathname) {
-      if (isMobile) {
-        setDrawerOpen(false);
-      }
-      previousPathnameRef.current = pathname;
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      message.success("Logged out successfully");
+      router.replace("/login");
+    } catch {
+      message.error("Could not sign out. Please try again.");
     }
-  }, [pathname, isMobile]);
-
-  const getResponsivePadding = (): number => {
-    if (typeof window === "undefined") return 12;
-    if (window.innerWidth < 640) return 12;
-    if (window.innerWidth < 768) return 16;
-    if (window.innerWidth < 1024) return 20;
-    return 24;
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userData");
-    message.success("Logged out successfully");
-    router.push("/login");
   };
 
   const handleSidebarLogout = () => {
     handleLogout();
     if (isMobile) {
-      setDrawerOpen(false);
+      setDrawerPath(null);
     }
   };
 
@@ -94,12 +86,14 @@ export default function AdminLayout({
     return <>{children}</>;
   }
 
+  if (!authorized) return <SessionLoader />;
+
   return (
     <div
+      className={styles.workspace}
       style={{
         display: "flex",
         minHeight: "100vh",
-        backgroundColor: "#f8fafc",
         overflow: "hidden",
       }}
     >
@@ -137,10 +131,12 @@ export default function AdminLayout({
       )}
 
       {/* Mobile Menu Button */}
-      {isMobile && (
+      {isMobile && !drawerOpen && (
         <Button
           type="text"
-          onClick={() => setDrawerOpen(!drawerOpen)}
+          aria-label="Open navigation"
+          aria-expanded={drawerOpen}
+          onClick={() => setDrawerPath(drawerOpen ? null : pathname)}
           style={{
             position: "fixed",
             left: 12,
@@ -161,15 +157,14 @@ export default function AdminLayout({
 
       {/* Main Content Area */}
       <div
-        className="main-content-wrapper"
+        className={`main-content-wrapper ${styles.adminMain}`}
         style={{
           marginLeft: isMobile ? 0 : sidebarCollapsed ? 80 : 260,
           flex: 1,
-          padding: getResponsivePadding(),
-          paddingTop: isMobile ? 68 : getResponsivePadding(),
           overflowX: "hidden",
           overflowY: "auto",
-          height: "100vh",
+          height: "100svh",
+          minWidth: 0,
         }}
       >
         {children}
@@ -178,18 +173,18 @@ export default function AdminLayout({
       {/* Mobile Drawer */}
       <Drawer
         placement="left"
-        onClose={() => setDrawerOpen(false)}
+        onClose={() => setDrawerPath(null)}
         open={drawerOpen}
         styles={{
           body: {
             padding: 0,
             margin: 0,
-            background: "linear-gradient(180deg, #1e3a8a 0%, #2563eb 100%)",
+            background: "#14233f",
             overflow: "hidden",
           },
           mask: { backgroundColor: "rgba(0,0,0,0.5)" },
         }}
-        width={260}
+        width="min(260px, 100vw)"
         closable={false}
         maskClosable
         style={{ zIndex: 1600 }}
@@ -197,7 +192,7 @@ export default function AdminLayout({
         <AdminSidebar
           collapsed={false}
           isMobile={true}
-          onClose={() => setDrawerOpen(false)}
+          onClose={() => setDrawerPath(null)}
           onLogout={handleSidebarLogout}
           // onToggleCollapse is not needed for mobile drawer
         />

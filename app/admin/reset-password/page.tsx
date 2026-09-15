@@ -1,5 +1,9 @@
 "use client";
 
+import AdminPageHeader from "@/src/components/admin/AdminPageHeader";
+import design from "@/src/components/admin/AdminPages.module.css";
+
+
 import { useState } from "react";
 import {
   Form,
@@ -15,6 +19,7 @@ import {
   CheckCircleOutlined,
 } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
+import { signOut } from "@/src/services/auth";
 import {
   resetAdminPassword,
 } from "@/src/services/admin/admin";
@@ -52,10 +57,13 @@ export default function ResetPasswordPage() {
         );
 
         // Clear token and redirect to login
-        setTimeout(() => {
-          localStorage.removeItem("token");
-          localStorage.removeItem("userData");
-          router.push("/login");
+        setTimeout(async () => {
+          try {
+            await signOut();
+            router.replace("/login");
+          } catch {
+            message.error("Password changed, but sign-out failed. Please try again.");
+          }
         }, 2000);
       } else {
         message.error(response.message || "Password reset failed");
@@ -69,23 +77,16 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#f8fafc",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "16px",
-      }}
-    >
+    <div className={design.page}>
+      <AdminPageHeader title="Account security" description="Update your admin password to keep your account secure." section="SECURITY" />
       <Card
         style={{
           width: "100%",
-          maxWidth: 420,
+          maxWidth: 560,
           borderRadius: 16,
           boxShadow: "0 16px 40px rgba(15,23,42,0.12)",
         }}
+        className={design.securityCard}
         styles={{ body: { padding: "28px" } }}
       >
         <div style={{ textAlign: "center", marginBottom: 22 }}>

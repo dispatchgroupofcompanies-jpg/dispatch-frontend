@@ -1,36 +1,25 @@
 "use client";
 
-import { useEffect } from "react";
+import SessionLoader from "@/src/components/auth/SessionLoader";
+
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { getSession } from "../../src/services/auth";
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const userData = localStorage.getItem("userData");
-
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
-    // If userData exists, check if it's a regular user (not admin)
-    if (userData) {
-      try {
-        const user = JSON.parse(userData);
-        // If the user is an admin, redirect them to admin login
-        if (user.role === "admin") {
-          router.push("/login");
-        }
-      } catch (error) {
-        // If parsing fails, clear invalid data and redirect
-        localStorage.removeItem("token");
-        localStorage.removeItem("userData");
-        router.push("/login");
-      }
-    }
+    let active = true;
+    getSession().then((user) => {
+      if (!active) return;
+      if (!user) router.replace("/login");
+      else if (user.role === "admin") router.replace("/admin/dashboard");
+      else setAuthorized(true);
+    });
+    return () => { active = false; };
   }, [router]);
 
-  return <>{children}</>;
+  return authorized ? <>{children}</> : <SessionLoader />;
 }

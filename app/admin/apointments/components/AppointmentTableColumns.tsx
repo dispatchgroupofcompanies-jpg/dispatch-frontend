@@ -127,7 +127,7 @@ export function createColumns({
       title: "Carrier",
       dataIndex: "carrierName",
       key: "carrierName",
-      responsive: ["md"],
+
       render: (val: string) => (
         <span
           style={{
@@ -142,7 +142,7 @@ export function createColumns({
     {
       title: "Timeline",
       key: "timeline",
-      responsive: ["sm"],
+
       render: (_, record) => (
         <div
           style={{
@@ -165,7 +165,7 @@ export function createColumns({
       title: "Created By",
       key: "createdByUser",
       width: isMobile ? 150 : 200,
-      responsive: ["md"],
+
       render: (_, record) => {
         const user = record.createdByUser;
         if (!user) {

@@ -1,7 +1,8 @@
 "use client";
 
 import { Table, Card } from "antd";
-import { useCallback, useEffect, useRef, useState } from "react";
+import type { TableProps } from "antd";
+import { useMediaQuery } from "@/src/hooks/useMediaQuery";
 
 interface ResponsiveTableProps<T> {
   cardTitle?: React.ReactNode;
@@ -14,15 +15,15 @@ interface ResponsiveTableProps<T> {
   enableHorizontalScroll?: boolean;
   minScrollWidth?: number;
   dataSource: T[];
-  columns: any[];
-  pagination?: any;
+  columns: TableProps<T>["columns"];
+  pagination?: TableProps<T>["pagination"];
   size?: "small" | "middle" | "large";
   scroll?: { x?: number | string; y?: number | string };
   rowKey?: string | ((record: T) => string);
   loading?: boolean;
 }
 
-export default function ResponsiveTable<T extends Record<string, unknown>>({
+export default function ResponsiveTable<T extends object>({
   cardTitle,
   cardProps,
   tableContainerStyle,
@@ -36,72 +37,17 @@ export default function ResponsiveTable<T extends Record<string, unknown>>({
   rowKey,
   loading,
 }: ResponsiveTableProps<T>) {
-  const [isMobile, setIsMobile] = useState(false);
-  const [tableSize, setTableSize] = useState<"small" | "middle" | "large">(
-    size || "middle",
-  );
-  const [scrollWidth, setScrollWidth] = useState<number | string>(
-    minScrollWidth,
-  );
-  const isInitialMount = useRef(true);
+  const isMobile = useMediaQuery("(max-width: 767px)");
+  const tableSize = size || (isMobile ? "small" : "middle");
+  const scrollWidth = minScrollWidth;
 
-  const handleResize = useCallback(() => {
-    const width = window.innerWidth;
-    const mobile = width < 768;
-    const tablet = width < 1024;
-
-    setIsMobile(mobile);
-    setTableSize(mobile ? "small" : "middle");
-
-    if (enableHorizontalScroll && !scroll) {
-      if (mobile) {
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        setScrollWidth(Math.max(minScrollWidth, width * 1.5));
-      } else if (tablet) {
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        setScrollWidth(Math.max(minScrollWidth, width * 1.2));
-      } else {
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        setScrollWidth("100%");
-      }
-    }
-  }, [enableHorizontalScroll, minScrollWidth, scroll]);
-
-  useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-
-      const width = window.innerWidth;
-      const mobile = width < 768;
-      const tablet = width < 1024;
-
-      // Initial setup - these setState calls are intentional for responsive behavior
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      setIsMobile(mobile);
-      setTableSize(mobile ? "small" : "middle");
-
-      if (enableHorizontalScroll && !scroll) {
-        if (mobile) {
-          setScrollWidth(Math.max(minScrollWidth, width * 1.5));
-        } else if (tablet) {
-          setScrollWidth(Math.max(minScrollWidth, width * 1.2));
-        } else {
-          setScrollWidth("100%");
-        }
-      }
-
-      window.addEventListener("resize", handleResize);
-      return () => window.removeEventListener("resize", handleResize);
-    }
-  }, [enableHorizontalScroll, minScrollWidth, scroll, handleResize]);
-
-  const mergedPagination = {
+  const mergedPagination: Exclude<TableProps<T>["pagination"], false | undefined> = {
     pageSize: 10,
     showSizeChanger: true,
     showTotal: (total: number, range: [number, number]) =>
       `${range[0]}-${range[1]} of ${total} items`,
-    size: isMobile ? "small" : "default",
-    ...pagination,
+    size: isMobile ? "small" : "middle",
+    ...(pagination || {}),
   };
 
   const mergedScroll = {
@@ -120,7 +66,7 @@ export default function ResponsiveTable<T extends Record<string, unknown>>({
       <Table<T>
         dataSource={dataSource}
         columns={columns}
-        pagination={mergedPagination}
+        pagination={pagination === false ? false : mergedPagination}
         size={tableSize}
         scroll={mergedScroll}
         bordered={false}

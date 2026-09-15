@@ -1,0 +1,7 @@
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; padding: 4px; }
+.card { min-width: 0; }
+.parties { display: grid; gap: 12px; margin: 0; padding-bottom: 12px; border-bottom: 1px solid #edf0f5; }
+.parties dt { color: #738198; font-size: 11px; margin-bottom: 4px; }
+.parties dd { margin: 0; color: #17263f; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; line-height: 1.5; }
+.card > div { min-width: 0; }
+@media (max-width: 575px) { .cards { grid-template-columns: minmax(0, 1fr); } }

@@ -1,4 +1,8 @@
 "use client";
+
+import AdminPageHeader from "@/src/components/admin/AdminPageHeader";
+import design from "@/src/components/admin/AdminPages.module.css";
+
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   Card,
@@ -183,7 +187,6 @@ export default function CompanyHistoryPage() {
   };
 
   const [isMobile, setIsMobile] = useState(false);
-  const headerPadding = isMobile ? "16px 12px" : "24px 20px";
 
   useEffect(() => {
     const checkMobile = () => {
@@ -322,47 +325,9 @@ export default function CompanyHistoryPage() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#f8fafc",
-        padding: isMobile ? "12px" : "20px",
-      }}
-    >
+    <div className={design.page}>
       {/* Header Section */}
-      <div
-        style={{
-          background: "linear-gradient(135deg, #065f46 0%, #10b981 100%)",
-          padding: headerPadding,
-          marginBottom: isMobile ? 16 : 24,
-          borderRadius: isMobile ? 12 : 16,
-          boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-        }}
-      >
-        <div>
-          <Title
-            level={3}
-            style={{
-              margin: 0,
-              color: "#fff",
-              fontSize: isMobile ? 20 : 24,
-              fontWeight: 700,
-            }}
-          >
-            Invoice History
-          </Title>
-          <Text
-            style={{
-              color: "rgba(255,255,255,0.85)",
-              fontSize: isMobile ? 12 : 14,
-              marginTop: 4,
-              display: "block",
-            }}
-          >
-            View and filter all invoices across the system
-          </Text>
-        </div>
-      </div>
+      <AdminPageHeader title="Invoice history" description="Explore company invoices, payment history and exports." section="HISTORY" />
 
       {/* Search and Filters */}
       <Card
@@ -553,10 +518,12 @@ export default function CompanyHistoryPage() {
                     <div>
                       <Text type="secondary">Payee: </Text>
                       <Text strong>{payeeName || "N/A"}</Text>
+                      <div style={{ overflowWrap: "anywhere", color: "#64748b" }}>{invoice.payee?.email || invoice.payeeEmail || ""}</div>
                     </div>
                     <div>
                       <Text type="secondary">Pay-to: </Text>
                       <Text strong>{payToName || "N/A"}</Text>
+                      <div style={{ overflowWrap: "anywhere", color: "#64748b" }}>{invoice.customer?.email || ""}</div>
                     </div>
                   </div>
 
@@ -624,6 +591,7 @@ export default function CompanyHistoryPage() {
         ) : (
           <Table
             dataSource={filteredInvoices}
+            scroll={{ x: "max-content" }}
             columns={columns}
             rowKey="_id"
             expandable={{

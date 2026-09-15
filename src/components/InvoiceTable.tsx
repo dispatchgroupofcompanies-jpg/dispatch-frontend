@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import styles from "./InvoiceTable.module.css";
 import {
   Table,
   Tag,
@@ -106,6 +107,7 @@ export default function InvoiceTable({
 }: Props) {
   const screens = useBreakpoint();
   const isMobile = !screens.md;
+  const isCompact = !screens.xl;
   const [downloadingInvoiceId, setDownloadingInvoiceId] = React.useState<
     string | null
   >(null);
@@ -341,9 +343,8 @@ export default function InvoiceTable({
               style={{
                 color: "#0f172a",
                 fontSize: isMobile ? 11 : 13,
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
+                whiteSpace: "normal",
+                overflowWrap: "anywhere",
                 display: "inline-block",
                 maxWidth: "100%",
               }}
@@ -370,9 +371,8 @@ export default function InvoiceTable({
               style={{
                 color: "#0f172a",
                 fontSize: isMobile ? 11 : 13,
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
+                whiteSpace: "normal",
+                overflowWrap: "anywhere",
                 display: "inline-block",
                 maxWidth: "100%",
               }}
@@ -512,9 +512,9 @@ export default function InvoiceTable({
           padding: isMobile ? "4px" : "16px",
         }}
       >
-        {isMobile ? (
-          <div style={{ display: "grid", gap: 12, padding: 8 }}>
-            {invoices.map((record) => {
+        {isCompact ? (
+          <div className={styles.cards}>
+            {invoices.map((record, index) => {
               const vrids =
                 record.trips?.map((trip) => trip.vrid).filter(Boolean) || [];
               const status = record.invoiceStatus || "draft";
@@ -528,6 +528,7 @@ export default function InvoiceTable({
               return (
                 <div
                   key={record._id}
+                  className={styles.card}
                   style={{
                     display: "grid",
                     gap: 12,
@@ -551,18 +552,22 @@ export default function InvoiceTable({
                       style={{
                         color: "#1e40af",
                         fontWeight: 700,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
+                        overflowWrap: "anywhere",
+                        whiteSpace: "normal",
                       }}
                     >
                       {vrids.join(", ") || "No VRID"}
                     </span>
                   </div>
+                  <dl className={styles.parties}>
+                    <div><dt>S No / Invoice</dt><dd>{totalInvoices - index} / {record.invoiceNumber || "?"}</dd></div>
+                    <div><dt>Payee</dt><dd>{record.payee?.companyName || record.payeeName || (typeof record.payee === "string" ? record.payee : "?")}</dd></div>
+                    <div><dt>Pay To</dt><dd>{record.customer?.companyName || record.customer?.name || (typeof record.customer === "string" ? record.customer : null) || (typeof record.companyName === "string" ? record.companyName : "?")}</dd></div>
+                  </dl>
                   <div
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
+                      gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
                       gap: 12,
                     }}
                   >
@@ -629,6 +634,7 @@ export default function InvoiceTable({
                     <Button
                       size="small"
                       icon={<DownloadOutlined />}
+                      aria-label="Download invoice"
                       loading={downloadingInvoiceId === record._id}
                       onClick={() => downloadInvoice(record)}
                     />
@@ -644,6 +650,7 @@ export default function InvoiceTable({
                       size="small"
                       type="primary"
                       icon={<EyeOutlined />}
+                      aria-label="View invoice details"
                       onClick={() => onView(record)}
                     />
                   </div>
@@ -654,6 +661,7 @@ export default function InvoiceTable({
         ) : (
           <Table
             columns={columns}
+            scroll={{ x: "max-content" }}
             dataSource={invoices}
             rowKey={(r) => r._id}
             pagination={{

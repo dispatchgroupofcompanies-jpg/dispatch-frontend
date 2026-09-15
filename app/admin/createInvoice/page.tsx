@@ -1,5 +1,9 @@
 "use client";
 
+import AdminPageHeader from "@/src/components/admin/AdminPageHeader";
+import design from "@/src/components/admin/AdminPages.module.css";
+
+
 import { useEffect, useState, useMemo } from "react";
 import {
   Button,
@@ -34,6 +38,7 @@ import {
   downloadInvoicePDF,
 } from "../../../src/services/admin/invoice";
 import API from "../../../src/services/api";
+import { getSession } from "../../../src/services/auth";
 import type { Invoice as InvoiceType } from "../../../src/types/invoice";
 
 const { useBreakpoint } = Grid;
@@ -42,25 +47,10 @@ function DashboardComponent() {
   const router = useRouter();
 
   useEffect(() => {
-    // Only allow admin users to view this page. Redirect unauthenticated or non-admins.
-    try {
-      const userRaw = typeof window !== 'undefined' ? localStorage.getItem('userData') : null;
-      if (!userRaw) {
-        router.push('/login');
-        return;
-      }
-      const user = JSON.parse(userRaw);
-      console.log("👤 Current user:", user);
-      if (user.role !== 'admin') {
-        router.push('/user/loadboard');
-        return;
-      }
-      // Admins may continue to use this page (render create UI)
-      console.log("✅ Admin verified. Proceeding...");
-    } catch (e) {
-      console.error("❌ Auth check error:", e);
-      router.push('/login');
-    }
+    getSession().then((user) => {
+      if (!user) router.replace('/login');
+      else if (user.role !== 'admin') router.replace('/user/loadboard');
+    });
   }, [router]);
   const screens = useBreakpoint();
   const isMobile = !screens.md;
@@ -89,15 +79,15 @@ function DashboardComponent() {
     try {
       setLoading(true);
       console.log("📋 Loading invoices from /admin/invoices...");
-      
+
       const res = await getInvoices();
-      
+
       console.log("✅ API Response received:", {
         status: "Success",
         data: res,
         invoiceCount: res.data?.length || 0,
       });
-      
+
       setInvoices(res.data || []);
     } catch (err: any) {
       console.error("❌ FULL ERROR DETAILS:", {
@@ -109,7 +99,7 @@ function DashboardComponent() {
         responseData: err.response?.data,
         errorStack: err.stack,
       });
-      
+
       // Only show error message, don't redirect (preserve auth)
       if (err.response?.status === 401) {
         message.error("❌ 401: Session expired or invalid token");
@@ -477,56 +467,11 @@ function DashboardComponent() {
     [selected, downloading, isMobile, currentPage, pageSize, filteredInvoices],
   );
 
-  const headerPadding = isMobile ? "20px 16px" : "24px 20px";
+
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#f8fafc",
-        padding: isMobile ? "12px" : "20px",
-      }}
-    >
-      {/* Header Section */}
-      <div
-        style={{
-          background: "linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)",
-          padding: headerPadding,
-          marginBottom: isMobile ? 16 : 24,
-          borderRadius: isMobile ? 12 : 16,
-          boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: isMobile ? "column" : "row",
-            justifyContent: "space-between",
-            alignItems: isMobile ? "flex-start" : "center",
-            gap: isMobile ? "16px" : "0",
-          }}
-        >
-          <div>
-            <h2
-              style={{
-                margin: 0,
-                fontSize: isMobile ? 20 : 24,
-                fontWeight: 700,
-                color: "#fff",
-              }}
-            >
-              Invoice Management Ledger
-            </h2>
-            <p
-              style={{
-                margin: "4px 0 0 0",
-                fontSize: isMobile ? 12 : 14,
-                color: "rgba(255,255,255,0.85)",
-              }}
-            >
-              Create, tracking logs, view, and instantly download invoices.
-            </p>
-          </div>
+    <div className={design.page}>
+      <AdminPageHeader title="Create & manage invoices" description="Create invoices, track company totals and manage your billing records." section="BILLING" actions={
           <Button
             type="primary"
             size="large"
@@ -546,17 +491,16 @@ function DashboardComponent() {
           >
             Create Invoice
           </Button>
-        </div>
-      </div>
+        } />
 
       {/* Stats Cards */}
-      <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
+      <Row className={design.metrics} gutter={[16, 16]} style={{ marginBottom: "24px" }}>
         <Col xs={24} sm={12} md={8}>
           <Card style={{ boxShadow: "0 1px 3px 0 rgba(0,0,0,0.05)", borderRadius: "12px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
               <FileTextOutlined style={{ color: "#3b82f6", fontSize: "24px" }} />
               <div>
-                <div style={{ color: "#64748b", fontSize: "14px" }}>Total Ledger Statements</div>
+                <div style={{ color: "#64748b", fontSize: "14px" }}>Total invoices</div>
                 <div style={{ fontSize: "20px", fontWeight: 700 }}>{stats.total}</div>
               </div>
             </div>
@@ -567,7 +511,7 @@ function DashboardComponent() {
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
               <DollarCircleOutlined style={{ color: "#10b981", fontSize: "24px" }} />
               <div>
-                <div style={{ color: "#64748b", fontSize: "14px" }}>Gross Volume Valuation</div>
+                <div style={{ color: "#64748b", fontSize: "14px" }}>Total invoice value</div>
                 <div style={{ fontSize: "20px", fontWeight: 700 }}>
                   ${stats.grossEarnings?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </div>
@@ -580,7 +524,7 @@ function DashboardComponent() {
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
               <CheckCircleOutlined style={{ color: "#f59e0b", fontSize: "24px" }} />
               <div>
-                <div style={{ color: "#64748b", fontSize: "14px" }}>Active Draft Modifications</div>
+                <div style={{ color: "#64748b", fontSize: "14px" }}>Draft invoices</div>
                 <div style={{ fontSize: "20px", fontWeight: 700 }}>{stats.draftCount}</div>
               </div>
             </div>
@@ -671,9 +615,9 @@ function DashboardComponent() {
         ) : (
           <ResponsiveTable
             cardProps={{ borderRadius: "12px", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
-            dataSource={filteredInvoices as unknown as Record<string, unknown>[]}
+            dataSource={filteredInvoices}
             columns={columns}
-            rowKey={(record) => (record as unknown as InvoiceType)._id}
+            rowKey={(record) => record._id}
             loading={loading}
             pagination={{
               current: currentPage,

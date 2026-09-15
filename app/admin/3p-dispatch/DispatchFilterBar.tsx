@@ -1,5 +1,7 @@
 "use client";
 
+import design from "@/src/components/admin/AdminPages.module.css";
+
 import React, { useMemo, useEffect } from "react";
 import { Input, Select, Space, Typography, Grid, Button } from "antd";
 import {
@@ -87,6 +89,7 @@ export const DispatchFilterBar: React.FC<DispatchFilterBarProps> = React.memo(
 
     return (
       <div
+        className={design.dispatchFilters}
         style={{
           display: "flex",
           flexDirection: "column",
@@ -110,9 +113,9 @@ export const DispatchFilterBar: React.FC<DispatchFilterBarProps> = React.memo(
         >
           <Title
             level={4}
-            style={{ margin: 0, color: "#065f46", whiteSpace: "nowrap" }}
+            style={{ margin: 0, color: "#065f46", whiteSpace: "normal" }}
           >
-            3P Dispatch Records
+            Dispatch filters
           </Title>
 
           {selectedWeekRange && selectedWeekRange !== "all" && (
@@ -146,7 +149,7 @@ export const DispatchFilterBar: React.FC<DispatchFilterBarProps> = React.memo(
           size={12}
           style={{ alignSelf: isMobile ? "stretch" : "flex-start" }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 4, minWidth: 0 }}>
             <Button
               icon={<LeftOutlined />}
               onClick={handlePreviousWeek}
@@ -158,7 +161,7 @@ export const DispatchFilterBar: React.FC<DispatchFilterBarProps> = React.memo(
               placeholder="Select Week"
               value={selectedWeekRange}
               onChange={onWeekFilterChange}
-              style={{ width: isMobile ? "100%" : 260 }}
+              style={{ width: isMobile ? "100%" : 260, minWidth: 0, flex: isMobile ? 1 : undefined }}
               options={weekOptions.map((w) => ({ label: w.label, value: w.value }))}
               suffixIcon={<CalendarOutlined style={{ color: "#10b981" }} />}
             />

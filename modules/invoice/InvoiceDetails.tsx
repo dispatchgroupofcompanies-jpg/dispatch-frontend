@@ -1,10 +1,18 @@
 "use client";
 
-import React from "react";
-import { Card, Col, Form, Input, Row, Select } from "antd";
+import React, { useId, useState } from "react";
+import { Button, Card, Col, Form, Input, Row, Select } from "antd";
 
 export default function InvoiceDetails() {
+  const [expanded, setExpanded] = useState(false);
+  const fieldsId = useId();
   return (
+    <section>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 12 }}>
+        <div><strong>Invoice information</strong><p style={{ margin: "4px 0 0", color: "#64748b", fontSize: 12 }}>Optional currency and bank details. Invoice number is generated automatically.</p></div>
+        <Button htmlType="button" aria-expanded={expanded} aria-controls={fieldsId} onClick={() => setExpanded((value) => !value)}>{expanded ? "Hide invoice information" : "Show invoice information"}</Button>
+      </div>
+      <div id={fieldsId} hidden={!expanded}>
     <Card
       title={
         <span style={{ fontSize: 13, fontWeight: 700, color: "#102a63" }}>
@@ -189,5 +197,7 @@ export default function InvoiceDetails() {
         </Col>
       </Row>
     </Card>
+      </div>
+    </section>
   );
 }

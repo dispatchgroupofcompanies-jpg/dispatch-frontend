@@ -1,5 +1,9 @@
 "use client";
 
+import AdminPageHeader from "@/src/components/admin/AdminPageHeader";
+import design from "@/src/components/admin/AdminPages.module.css";
+
+
 import React, { useState, useEffect } from "react";
 import {
   Button,
@@ -239,8 +243,6 @@ export default function AddUsersPage() {
     },
   ];
 
-  const containerPadding = isMobile ? "12px" : "20px";
-  const headerPadding = isMobile ? "20px 16px" : "24px 20px";
 
   // Stats cards data
   const stats = [
@@ -254,55 +256,9 @@ export default function AddUsersPage() {
   ];
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#f8fafc",
-        padding: containerPadding,
-      }}
-    >
+    <div className={design.page}>
       {/* Header Section */}
-      <div
-        style={{
-          background: "linear-gradient(135deg, #065f46 0%, #10b981 100%)",
-          padding: headerPadding,
-          marginBottom: isMobile ? 16 : 24,
-          borderRadius: isMobile ? 12 : 16,
-          boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: "12px",
-          }}
-        >
-          <div>
-            <h1
-              style={{
-                margin: 0,
-                fontSize: isMobile ? 22 : 28,
-                fontWeight: 700,
-                color: "#fff",
-              }}
-            >
-              Users Directory
-            </h1>
-            <p
-              style={{
-                margin: "4px 0 0 0",
-                fontSize: isMobile ? 12 : 14,
-                color: "rgba(255,255,255,0.85)",
-              }}
-            >
-              Manage and onboard system users.
-            </p>
-          </div>
-
-          <Button
+      <AdminPageHeader title="Team & users" description="Manage team accounts, access and user profiles." section="TEAM" actions={<Button
             type="primary"
             icon={<UserAddOutlined />}
             onClick={showModal}
@@ -316,12 +272,11 @@ export default function AddUsersPage() {
             }}
           >
             Add User
-          </Button>
-        </div>
-      </div>
+          </Button>} />
 
       {/* Stats Cards */}
       <div
+        className={design.summaryGrid}
         style={{
           display: "grid",
           gridTemplateColumns: isMobile
@@ -415,7 +370,7 @@ export default function AddUsersPage() {
               isMobile ? `${total} items` : `Total ${total} items`,
           }}
           size={isMobile ? "middle" : "small"}
-          scroll={isMobile ? { x: "max-content" } : { x: undefined }}
+          scroll={{ x: "max-content" }}
           style={{ fontSize: isMobile ? 12 : 13 }}
         />
       </div>

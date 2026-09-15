@@ -1,472 +1,147 @@
 "use client";
 
-import { Form, Input, Button, message, Spin, Checkbox, Typography} from "antd";
-import { useState, useEffect } from "react";
+import Image from "next/image";
+import SessionLoader from "@/src/components/auth/SessionLoader";
+import { useEffect, useState } from "react";
 import { signin } from "../route";
-import { EyeInvisibleOutlined, EyeTwoTone, LockOutlined, MailOutlined, LoadingOutlined } from "@ant-design/icons";
-
-const { Text, Title } = Typography;
+import styles from "./LoginForm.module.css";
 
 export default function LoginForm() {
-  const [form] = Form.useForm();
+  const [email, setEmail] = useState(() => typeof window === "undefined" ? "" : localStorage.getItem("rememberEmail") || "");
+  const [password, setPassword] = useState("");
+  const [rememberEmail, setRememberEmail] = useState(() => typeof window !== "undefined" && Boolean(localStorage.getItem("rememberEmail")));
+  const [showPassword, setShowPassword] = useState(false);
+  const [deviceId, setDeviceId] = useState(() => typeof window === "undefined" ? null : localStorage.getItem("deviceId"));
   const [loading, setLoading] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
-  const [deviceId, setDeviceId] = useState(null);
-  const [deviceGenerated, setDeviceGenerated] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
+    localStorage.removeItem("token");
+    localStorage.removeItem("userData");
+    if (deviceId) return;
 
-    const savedEmail = localStorage.getItem("rememberEmail");
-    const savedDeviceId = localStorage.getItem("deviceId");
+    let active = true;
+    import("@fingerprintjs/fingerprintjs")
+      .then((module) => module.load())
+      .then((fingerprint) => fingerprint.get())
+      .then((result) => {
+        if (!active) return;
+        localStorage.setItem("deviceId", result.visitorId);
+        setDeviceId(result.visitorId);
+      })
+      .catch(() => {
+        if (active) setError("Could not identify this device. Please refresh and try again.");
+      });
 
-    if (savedEmail) {
-      setRememberMe(true);
-      form.setFieldsValue({ email: savedEmail, remember: true });
-    }
-
-    if (savedDeviceId) {
-      setDeviceId(savedDeviceId);
-      setDeviceGenerated(true);
-    }
-  }, [form]);
-
-  // Auto-generate device ID on mount if not present
-  useEffect(() => {
-    const initDeviceId = async () => {
-      if (typeof window === "undefined") {
-        return;
-      }
-
-      if (deviceId || localStorage.getItem("deviceId")) {
-        return;
-      }
-
-      try {
-        const FP = await import("@fingerprintjs/fingerprintjs");
-        const fp = await FP.load();
-        const result = await fp.get();
-        const newDeviceId = result.visitorId;
-
-        setDeviceId(newDeviceId);
-        setDeviceGenerated(true);
-
-        localStorage.setItem("deviceId", newDeviceId);
-        console.log("Device ID auto-generated on mount:", newDeviceId);
-      } catch (error) {
-        console.error("Failed to auto-generate device ID:", error);
-      }
-    };
-
-    initDeviceId();
+    return () => { active = false; };
   }, [deviceId]);
 
-
-
-  const handleFinish = async (values) => {
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError("");
     setLoading(true);
 
     try {
-      // Get deviceId from multiple sources
-      let currentDeviceId = deviceId;
-      
-      // If not in state, try localStorage
-      if (!currentDeviceId && typeof window !== "undefined") {
-        currentDeviceId = localStorage.getItem("deviceId");
-      }
-      
-      // If still not found, try to generate it automatically
+      let currentDeviceId = deviceId || localStorage.getItem("deviceId");
       if (!currentDeviceId) {
         try {
-          const FP = await import("@fingerprintjs/fingerprintjs");
-          const fp = await FP.load();
-          const result = await fp.get();
-          currentDeviceId = result.visitorId;
-          
-          // Save to state and localStorage
+          const fingerprint = await import("@fingerprintjs/fingerprintjs").then((module) => module.load());
+          currentDeviceId = (await fingerprint.get()).visitorId;
+          localStorage.setItem("deviceId", currentDeviceId);
           setDeviceId(currentDeviceId);
-          setDeviceGenerated(true);
-          if (typeof window !== "undefined") {
-            localStorage.setItem("deviceId", currentDeviceId);
-          }
-          console.log("Device ID generated automatically:", currentDeviceId);
-        } catch (error) {
-          console.error("Failed to auto-generate device ID:", error);
+        } catch {
+          setError("Could not identify this device. Please refresh and try again.");
+          return;
         }
       }
-      
-      
-      // Add deviceId and userAgent to login data
-      const loginData = {
-        ...values,
+
+      const result = await signin({
+        email: email.trim(),
+        password,
         deviceId: currentDeviceId,
-        userAgent: typeof window !== "undefined" ? navigator.userAgent : undefined,
-      };
+      });
 
-      const res = await signin(loginData);
-
-      if (res.success) {
-        message.success("Login successful! Redirecting...");
-
-        // Remember Me Logic Handling
-        if (rememberMe) {
-          localStorage.setItem("rememberEmail", values.email);
-        } else {
-          localStorage.removeItem("rememberEmail");
-        }
-
-        // 1. STORE TOKEN (Sabse pehle token update hona chahiye)
-        if (res.token) {
-          localStorage.setItem("token", res.token);
-        }
-
-        // 2. DETECT ROLE & STORE DATA
-        const accountData = res.admin || res.user;
-        const isAdmin = res.admin || (accountData && accountData.role === "admin");
-
-        if (accountData) {
-          localStorage.setItem("userData", JSON.stringify(accountData));
-        }
-
-        // 3. 🔥 FIX REDIRECTION LOOP (Bypassing Next.js Cache router)
-        setTimeout(() => {
-          const urlParams = new URLSearchParams(window.location.search);
-          const customRedirect = urlParams.get("redirect");
-
-          if (customRedirect) {
-            window.location.href = customRedirect; // URL query parameters ka redirection handle karega
-          } else if (isAdmin) {
-            window.location.href = "/admin/dashboard"; 
-          } else {
-            window.location.href = "/user";
-          }
-        }, 800);
-
-      } else if (res.status === "device_id_required") {
-        // Device ID required
-        message.warning({
-          content: "Please generate your device ID first. Click 'Generate Device ID' button below.",
-          duration: 10,
-        });
-      } else if (res.status === "pending_approval") {
-        // Device pending approval
-        message.warning({
-          content: "Please wait for admin approval.",
-          duration: 10,
-        });
-      } else if (res.status === "access_denied") {
-        // Device access denied
-        message.error({
-          content: "This device was denied access. Contact admin.",
-          duration: 10,
-        });
-      } else if (res.status === "device_id_mismatch") {
-        // Device ID mismatch
-        message.error({
-          content: "Device ID not matched. You can only login from the approved device.",
-          duration: 10,
-        });
-      } else {
-        message.error(res.message || "Invalid credentials");
+      if (!result.success) {
+        const messages = {
+          pending_approval: "This device is awaiting administrator approval.",
+          access_denied: "This device was denied access. Contact your administrator.",
+          device_id_required: "Device identification is required. Please refresh and try again.",
+        };
+        setError(messages[result.status] || result.message || "Sign in failed. Please try again.");
+        return;
       }
-    } catch (error) {
-      console.error("Login component error:", error);
-      message.error("Login failed. Please check your connection.");
+
+      if (rememberEmail) localStorage.setItem("rememberEmail", email.trim());
+      else localStorage.removeItem("rememberEmail");
+
+      // Only a local path for this user's role may override the destination.
+      const isAdmin = (result.admin || result.user)?.role === "admin";
+      const requestedPath = new URLSearchParams(window.location.search).get("redirect");
+      const safePath = requestedPath?.startsWith("/") &&
+        !requestedPath.startsWith("//") && !requestedPath.includes("\\") &&
+        requestedPath.startsWith(isAdmin ? "/admin/" : "/user/");
+      setRedirecting(true);
+      window.location.assign(safePath ? requestedPath : isAdmin ? "/admin/dashboard" : "/user/loadboard");
+    } catch {
+      setError("Unable to connect. Please check your connection and try again.");
     } finally {
       setLoading(false);
     }
   };
 
+  if (redirecting) return <SessionLoader />;
+
   return (
-    <div className="login-shell bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center px-3 py-3 sm:px-4 sm:py-4 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-40 left-40 w-80 h-80 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
-      </div>
-
-      <Spin spinning={loading} description="Signing in...">
-        <div className="login-content w-full max-w-5xl relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 items-center">
-            
-            {/* Left Side - Branding */}
-            <div className="login-branding hidden lg:block p-8 xl:p-12">
-              <div className="space-y-6 xl:space-y-8">
-                {/* Logo */}
-                <div className="relative">
-                  <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-2xl flex items-center justify-center shadow-2xl transform rotate-6 hover:rotate-12 transition-transform duration-300">
-                    <span className="text-5xl">📱</span>
-                  </div>
-                  <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-400 rounded-full animate-pulse"></div>
-                </div>
-
-                {/* Title */}
-                <div>
-                  <Title level={2} className="!text-white !mb-3 !text-4xl xl:!text-5xl !font-bold !leading-tight">
-                    Dispatch Management System
-                  </Title>
-                  <Text className="text-gray-300 text-lg block leading-relaxed">
-                    Manage your dispatch operations efficiently with our modern platform. Real-time tracking, analytics, and seamless integration.
-                  </Text>
-                </div>
-
-                {/* Features */}
-                <div className="space-y-4 xl:space-y-5 pt-2 xl:pt-4">
-                  <div className="flex items-start gap-4 group">
-                    <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-lg">
-                      <span className="text-2xl">✅</span>
-                    </div>
-                    <div>
-                      <Text className="text-white font-bold text-lg block mb-1">Fast & Secure</Text>
-                      <Text className="text-gray-400">Bank-level security with end-to-end encryption</Text>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-4 group">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-lg">
-                      <span className="text-2xl">📊</span>
-                    </div>
-                    <div>
-                      <Text className="text-white font-bold text-lg block mb-1">Analytics</Text>
-                      <Text className="text-gray-400">Real-time insights and comprehensive reporting</Text>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-4 group">
-                    <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-lg">
-                      <span className="text-2xl">⚡</span>
-                    </div>
-                    <div>
-                      <Text className="text-white font-bold text-lg block mb-1">Lightning Fast</Text>
-                      <Text className="text-gray-400">Optimized performance for seamless experience</Text>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Side - Form */}
-            <div className="w-full">
-              <div className="login-card bg-gray-800/95 backdrop-blur-xl p-5 sm:p-8 shadow-2xl rounded-2xl lg:rounded-l-2xl lg:rounded-r-none">
-                
-                {/* Mobile Logo */}
-                <div className="lg:hidden mb-6 text-center">
-                  <div className="inline-block relative">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-xl">
-                      <span className="text-3xl">📱</span>
-                    </div>
-                  </div>
-                  <Title level={3} className="!text-white !mt-3 !text-xl lg:!hidden">
-                    Dispatch Management
-                  </Title>
-                </div>
-
-                {/* Header */}
-                <div className="mb-6">
-                  <Title level={2} className="!mb-2 !text-2xl !font-bold text-white">
-                    Welcome Back
-                  </Title>
-                  <Text className="text-gray-300 text-sm">
-                    Sign in to your account to continue
-                  </Text>
-                </div>
-
-                {/* Form */}
-                <Form 
-                  form={form} 
-                  layout="vertical" 
-                  onFinish={handleFinish}
-                  initialValues={{ remember: rememberMe }}
-                  requiredMark="optional"
-                  scrollToFirstError
-                  className="space-y-4"
-                >
-                  <Form.Item
-                    label={<span style={{ color: "#e5e7eb", fontWeight: 600, fontSize: 12 }}>Email Address</span>}
-                    name="email"
-                    rules={[
-                      { required: true, message: "Email is required" },
-                      { type: "email", message: "Please enter a valid email" }
-                    ]}
-                  >
-                    <Input
-                      size="middle"
-                      type="email"
-                      placeholder="your@email.com"
-                      prefix={<MailOutlined style={{ color: "#9ca3af" }} />}
-                      style={{ 
-                        borderRadius: 8, 
-                        backgroundColor: "#374151", 
-                        borderColor: "#4b5563",
-                        color: "#ffffff"
-                      }}
-                      disabled={loading}
-                    />
-                  </Form.Item>
-
-                  <Form.Item
-                    label={<span style={{ color: "#e5e7eb", fontWeight: 600, fontSize: 12 }}>Password</span>}
-                    name="password"
-                    rules={[
-                      { required: true, message: "Password is required" }
-                    ]}
-                  >
-                    <Input.Password
-                      size="middle"
-                      placeholder="••••••••"
-                      prefix={<LockOutlined style={{ color: "#9ca3af" }} />}
-                      style={{ 
-                        borderRadius: 8, 
-                        backgroundColor: "#374151", 
-                        borderColor: "#4b5563",
-                        color: "#ffffff"
-                      }}
-                      disabled={loading}
-                      iconRender={(visible) => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)}
-                    />
-                  </Form.Item>
-
-                  <div className="flex items-center justify-between py-1">
-                    <Form.Item name="remember" valuePropName="checked" noStyle>
-                      <Checkbox 
-                        onChange={(e) => setRememberMe(e.target.checked)}
-                        className="text-gray-300"
-                      >
-                        <span className="text-xs">Remember me</span>
-                      </Checkbox>
-                    </Form.Item>
-                  </div>
-
-                  {/* Device ID Status - Only show if needed */}
-                  {!deviceGenerated && (
-                    <div className="text-xs text-gray-400 flex items-center gap-2">
-                      <LoadingOutlined className="text-blue-400" />
-                      <span>Generating device ID...</span>
-                    </div>
-                  )}
-
-                  <Button
-                    type="primary"
-                    htmlType="submit"
-                    size="middle"
-                    block
-                    loading={loading}
-                    className="!h-10 !rounded-lg !bg-gradient-to-r !from-blue-600 !to-cyan-500 hover:!from-blue-700 hover:!to-cyan-600 !font-semibold !text-sm !shadow-lg hover:!shadow-xl !transition-all"
-                  >
-                    {loading ? "Signing in..." : "Sign In"}
-                  </Button>
-                </Form>
-
-                {/* Footer */}
-                <div className="mt-6 pt-4 border-t border-gray-700">
-                  <p className="text-center text-xs text-gray-400">
-                    Contact your administrator for account access
-                  </p>
-                </div>
-              </div>
+    <main className={styles.page}>
+      <div className={styles.shell}>
+        <section className={styles.brandPanel} aria-label="XCDGOC dispatch platform">
+          <div className={styles.brandTop}>
+            <span className={styles.brandMark}>X</span>
+            <span className={styles.brandName}>XCDGOC <span>Dispatch</span></span>
+          </div>
+          <div className={styles.brandBody}>
+            <span className={styles.eyebrow}>DISPATCH OPERATIONS PLATFORM</span>
+            <h1>Clarity for every mile.</h1>
+            <p>One secure workspace for your team, your loads, and every important decision along the way.</p>
+            <div className={styles.featureList}>
+              <div><span>01</span> Manage dispatch and load boards</div>
+              <div><span>02</span> Track invoices and payments</div>
+              <div><span>03</span> Keep your team connected</div>
             </div>
           </div>
-        </div>
-      </Spin>
+          <div className={styles.brandFoot}>
+            <Image src="/logo.jpeg" alt="XCDGOC Pvt Ltd" width={108} height={108} className={styles.logo} priority />
+            <span>Built for the people who keep freight moving.</span>
+          </div>
+        </section>
 
-      <style jsx global>{`
-        @keyframes blob {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
-        }
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
+        <section className={styles.formPanel} aria-labelledby="sign-in-title">
+          <div className={styles.formContent}>
+            <div className={styles.mobileBrand}><span className={styles.brandMark}>X</span><span>XCDGOC Dispatch</span></div>
+            <span className={styles.formEyebrow}>WELCOME BACK</span>
+            <h2 id="sign-in-title">Sign in to your workspace</h2>
+            <p className={styles.intro}>Enter your credentials to continue to your dashboard.</p>
 
-        .login-shell {
-          height: 100vh;
-          height: 100dvh;
-          min-height: 0;
-          overscroll-behavior: none;
-        }
+            <form onSubmit={handleSubmit} className={styles.form}>
+              <label htmlFor="login-email">Email address</label>
+              <input id="login-email" type="email" autoComplete="email" placeholder="you@company.com" value={email} onChange={(event) => setEmail(event.target.value)} required disabled={loading} />
 
-        .login-content {
-          max-height: 100%;
-        }
-        
-        /* Force white text in all inputs */
-        .ant-input,
-        .ant-input-password input,
-        .ant-input-affix-wrapper input {
-          color: #ffffff !important;
-        }
-        
-        .ant-input::placeholder,
-        .ant-input-password input::placeholder,
-        .ant-input-affix-wrapper input::placeholder {
-          color: #9ca3af !important;
-        }
-        
-        /* Override Ant Design input styles */
-        .ant-input {
-          background-color: #374151 !important;
-          border-color: #4b5563 !important;
-        }
-        
-        .ant-input-affix-wrapper {
-          background-color: #374151 !important;
-          border-color: #4b5563 !important;
-        }
-        
-        .ant-input-affix-wrapper input {
-          background-color: transparent !important;
-        }
+              <label htmlFor="login-password">Password</label>
+              <div className={styles.passwordField}>
+                <input id="login-password" type={showPassword ? "text" : "password"} autoComplete="current-password" placeholder="Enter your password" value={password} onChange={(event) => setPassword(event.target.value)} required disabled={loading} />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? "Hide" : "Show"}</button>
+              </div>
 
-        .ant-input:hover,
-        .ant-input:focus,
-        .ant-input-focused,
-        .ant-input-affix-wrapper:hover,
-        .ant-input-affix-wrapper:focus,
-        .ant-input-affix-wrapper-focused {
-          background-color: #374151 !important;
-          border-color: #38bdf8 !important;
-          box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.16) !important;
-        }
+              <label className={styles.remember}><input type="checkbox" checked={rememberEmail} onChange={(event) => setRememberEmail(event.target.checked)} /> Remember my email</label>
+              {error && <p className={styles.error} role="alert">{error}</p>}
+              <button className={styles.submit} type="submit" disabled={loading}>{loading ? "Signing in…" : "Sign in"}<span aria-hidden="true">→</span></button>
+            </form>
 
-        .ant-input:-webkit-autofill,
-        .ant-input:-webkit-autofill:hover,
-        .ant-input:-webkit-autofill:focus,
-        .ant-input-affix-wrapper input:-webkit-autofill,
-        .ant-input-affix-wrapper input:-webkit-autofill:hover,
-        .ant-input-affix-wrapper input:-webkit-autofill:focus {
-          -webkit-text-fill-color: #ffffff !important;
-          -webkit-box-shadow: 0 0 0 1000px #374151 inset !important;
-          box-shadow: 0 0 0 1000px #374151 inset !important;
-          caret-color: #ffffff;
-          transition: background-color 9999s ease-out 0s;
-        }
-
-        @media (max-height: 640px) {
-          .login-card { padding: 16px !important; }
-          .login-card .ant-form-item { margin-bottom: 12px; }
-          .login-card .ant-typography { margin-bottom: 4px !important; }
-          .login-card .mt-6 { margin-top: 14px !important; }
-          .login-card .mb-6 { margin-bottom: 14px !important; }
-        }
-
-        @media (min-width: 1024px) and (max-height: 760px) {
-          .login-branding { padding-top: 12px !important; padding-bottom: 12px !important; }
-          .login-branding .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 16px; }
-          .login-branding .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 10px; }
-          .login-branding .text-4xl { font-size: 30px !important; }
-          .login-branding .text-lg { font-size: 14px !important; }
-        }
-      `}</style>
-    </div>
+          </div>
+          <footer className={styles.footer}>© {new Date().getFullYear()} XCDGOC Pvt Ltd <span>•</span> Secure dispatch workspace</footer>
+        </section>
+      </div>
+    </main>
   );
 }

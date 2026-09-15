@@ -3,19 +3,10 @@ import Api from "./api";
 
 const api = axios.create({
   baseURL: `${Api.defaults.baseURL}/admin/users`,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
-});
-
-api.interceptors.request.use((config) => {
-  if (typeof window !== "undefined") {
-    const token = localStorage.getItem("token");
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-  }
-  return config;
 });
 
 export const createUserApi = async (userData: {
