@@ -31,13 +31,13 @@ export default function PayeeDetails({
       formInstance.setFieldsValue({
         payee: {
           payeeSelectKey: companyId,
-          companyName: targetCompany.companyName,
-          contactPerson: targetCompany.carrierIdentifier || "",
-          address1: `${targetCompany.addressLine1 || ""}, ${targetCompany.city || ""}, ${targetCompany.province || ""}, ${targetCompany.postCode || ""}`,
-          phone: targetCompany.phone || "",
-          email: targetCompany.email || "",
-          gstNumber: targetCompany.gstHst || "",
-          eTransferAddress: targetCompany.eTransfer || "",
+          companyName: targetCompany.companyName?.toUpperCase() || "",
+          contactPerson: targetCompany.carrierIdentifier?.toUpperCase() || "",
+          address1: `${targetCompany.addressLine1 || ""}, ${targetCompany.city || ""}, ${targetCompany.province || ""}, ${targetCompany.postCode || ""}`.toUpperCase(),
+          phone: targetCompany.phone?.toUpperCase() || "",
+          email: targetCompany.email?.toUpperCase() || "",
+          gstNumber: targetCompany.gstHst?.toUpperCase() || "",
+          eTransferAddress: targetCompany.eTransfer?.toUpperCase() || "",
         },
       });
     }
@@ -122,7 +122,7 @@ export default function PayeeDetails({
                 popupClassName="payee-select-dropdown"
                 options={companiesList.map((company) => ({
                   value: company._id || company.companyName,
-                  label: `🏢 ${company.companyName}`,
+                  label: `🏢 ${company.companyName?.toUpperCase() || ""}`,
                 }))}
               />
             </Form.Item>
@@ -159,12 +159,19 @@ export default function PayeeDetails({
               <Form.Item
                 name={["payee", "companyName"]}
                 rules={[{ required: true, message: "Required" }]}
+                normalize={(value) => typeof value === "string" ? value.toUpperCase() : value}
                 style={{ marginBottom: 0 }}
               >
                 <Input
                   size="middle"
                   placeholder="Company Name"
-                  style={{ borderRadius: 4 }}
+                  style={{ borderRadius: 4, textTransform: "uppercase" }}
+                  onChange={(event) =>
+                    formInstance.setFieldValue(
+                      ["payee", "companyName"],
+                      event.target.value.toUpperCase(),
+                    )
+                  }
                 />
               </Form.Item>
             </Col>
@@ -172,6 +179,7 @@ export default function PayeeDetails({
               <span style={labelStyle}>Contact Person / Carrier</span>
               <Form.Item
                 name={["payee", "contactPerson"]}
+                normalize={(value) => typeof value === "string" ? value.toUpperCase() : value}
                 style={{ marginBottom: 0 }}
               >
                 <Input
@@ -187,7 +195,7 @@ export default function PayeeDetails({
           <Row gutter={[12, 12]}>
             <Col xs={24} sm={12} lg={12}>
               <span style={labelStyle}>Phone</span>
-              <Form.Item name={["payee", "phone"]} style={{ marginBottom: 0 }}>
+              <Form.Item name={["payee", "phone"]} normalize={(value) => typeof value === "string" ? value.toUpperCase() : value} style={{ marginBottom: 0 }}>
                 <Input
                   size="middle"
                   placeholder="+1 647 XXX XXXX"
@@ -197,7 +205,7 @@ export default function PayeeDetails({
             </Col>
             <Col xs={24} sm={12} lg={12}>
               <span style={labelStyle}>Email</span>
-              <Form.Item name={["payee", "email"]} style={{ marginBottom: 0 }}>
+              <Form.Item name={["payee", "email"]} normalize={(value) => typeof value === "string" ? value.toUpperCase() : value} style={{ marginBottom: 0 }}>
                 <Input
                   size="middle"
                   placeholder="email@company.com"
@@ -213,6 +221,7 @@ export default function PayeeDetails({
               <span style={labelStyle}>GST/HST</span>
               <Form.Item
                 name={["payee", "gstNumber"]}
+                normalize={(value) => typeof value === "string" ? value.toUpperCase() : value}
                 style={{ marginBottom: 0 }}
               >
                 <Input
@@ -226,6 +235,7 @@ export default function PayeeDetails({
               <span style={labelStyle}>Address</span>
               <Form.Item
                 name={["payee", "address1"]}
+                normalize={(value) => typeof value === "string" ? value.toUpperCase() : value}
                 style={{ marginBottom: 0 }}
               >
                 <Input

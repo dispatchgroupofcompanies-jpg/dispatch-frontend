@@ -14,8 +14,12 @@ export interface Load {
 export interface LoadBoardRecord {
   _id?: string;
   carrierName: string;
+  companyName?: string;
   thirdPartyCarrierName: string;
+  address?: string;
+  postalCode?: string;
   date: string;
+  loadDate?: string;
   mgCharges: number;
   vrid: string;
   legs: number;

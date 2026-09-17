@@ -33,6 +33,10 @@ const statusTag = (value: string | undefined, type: "invoice" | "payment") => {
 export default function LoadBoardDetailsModal({ open, record, onClose }: Props) {
   if (!record) return null;
 
+  const payeeCompany = record.companyName || record.carrierName;
+  const payToCompany = record.carrierName || record.thirdPartyCarrierName;
+  const loadDate = record.loadDate || record.date;
+
   return (
     <Modal
       open={open}
@@ -44,18 +48,24 @@ export default function LoadBoardDetailsModal({ open, record, onClose }: Props) 
     >
       <div style={{ padding: "8px 0" }}>
         {record.screenshotUrl && (
-          <Image
-            src={record.screenshotUrl}
-            alt="Load screenshot"
-            width="100%"
-            style={{
-              maxHeight: 250,
-              objectFit: "contain",
-              borderRadius: 8,
-              background: "#f8fafc",
-              marginBottom: 20,
-            }}
-          />
+          <div style={{ marginBottom: 20 }}>
+            <Text strong style={{ display: "block", marginBottom: 8, color: "#475569" }}>
+              Load Screenshot
+            </Text>
+            <Image
+              src={record.screenshotUrl}
+              alt="Load screenshot"
+              preview={{ src: record.screenshotUrl }}
+              width="100%"
+              style={{
+                maxHeight: 250,
+                objectFit: "contain",
+                borderRadius: 8,
+                background: "#f8fafc",
+                border: "1px solid #e2e8f0",
+              }}
+            />
+          </div>
         )}
         <Descriptions
           bordered
@@ -64,22 +74,28 @@ export default function LoadBoardDetailsModal({ open, record, onClose }: Props) 
           labelStyle={{ fontWeight: 600, color: "#475569", width: 165 }}
         >
           <Descriptions.Item label="Company Name / Payee">
-            {record.carrierName || "—"}
+            {payeeCompany || "—"}
           </Descriptions.Item>
           <Descriptions.Item label="Pay To / Company Driver">
-            {record.thirdPartyCarrierName || "—"}
+            {payToCompany || "—"}
+          </Descriptions.Item>
+          <Descriptions.Item label="Driver Name">
+            {record.driverName || "—"}
           </Descriptions.Item>
           <Descriptions.Item label="CAD Amount">
             CAD ${Number(record.tripCharges || 0).toLocaleString()}
           </Descriptions.Item>
-          <Descriptions.Item label="Payment ID">
-            {record.driverName ? (
-              <Text copyable={{ tooltips: ["Copy", "Copied!"] }}>
-                {record.driverName}
-              </Text>
-            ) : (
-              "—"
-            )}
+          <Descriptions.Item label="Address">
+            {record.address || "—"}
+          </Descriptions.Item>
+          <Descriptions.Item label="Postal Code">
+            {record.postalCode || "—"}
+          </Descriptions.Item>
+          <Descriptions.Item label="Load Date">
+            {loadDate ? new Date(loadDate).toLocaleDateString() : "—"}
+          </Descriptions.Item>
+          <Descriptions.Item label="Dispatcher">
+            {record.dispatcher || "—"}
           </Descriptions.Item>
           <Descriptions.Item label="Invoice Status">
             {statusTag(record.invoiceStatus, "invoice")}

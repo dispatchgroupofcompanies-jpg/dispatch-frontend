@@ -20,12 +20,12 @@ export default function PayToDetails({
     if (targetCompany) {
       formInstance.setFieldsValue({
         customer: {
-          companyName: targetCompany.companyName,
-          phone: targetCompany.phone || "",
-          email: targetCompany.email || "",
-          gstNumber: targetCompany.gstHst || "",
-          eTransfer: targetCompany.eTransfer || "",
-          address1: `${targetCompany.addressLine1 || ""}, ${targetCompany.city || ""}, ${targetCompany.province || ""}, ${targetCompany.postCode || ""}`,
+          companyName: targetCompany.companyName?.toUpperCase() || "",
+          phone: targetCompany.phone?.toUpperCase() || "",
+          email: targetCompany.email?.toUpperCase() || "",
+          gstNumber: targetCompany.gstHst?.toUpperCase() || "",
+          eTransfer: targetCompany.eTransfer?.toUpperCase() || "",
+          address1: `${targetCompany.addressLine1 || ""}, ${targetCompany.city || ""}, ${targetCompany.province || ""}, ${targetCompany.postCode || ""}`.toUpperCase(),
         },
       });
     }
@@ -99,7 +99,7 @@ export default function PayToDetails({
                 popupClassName="customer-select-dropdown"
                 options={companiesList.map((company) => ({
                   value: company._id || company.companyName,
-                  label: `🏢 ${company.companyName}`,
+                  label: `🏢 ${company.companyName?.toUpperCase() || ""}`,
                 }))}
               />
             </Form.Item>
@@ -135,11 +135,18 @@ export default function PayToDetails({
               label="Customer/Company Name"
               name={["customer", "companyName"]}
               rules={[{ required: true, message: "Required" }]}
+              normalize={(value) => typeof value === "string" ? value.toUpperCase() : value}
               style={{ marginBottom: 4 }}
             >
               <Input
                 placeholder="Customer Company Name"
-                style={{ borderRadius: 4, height: 34 }}
+                style={{ borderRadius: 4, height: 34, textTransform: "uppercase" }}
+                onChange={(event) =>
+                  formInstance.setFieldValue(
+                    ["customer", "companyName"],
+                    event.target.value.toUpperCase(),
+                  )
+                }
               />
             </Form.Item>
           </Col>
@@ -148,6 +155,7 @@ export default function PayToDetails({
             <Form.Item
               label="Phone"
               name={["customer", "phone"]}
+              normalize={(value) => typeof value === "string" ? value.toUpperCase() : value}
               style={{ marginBottom: 4 }}
             >
               <Input
@@ -162,6 +170,7 @@ export default function PayToDetails({
               label="Email"
               name={["customer", "email"]}
               rules={[{ type: "email", message: "Invalid email" }]}
+              normalize={(value) => typeof value === "string" ? value.toUpperCase() : value}
               style={{ marginBottom: 4 }}
             >
               <Input
@@ -175,6 +184,7 @@ export default function PayToDetails({
             <Form.Item
               label="GST/HST"
               name={["customer", "gstNumber"]}
+              normalize={(value) => typeof value === "string" ? value.toUpperCase() : value}
               style={{ marginBottom: 4 }}
             >
               <Input
@@ -189,6 +199,7 @@ export default function PayToDetails({
               label="E-Transfer Email"
               name={["customer", "eTransfer"]}
               rules={[{ type: "email", message: "Invalid email" }]}
+              normalize={(value) => typeof value === "string" ? value.toUpperCase() : value}
               style={{ marginBottom: 4 }}
             >
               <Input
@@ -202,6 +213,7 @@ export default function PayToDetails({
             <Form.Item
               label="Address"
               name={["customer", "address1"]}
+              normalize={(value) => typeof value === "string" ? value.toUpperCase() : value}
               style={{ marginBottom: 0 }}
             >
               <Input

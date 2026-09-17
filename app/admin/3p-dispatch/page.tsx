@@ -37,8 +37,13 @@ interface LoadBoardRecord {
   createdBy?: { email: string; name: string };
   createdAt: string;
   load1Id?: string;
+  companyName?: string;
   carrierName?: string;
   thirdPartyCarrierName?: string;
+  address?: string;
+  postalCode?: string;
+  loadDate?: string;
+  date?: string;
   driverName?: string;
   dispatcher?: string;
   tripCharges?: number;
@@ -78,6 +83,9 @@ const statusTag = (value: string | undefined) => {
     </Tag>
   );
 };
+
+const getRecordDate = (record: LoadBoardRecord) =>
+  record.loadDate || record.date || record.createdAt;
 
 const DetailItem = React.memo(
   ({ label, children }: { label: string; children: React.ReactNode }) => (
@@ -157,7 +165,7 @@ export default function Admin3PDispatchPage() {
 
   const indexedRecords = useMemo(() => {
     const sorted = [...records].sort(
-      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      (a, b) => dayjs(getRecordDate(a)).valueOf() - dayjs(getRecordDate(b)).valueOf()
     );
 
     return sorted.map((record, index) => ({
@@ -218,7 +226,7 @@ export default function Admin3PDispatchPage() {
           const endDate = dayjs(endStr).endOf("day");
 
           return records.filter((record) => {
-            const recordDate = dayjs(record.createdAt);
+            const recordDate = dayjs(getRecordDate(record));
             return !recordDate.isBefore(startDate) && !recordDate.isAfter(endDate);
           });
         })();
@@ -248,7 +256,7 @@ export default function Admin3PDispatchPage() {
 
       if (selectedWeekRange && selectedWeekRange !== "all") {
         const [startStr, endStr] = selectedWeekRange.split("_");
-        const recordDate = dayjs(r.createdAt);
+        const recordDate = dayjs(getRecordDate(r));
         const startDate = dayjs(startStr).startOf("day");
         const endDate = dayjs(endStr).endOf("day");
 
@@ -273,7 +281,7 @@ export default function Admin3PDispatchPage() {
     });
 
     return filtered.sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      (a, b) => dayjs(getRecordDate(b)).valueOf() - dayjs(getRecordDate(a)).valueOf()
     );
   }, [indexedRecords, searchText, statusFilter, selectedWeekRange]);
 
@@ -304,9 +312,9 @@ export default function Admin3PDispatchPage() {
         title: "Company Name / Payee",
         dataIndex: "carrierName",
         width: 170,
-        render: (value: string) => (
+        render: (value: string, record: LoadBoardRecord) => (
           <span style={{ fontWeight: 600, color: "#047857" }}>
-            {value || "—"}
+            {record.companyName || value || "—"}
           </span>
         ),
       },
@@ -467,11 +475,23 @@ export default function Admin3PDispatchPage() {
                       whiteSpace: "normal",
                     }}
                   >
-                    {record.carrierName || record.thirdPartyCarrierName || "—"}
+                    {record.companyName || record.carrierName || record.thirdPartyCarrierName || "—"}
                   </span>
                 </div>
 
-                <div style={{ fontSize: 12, color: "#374151", overflowWrap: "anywhere" }}>Pay To / Company Driver: <strong>{record.thirdPartyCarrierName || "?"}</strong></div>
+                <div style={{ fontSize: 12, color: "#374151", overflowWrap: "anywhere" }}>Pay To / Company Driver: <strong>{record.carrierName || record.thirdPartyCarrierName || "?"}</strong></div>
+                <div style={{ fontSize: 12, color: "#374151", overflowWrap: "anywhere" }}>
+                  Driver: <strong>{record.driverName || "—"}</strong>
+                </div>
+                <div style={{ fontSize: 12, color: "#374151", overflowWrap: "anywhere" }}>
+                  Address: <strong>{record.address || "—"}</strong>
+                </div>
+                <div style={{ fontSize: 12, color: "#374151" }}>
+                  Postal Code: <strong>{record.postalCode || "—"}</strong>
+                </div>
+                <div style={{ fontSize: 12, color: "#374151" }}>
+                  Load Date: <strong>{record.loadDate || record.date ? dayjs(record.loadDate || record.date).format("MMM D, YYYY") : "—"}</strong>
+                </div>
                 <div style={{ fontSize: 12, color: "#374151" }}>
                   Dispatcher: <strong>{record.dispatcher || "—"}</strong>
                 </div>
@@ -568,10 +588,24 @@ export default function Admin3PDispatchPage() {
               )}
               <DetailItem label="S.No">{detailsRecord.globalSerial}</DetailItem>
               <DetailItem label="Company Name / Payee">
-                {detailsRecord.carrierName || "—"}
+                {detailsRecord.companyName || detailsRecord.carrierName || "—"}
               </DetailItem>
               <DetailItem label="Pay To / Company Driver">
-                {detailsRecord.thirdPartyCarrierName || "—"}
+                {detailsRecord.carrierName || detailsRecord.thirdPartyCarrierName || "—"}
+              </DetailItem>
+              <DetailItem label="Driver Name">
+                {detailsRecord.driverName || "—"}
+              </DetailItem>
+              <DetailItem label="Address">
+                {detailsRecord.address || "—"}
+              </DetailItem>
+              <DetailItem label="Postal Code">
+                {detailsRecord.postalCode || "—"}
+              </DetailItem>
+              <DetailItem label="Load Date">
+                {detailsRecord.loadDate || detailsRecord.date
+                  ? dayjs(detailsRecord.loadDate || detailsRecord.date).format("MMM D, YYYY")
+                  : "—"}
               </DetailItem>
               <DetailItem label="Dispatcher">
                 {detailsRecord.dispatcher || "—"}
@@ -678,10 +712,24 @@ export default function Admin3PDispatchPage() {
             >
               <DetailItem label="S.No">{detailsRecord.globalSerial}</DetailItem>
               <DetailItem label="Company Name / Payee">
-                {detailsRecord.carrierName || "—"}
+                {detailsRecord.companyName || detailsRecord.carrierName || "—"}
               </DetailItem>
               <DetailItem label="Pay To / Company Driver">
-                {detailsRecord.thirdPartyCarrierName || "—"}
+                {detailsRecord.carrierName || detailsRecord.thirdPartyCarrierName || "—"}
+              </DetailItem>
+              <DetailItem label="Driver Name">
+                {detailsRecord.driverName || "—"}
+              </DetailItem>
+              <DetailItem label="Address">
+                {detailsRecord.address || "—"}
+              </DetailItem>
+              <DetailItem label="Postal Code">
+                {detailsRecord.postalCode || "—"}
+              </DetailItem>
+              <DetailItem label="Load Date">
+                {detailsRecord.loadDate || detailsRecord.date
+                  ? dayjs(detailsRecord.loadDate || detailsRecord.date).format("MMM D, YYYY")
+                  : "—"}
               </DetailItem>
               <DetailItem label="Dispatcher">
                 {detailsRecord.dispatcher || "—"}
