@@ -64,7 +64,6 @@ export default function CreateInvoiceModal({
     if (open && editData) {
       const period = editData.invoicePeriod;
 
-      // Explicitly check that period is an object containing 'startDate' and not an array
       const hasObjectDates =
         period &&
         !Array.isArray(period) &&
@@ -81,12 +80,26 @@ export default function CreateInvoiceModal({
           : null,
         trips: (editData.trips || []).map((trip: TripForm) => ({
           ...trip,
+          dispatchPercent: trip.dispatchPercent ?? 0, // Fallback to 0 if null/undefined
           tripDate: trip.tripDate ? dayjs(trip.tripDate) : null,
         })),
       };
       form.setFieldsValue(formattedEditData);
     } else if (open && !editData) {
-      form.resetFields();
+      // Explicitly set default fields when opening a fresh creation form
+      form.setFieldsValue({
+        invoiceType: "single",
+        currency: "CAD",
+        trips: [
+          {
+            dispatchPercent: 0,
+            totalCharges: 0,
+            loadId1: "",
+            loadId2: "",
+            driverName: "",
+          },
+        ],
+      });
     }
   }, [open, editData, form]);
 
@@ -120,10 +133,8 @@ export default function CreateInvoiceModal({
         };
       });
 
-      // 1. Separate invoicePeriod out of values to avoid spreading array-typed values
       const { invoicePeriod: rawPeriod, ...restValues } = values;
 
-      // 2. Format invoicePeriod to object structure matching Partial<Invoice>
       let formattedInvoicePeriod: { startDate: string; endDate: string } | undefined = undefined;
 
       if (rawPeriod && Array.isArray(rawPeriod) && rawPeriod.length === 2 && rawPeriod[0] && rawPeriod[1]) {
@@ -185,9 +196,7 @@ export default function CreateInvoiceModal({
           }}
         >
           <span style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a" }}>
-            {isEditMode
-              ? "✏️ Edit invoice"
-              : "➕ Create invoice"}
+            {isEditMode ? "✏️ Edit invoice" : "➕ Create invoice"}
           </span>
         </div>
       }
@@ -215,7 +224,7 @@ export default function CreateInvoiceModal({
           currency: "CAD",
           trips: [
             {
-              dispatchPercent: 10,
+              dispatchPercent: 0,
               totalCharges: 0,
               loadId1: "",
               loadId2: "",
