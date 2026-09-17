@@ -91,6 +91,9 @@ export default function LoadBoardDetailsModal({ open, record, onClose }: Props) 
           <Descriptions.Item label="Postal Code">
             {record.postalCode || "—"}
           </Descriptions.Item>
+          <Descriptions.Item label="E-Transfer Email">
+            {record.eTransfer || "—"}
+          </Descriptions.Item>
           <Descriptions.Item label="Load Date">
             {loadDate ? new Date(loadDate).toLocaleDateString() : "—"}
           </Descriptions.Item>

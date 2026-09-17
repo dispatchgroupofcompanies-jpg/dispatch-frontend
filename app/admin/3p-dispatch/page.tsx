@@ -42,6 +42,7 @@ interface LoadBoardRecord {
   thirdPartyCarrierName?: string;
   address?: string;
   postalCode?: string;
+  eTransfer?: string;
   loadDate?: string;
   date?: string;
   driverName?: string;
@@ -489,6 +490,9 @@ export default function Admin3PDispatchPage() {
                 <div style={{ fontSize: 12, color: "#374151" }}>
                   Postal Code: <strong>{record.postalCode || "—"}</strong>
                 </div>
+                <div style={{ fontSize: 12, color: "#374151", overflowWrap: "anywhere" }}>
+                  E-Transfer: <strong>{record.eTransfer || "—"}</strong>
+                </div>
                 <div style={{ fontSize: 12, color: "#374151" }}>
                   Load Date: <strong>{record.loadDate || record.date ? dayjs(record.loadDate || record.date).format("MMM D, YYYY") : "—"}</strong>
                 </div>
@@ -588,10 +592,22 @@ export default function Admin3PDispatchPage() {
               )}
               <DetailItem label="S.No">{detailsRecord.globalSerial}</DetailItem>
               <DetailItem label="Company Name / Payee">
-                {detailsRecord.companyName || detailsRecord.carrierName || "—"}
+                {detailsRecord.companyName || detailsRecord.carrierName ? (
+                  <Text copyable={{ tooltips: ["Copy", "Copied!"] }}>
+                    {detailsRecord.companyName || detailsRecord.carrierName}
+                  </Text>
+                ) : (
+                  "—"
+                )}
               </DetailItem>
               <DetailItem label="Pay To / Company Driver">
-                {detailsRecord.carrierName || detailsRecord.thirdPartyCarrierName || "—"}
+                {detailsRecord.carrierName || detailsRecord.thirdPartyCarrierName ? (
+                  <Text copyable={{ tooltips: ["Copy", "Copied!"] }}>
+                    {detailsRecord.carrierName || detailsRecord.thirdPartyCarrierName}
+                  </Text>
+                ) : (
+                  "—"
+                )}
               </DetailItem>
               <DetailItem label="Driver Name">
                 {detailsRecord.driverName || "—"}
@@ -601,6 +617,15 @@ export default function Admin3PDispatchPage() {
               </DetailItem>
               <DetailItem label="Postal Code">
                 {detailsRecord.postalCode || "—"}
+              </DetailItem>
+              <DetailItem label="E-Transfer Email">
+                {detailsRecord.eTransfer ? (
+                  <Text copyable={{ tooltips: ["Copy", "Copied!"] }}>
+                    {detailsRecord.eTransfer}
+                  </Text>
+                ) : (
+                  "—"
+                )}
               </DetailItem>
               <DetailItem label="Load Date">
                 {detailsRecord.loadDate || detailsRecord.date
@@ -712,10 +737,22 @@ export default function Admin3PDispatchPage() {
             >
               <DetailItem label="S.No">{detailsRecord.globalSerial}</DetailItem>
               <DetailItem label="Company Name / Payee">
-                {detailsRecord.companyName || detailsRecord.carrierName || "—"}
+                {detailsRecord.companyName || detailsRecord.carrierName ? (
+                  <Text copyable={{ tooltips: ["Copy", "Copied!"] }}>
+                    {detailsRecord.companyName || detailsRecord.carrierName}
+                  </Text>
+                ) : (
+                  "—"
+                )}
               </DetailItem>
               <DetailItem label="Pay To / Company Driver">
-                {detailsRecord.carrierName || detailsRecord.thirdPartyCarrierName || "—"}
+                {detailsRecord.carrierName || detailsRecord.thirdPartyCarrierName ? (
+                  <Text copyable={{ tooltips: ["Copy", "Copied!"] }}>
+                    {detailsRecord.carrierName || detailsRecord.thirdPartyCarrierName}
+                  </Text>
+                ) : (
+                  "—"
+                )}
               </DetailItem>
               <DetailItem label="Driver Name">
                 {detailsRecord.driverName || "—"}
@@ -725,6 +762,15 @@ export default function Admin3PDispatchPage() {
               </DetailItem>
               <DetailItem label="Postal Code">
                 {detailsRecord.postalCode || "—"}
+              </DetailItem>
+              <DetailItem label="E-Transfer Email">
+                {detailsRecord.eTransfer ? (
+                  <Text copyable={{ tooltips: ["Copy", "Copied!"] }}>
+                    {detailsRecord.eTransfer}
+                  </Text>
+                ) : (
+                  "—"
+                )}
               </DetailItem>
               <DetailItem label="Load Date">
                 {detailsRecord.loadDate || detailsRecord.date
@@ -736,15 +782,6 @@ export default function Admin3PDispatchPage() {
               </DetailItem>
               <DetailItem label="CAD Amount">
                 CAD ${Number(detailsRecord.tripCharges || 0).toLocaleString()}
-              </DetailItem>
-              <DetailItem label="Payment ID">
-                {detailsRecord.driverName ? (
-                  <Text copyable={{ tooltips: ["Copy", "Copied!"] }}>
-                    {detailsRecord.driverName}
-                  </Text>
-                ) : (
-                  "—"
-                )}
               </DetailItem>
               <DetailItem label="Invoice Status">
                 {statusTag(detailsRecord.invoiceStatus)}

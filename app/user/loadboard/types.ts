@@ -18,6 +18,7 @@ export interface LoadBoardRecord {
   thirdPartyCarrierName: string;
   address?: string;
   postalCode?: string;
+  eTransfer?: string;
   date: string;
   loadDate?: string;
   mgCharges: number;

@@ -5,6 +5,7 @@ import { Form, Input, InputNumber, Modal, Row, Col, Button, Upload, Image, Grid,
 import { UploadOutlined } from "@ant-design/icons";
 import type { UploadFile } from "antd";
 import type { LoadBoardRecord } from "../types";
+import { getCompanyProfile } from "../../../../modules/company/route";
 
 const { useBreakpoint } = Grid;
 
@@ -24,6 +25,52 @@ export default function LoadBoardModal({ open, onClose, onSave, record }: Props)
   // Checkbox states
   const [useAvailAddr, setUseAvailAddr] = useState(false);
   const [useAvailPostal, setUseAvailPostal] = useState(false);
+  const [availableAddress, setAvailableAddress] = useState("");
+  const [availablePostalCode, setAvailablePostalCode] = useState("");
+
+  useEffect(() => {
+    if (!open) return;
+
+    let active = true;
+    getCompanyProfile()
+      .then((response) => {
+        if (!active || !response?.success) return;
+
+        const profile = Array.isArray(response.data) ? response.data[0] : response.data;
+        if (!profile) return;
+
+        const profileAddress = [
+          profile.addressLine1,
+          profile.addressLine2,
+          profile.city,
+          profile.province,
+        ]
+          .filter((part): part is string => typeof part === "string" && part.trim() !== "")
+          .join(", ");
+
+        setAvailableAddress(profileAddress);
+        setAvailablePostalCode(typeof profile.postCode === "string" ? profile.postCode : "");
+      })
+      .catch(() => {
+        if (active) {
+          setAvailableAddress("");
+          setAvailablePostalCode("");
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (useAvailAddr && availableAddress && !form.getFieldValue("address")) {
+      form.setFieldValue("address", availableAddress);
+    }
+    if (useAvailPostal && availablePostalCode && !form.getFieldValue("postalCode")) {
+      form.setFieldValue("postalCode", availablePostalCode);
+    }
+  }, [availableAddress, availablePostalCode, form, useAvailAddr, useAvailPostal]);
 
   useEffect(() => {
     if (!open) return;
@@ -37,6 +84,7 @@ export default function LoadBoardModal({ open, onClose, onSave, record }: Props)
         address: record?.address ?? "",
         driverName: record?.driverName ?? "",
         postalCode: record?.postalCode ?? "",
+        eTransfer: record?.eTransfer ?? "",
         loadDate: record?.loadDate ?? record?.date ?? "",
         tripCharges: record?.tripCharges ?? 0,
         dispatcher: record?.dispatcher ?? "",
@@ -55,8 +103,8 @@ export default function LoadBoardModal({ open, onClose, onSave, record }: Props)
   const handleAddrCheckbox = (checked: boolean) => {
     setUseAvailAddr(checked);
     if (checked) {
-      const availableAddress = record?.address || form.getFieldValue("address") || "";
-      form.setFieldValue("address", availableAddress);
+      const value = record?.address || availableAddress || form.getFieldValue("address") || "";
+      form.setFieldValue("address", value);
     } else {
       form.setFieldValue("address", "");
     }
@@ -66,8 +114,8 @@ export default function LoadBoardModal({ open, onClose, onSave, record }: Props)
   const handlePostalCheckbox = (checked: boolean) => {
     setUseAvailPostal(checked);
     if (checked) {
-      const availablePostal = record?.postalCode || form.getFieldValue("postalCode") || "";
-      form.setFieldValue("postalCode", availablePostal);
+      const value = record?.postalCode || availablePostalCode || form.getFieldValue("postalCode") || "";
+      form.setFieldValue("postalCode", value);
     } else {
       form.setFieldValue("postalCode", "");
     }
@@ -265,6 +313,20 @@ export default function LoadBoardModal({ open, onClose, onSave, record }: Props)
                           />
                         </Form.Item>
                       </div>
+
+                      <Form.Item
+                        label="E-Transfer Email"
+                        name="eTransfer"
+                        rules={[{ type: "email", message: "Enter a valid e-transfer email" }]}
+                        style={{ marginBottom: 8 }}
+                      >
+                        <Input
+                          type="email"
+                          placeholder="Enter e-transfer email"
+                          autoComplete="email"
+                          spellCheck={false}
+                        />
+                      </Form.Item>
 
                       <Form.Item
                         label="Load Date"
