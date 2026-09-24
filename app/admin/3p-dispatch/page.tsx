@@ -21,6 +21,7 @@ import {
 } from "antd";
 import { EyeOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
+import { formatLoadDate } from "@/utils/loadboardDate";
 import {
   getAdminLoadboard,
   updateAdminLoadboardStatus,
@@ -291,14 +292,14 @@ export default function Admin3PDispatchPage() {
       {
         title: "S.No",
         key: "serial",
-        width: 70,
+        width: "7%",
         render: (_v: any, record: LoadBoardRecord) => (
           <span
             style={{
               fontWeight: 800,
               color: "#ffffff",
               background: "#059669",
-              padding: "4px 10px",
+              padding: "4px 6px",
               borderRadius: 6,
               display: "inline-block",
               minWidth: 32,
@@ -310,9 +311,19 @@ export default function Admin3PDispatchPage() {
         ),
       },
       {
+        title: "Date",
+        key: "loadDate",
+        width: "8%",
+        render: (_value: unknown, record: LoadBoardRecord) => (
+          <span style={{ whiteSpace: "nowrap" }}>
+            {formatLoadDate(record.loadDate || record.date, true)}
+          </span>
+        ),
+      },
+      {
         title: "Company Name / Payee",
         dataIndex: "carrierName",
-        width: 170,
+        width: "19%",
         render: (value: string, record: LoadBoardRecord) => (
           <span style={{ fontWeight: 600, color: "#047857" }}>
             {record.companyName || value || "—"}
@@ -322,7 +333,7 @@ export default function Admin3PDispatchPage() {
       {
         title: "Pay To / Company Driver",
         dataIndex: "thirdPartyCarrierName",
-        width: 170,
+        width: "19%",
         render: (value: string) => (
           <span style={{ fontWeight: 600, color: "#064e3b" }}>
             {value || "—"}
@@ -332,16 +343,16 @@ export default function Admin3PDispatchPage() {
       {
         title: "Dispatcher",
         dataIndex: "dispatcher",
-        width: 140,
+        width: "12%",
         render: (value: string) => value || "—",
       },
       {
         title: "CAD Amount",
         dataIndex: "tripCharges",
-        width: 130,
+        width: "13%",
         render: (value: number) => (
           <span
-            style={{ fontWeight: 700, color: "#022c22", whiteSpace: "nowrap" }}
+            style={{ fontWeight: 700, color: "#022c22" }}
           >
             CAD ${Number(value || 0).toLocaleString()}
           </span>
@@ -350,7 +361,7 @@ export default function Admin3PDispatchPage() {
       {
         title: "Invoice Status",
         dataIndex: "invoiceStatus",
-        width: 150,
+        width: "15%",
         render: (value: string, record: LoadBoardRecord) => {
           const isGenerated = value === "generated";
 
@@ -372,7 +383,7 @@ export default function Admin3PDispatchPage() {
       {
         title: "Actions",
         key: "actions",
-        width: 90,
+        width: "7%",
         align: "center" as const,
         render: (_v: any, record: LoadBoardRecord) => (
           <Tooltip title="View Details">
@@ -494,7 +505,7 @@ export default function Admin3PDispatchPage() {
                   E-Transfer: <strong>{record.eTransfer || "—"}</strong>
                 </div>
                 <div style={{ fontSize: 12, color: "#374151" }}>
-                  Load Date: <strong>{record.loadDate || record.date ? dayjs(record.loadDate || record.date).format("MMM D, YYYY") : "—"}</strong>
+                  Load Date: <strong>{formatLoadDate(record.loadDate || record.date, true)}</strong>
                 </div>
                 <div style={{ fontSize: 12, color: "#374151" }}>
                   Dispatcher: <strong>{record.dispatcher || "—"}</strong>
@@ -669,6 +680,8 @@ export default function Admin3PDispatchPage() {
       >
         {filterHeader}
         <Table
+          className={design.dispatchTable}
+          tableLayout="fixed"
           dataSource={filteredRecords}
           columns={columns}
           rowKey={(r) => r._id}
@@ -685,8 +698,7 @@ export default function Admin3PDispatchPage() {
             pageSizeOptions: PAGE_SIZE_OPTIONS,
             style: { paddingRight: 16 },
           }}
-          scroll={{ x: "max-content" }}
-          size="middle"
+          size="small"
           rowClassName={(record) =>
             record.invoiceStatus === "generated"
               ? "loadboard-row-generated"

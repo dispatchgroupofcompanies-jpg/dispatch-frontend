@@ -84,6 +84,9 @@
 .page :global(.ant-table-content) { overscroll-behavior-x: contain; scrollbar-width: thin; }
 .page :global(.ant-table-thead > tr > th) { white-space: nowrap; }
 .page :global(.ant-table-cell) { overflow-wrap: anywhere; }
+.page .dispatchTable :global(.ant-table-cell) { padding: 10px 6px; }
+.page .dispatchTable :global(.ant-table-thead > tr > th) { white-space: normal; letter-spacing: 0; }
+.page .dispatchTable :global(.ant-select) { min-width: 0; max-width: 100%; }
 @media (max-width: 1199px) {
  .page :global(.ant-table-wrapper) { overflow: hidden; }
  .page :global(.ant-card-body) { min-width: 0; }

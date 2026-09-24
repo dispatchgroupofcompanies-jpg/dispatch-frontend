@@ -5,6 +5,7 @@ import { Form, Input, InputNumber, Modal, Row, Col, Button, Upload, Image, Grid,
 import { UploadOutlined } from "@ant-design/icons";
 import type { UploadFile } from "antd";
 import type { LoadBoardRecord } from "../types";
+import { toLoadDateInput } from "@/utils/loadboardDate";
 import { getCompanyProfile } from "../../../../modules/company/route";
 
 const { useBreakpoint } = Grid;
@@ -85,7 +86,7 @@ export default function LoadBoardModal({ open, onClose, onSave, record }: Props)
         driverName: record?.driverName ?? "",
         postalCode: record?.postalCode ?? "",
         eTransfer: record?.eTransfer ?? "",
-        loadDate: record?.loadDate ?? record?.date ?? "",
+        loadDate: toLoadDateInput(record?.loadDate || record?.date),
         tripCharges: record?.tripCharges ?? 0,
         dispatcher: record?.dispatcher ?? "",
       });

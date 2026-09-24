@@ -3,6 +3,7 @@
 import React from "react";
 import { Descriptions, Image, Modal, Tag, Typography } from "antd";
 import type { LoadBoardRecord } from "../types";
+import { formatLoadDate } from "@/utils/loadboardDate";
 
 const { Text } = Typography;
 
@@ -95,7 +96,7 @@ export default function LoadBoardDetailsModal({ open, record, onClose }: Props) 
             {record.eTransfer || "—"}
           </Descriptions.Item>
           <Descriptions.Item label="Load Date">
-            {loadDate ? new Date(loadDate).toLocaleDateString() : "—"}
+            {formatLoadDate(loadDate)}
           </Descriptions.Item>
           <Descriptions.Item label="Dispatcher">
             {record.dispatcher || "—"}
